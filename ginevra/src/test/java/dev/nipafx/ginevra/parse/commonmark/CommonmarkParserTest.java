@@ -4,6 +4,13 @@ import dev.nipafx.ginevra.html.Element;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import static dev.nipafx.ginevra.html.HtmlElement.h1;
+import static dev.nipafx.ginevra.html.HtmlElement.h2;
+import static dev.nipafx.ginevra.html.HtmlElement.h3;
+import static dev.nipafx.ginevra.html.HtmlElement.h4;
+import static dev.nipafx.ginevra.html.HtmlElement.h5;
+import static dev.nipafx.ginevra.html.HtmlElement.h6;
+import static dev.nipafx.ginevra.html.HtmlElement.hr;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +27,36 @@ class CommonmarkParserTest {
 	 * This order of tests follows the CommonMark Spec 0.3.0
 	 * (https://spec.commonmark.org/0.30/)
 	 */
+
+	// --- section 4 - Leaf blocks
+
+	// it is necessary to test all header levels in one go because the CommonMark parser corrects the heading level
+	// if the Markdown gets it wrong, e.g. the standalone string "## header" gets parsed to an h1 node
+	@Test
+	void headers() {
+		parseAndAssert(
+				"""
+				# Header 1
+				## Header 2
+				### Header 3
+				#### Header 4
+				##### Header 5
+				###### Header 6
+				""",
+				h1.text("Header 1"),
+				h2.text("Header 2"),
+				h3.text("Header 3"),
+				h4.text("Header 4"),
+				h5.text("Header 5"),
+				h6.text("Header 6"));
+	}
+
+	@Test
+	void horizontalRule() {
+		parseAndAssert(
+				"---",
+				hr);
+	}
 
 	@Test
 	void oneParagraph() {

@@ -24,12 +24,21 @@ class HtmlRendererTest {
 
 		ELEMENT createWith(String id, List<String> classes);
 
+		default boolean isSelfClosing() {
+			return false;
+		}
+
 		@Test
 		default void neither() {
 			var element = createWith(null, List.of());
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}></\{tag()}>
 					""");
 		}
@@ -39,7 +48,12 @@ class HtmlRendererTest {
 			var element = createWith("", List.of());
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}></\{tag()}>
 					""");
 		}
@@ -49,7 +63,12 @@ class HtmlRendererTest {
 			var element = createWith("the-id", List.of());
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} id="the-id" />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()} id="the-id"></\{tag()}>
 					""");
 		}
@@ -59,7 +78,12 @@ class HtmlRendererTest {
 			var element = createWith(null, List.of(""));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}></\{tag()}>
 					""");
 		}
@@ -69,7 +93,12 @@ class HtmlRendererTest {
 			var element = createWith(null, List.of("the-class"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} class="the-class" />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()} class="the-class"></\{tag()}>
 					""");
 		}
@@ -79,7 +108,12 @@ class HtmlRendererTest {
 			var element = createWith(null, List.of("", ""));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}></\{tag()}>
 					""");
 		}
@@ -89,7 +123,12 @@ class HtmlRendererTest {
 			var element = createWith(null, List.of("one-class", "another-class"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} class="one-class another-class" />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()} class="one-class another-class"></\{tag()}>
 					""");
 		}
@@ -99,7 +138,12 @@ class HtmlRendererTest {
 			var element = createWith("the-id", List.of("one-class", "another-class"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
+			if (isSelfClosing())
+				assertThat(rendered).isEqualTo(STR."""
+					<\{tag()} id="the-id" class="one-class another-class" />
+					""");
+			else
+				assertThat(rendered).isEqualTo(STR."""
 					<\{tag()} id="the-id" class="one-class another-class"></\{tag()}>
 					""");
 		}

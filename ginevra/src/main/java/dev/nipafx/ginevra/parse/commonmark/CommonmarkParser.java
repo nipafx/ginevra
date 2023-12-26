@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.parse.MarkupParser;
@@ -36,8 +37,10 @@ public class CommonmarkParser implements MarkupParser {
 				.map(this::parse)
 				.toArray(Element[]::new);
 		return switch (node) {
+			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
 			case org.commonmark.node.Text t -> new Text(t.getLiteral());
+			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			default -> throw new IllegalArgumentException(
 					STR."The node type '\{node.getClass().getSimpleName()}' is unsupported");
 		};

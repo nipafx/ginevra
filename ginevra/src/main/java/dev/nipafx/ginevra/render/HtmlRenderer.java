@@ -4,6 +4,8 @@ import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Heading;
+import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Text;
@@ -23,6 +25,15 @@ public class HtmlRenderer {
 				children.forEach(child -> render(child, renderer));
 				renderer.close("div");
 			}
+			case Heading(var level, var id, var classes, var text, var children) -> {
+				renderer.open("h" + level, id, classes);
+				if (text == null)
+					children.forEach(child -> render(child, renderer));
+				else
+					renderer.insertText(text);
+				renderer.close("h" + level);
+			}
+			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
 			case Paragraph(var id, var classes, var text, var children) -> {
 				renderer.open("p", id, classes);
 				if (text == null)
@@ -95,6 +106,14 @@ public class HtmlRenderer {
 			if (onNewLine)
 				builder.repeat("\t", indentation);
 			builder.append("</").append(tag).append(">\n");
+		}
+
+		public void selfClosed(String tag, String id, Classes classes) {
+			updateNewLine(true);
+			builder.repeat("\t", indentation).append("<").append(tag);
+			attribute("id", id);
+			attribute("class", classes.asCssString());
+			builder.append(" />\n");
 		}
 
 		public void insertText(String text) {
