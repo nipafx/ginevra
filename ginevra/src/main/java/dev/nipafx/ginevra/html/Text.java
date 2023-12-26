@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 public record Text(String text) implements JmlElement {
 
-	Text() {
+	public Text() {
 		this(null);
 	}
 

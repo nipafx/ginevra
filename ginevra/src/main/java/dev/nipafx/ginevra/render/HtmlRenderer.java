@@ -4,6 +4,8 @@ import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Paragraph;
+import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Text;
 
 public class HtmlRenderer {
@@ -21,7 +23,23 @@ public class HtmlRenderer {
 				children.forEach(child -> render(child, renderer));
 				renderer.close("div");
 			}
-			case Text(var text) -> renderer.text(text);
+			case Paragraph(var id, var classes, var text, var children) -> {
+				renderer.open("p", id, classes);
+				if (text == null)
+					children.forEach(child -> render(child, renderer));
+				else
+					renderer.insertText(text);
+				renderer.close("p");
+			}
+			case Span(var id, var classes, var text, var children) -> {
+				renderer.open("span", id, classes);
+				if (text == null)
+					children.forEach(child -> render(child, renderer));
+				else
+					renderer.insertText(text);
+				renderer.close("span");
+			}
+			case Text(var text) -> renderer.insertTextElement(text);
 			case CustomElement customElement -> customElement.render().forEach(child -> render(child, renderer));
 		}
 	}
@@ -48,12 +66,19 @@ public class HtmlRenderer {
 			addNewLineBeforeNextElement = true;
 		}
 
-		private void updateNewLine(boolean maybeInsert) {
-			if (addNewLineBeforeNextElement) {
-				if (maybeInsert)
-					builder.append("\n");
-				addNewLineBeforeNextElement = false;
-			}
+		/**
+		 * Inserts a new line if indicated by {@code addNewLineBeforeNextElement} and {@code insertNewLine}
+		 * and resets {@code addNewLineBeforeNextElement}.
+		 *
+		 * @param insertNewLine whether a new line should be inserted
+		 * @return whether the renderer stands on a new line after this call
+		 */
+		private boolean updateNewLine(boolean insertNewLine) {
+			if (addNewLineBeforeNextElement && insertNewLine)
+				builder.append("\n");
+			var onNewLine = !addNewLineBeforeNextElement || insertNewLine;
+			addNewLineBeforeNextElement = false;
+			return onNewLine;
 		}
 
 		private void attribute(String name, String value) {
@@ -66,11 +91,18 @@ public class HtmlRenderer {
 		public void close(String tag) {
 			indentation--;
 
-			updateNewLine(false);
-			builder.repeat("\t", indentation).append("</").append(tag).append(">\n");
+			var onNewLine = updateNewLine(false);
+			if (onNewLine)
+				builder.repeat("\t", indentation);
+			builder.append("</").append(tag).append(">\n");
 		}
 
-		public void text(String text) {
+		public void insertText(String text) {
+			updateNewLine(false);
+			builder.append(text);
+		}
+
+		public void insertTextElement(String text) {
 			if (!text.isBlank()) {
 				updateNewLine(true);
 				builder.repeat("\t", indentation).append(text).append("\n");

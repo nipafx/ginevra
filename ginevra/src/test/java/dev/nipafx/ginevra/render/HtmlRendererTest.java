@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static dev.nipafx.ginevra.html.HtmlElement.span;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HtmlRendererTest {
 
@@ -104,6 +106,66 @@ class HtmlRendererTest {
 
 	}
 
+	interface EmbeddedText<ELEMENT extends Element> extends TestBasics {
+
+		ELEMENT createWith(String text, Element... children);
+
+		@Test
+		default void withoutTextAndChildren() {
+			var element = createWith(null);
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}></\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withTextAndChildren() {
+			assertThatThrownBy(() -> createWith("inline text", new Text("text element")))
+					.isInstanceOf(IllegalArgumentException.class);
+		}
+
+		@Test
+		default void withText() {
+			var element = createWith("inline text");
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>inline text</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withSingleTextChild() {
+			var element = createWith(null, new Text("text element"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>text element</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withTextChildren() {
+			var element = createWith(
+					null,
+					new Text("text element 1"),
+					new Text("text element 2"),
+					new Text("text element 3"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>
+						text element 1
+						text element 2
+						text element 3
+					</\{tag()}>
+					""");
+		}
+
+	}
+
 	interface Children<ELEMENT extends Element> extends TestBasics {
 
 		ELEMENT createWith(Element... children);
@@ -123,12 +185,12 @@ class HtmlRendererTest {
 		default void withOneChild() {
 			var element =
 					createWith(
-							new Text("child"));
+							span.id("child"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
-						child
+						<span id="child"></span>
 					</\{tag()}>
 					""");
 		}
@@ -137,16 +199,16 @@ class HtmlRendererTest {
 		default void withChildren() {
 			var element =
 					createWith(
-							new Text("child 1"),
-							new Text("child 2"),
-							new Text("child 3"));
+							span.id("child-1"),
+							span.id("child-2"),
+							span.id("child-3"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
-						child 1
-						child 2
-						child 3
+						<span id="child-1"></span>
+						<span id="child-2"></span>
+						<span id="child-3"></span>
 					</\{tag()}>
 					""");
 		}
@@ -156,13 +218,13 @@ class HtmlRendererTest {
 			var element =
 					createWith(
 							createWith(
-									new Text("grandchild")));
+									span.id("grandchild")));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
 						<\{tag()}>
-							grandchild
+							<span id="grandchild"></span>
 						</\{tag()}>
 					</\{tag()}>
 					""");
@@ -173,18 +235,18 @@ class HtmlRendererTest {
 			var element =
 					createWith(
 							createWith(
-									new Text("grandchild")),
-							new Text("child 1"),
-							new Text("child 2"));
+									span.id("grandchild")),
+							span.id("child-1"),
+							span.id("child-2"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
 						<\{tag()}>
-							grandchild
+							<span id="grandchild"></span>
 						</\{tag()}>
-						child 1
-						child 2
+						<span id="child-1"></span>
+						<span id="child-2"></span>
 					</\{tag()}>
 					""");
 		}
@@ -193,19 +255,19 @@ class HtmlRendererTest {
 		default void withChildrenAndOneGrandchild_middle() {
 			var element =
 					createWith(
-							new Text("child 1"),
+							span.id("child-1"),
 							createWith(
-									new Text("grandchild")),
-							new Text("child 2"));
+									span.id("grandchild")),
+							span.id("child-2"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
-						child 1
+						<span id="child-1"></span>
 						<\{tag()}>
-							grandchild
+							<span id="grandchild"></span>
 						</\{tag()}>
-						child 2
+						<span id="child-2"></span>
 					</\{tag()}>
 					""");
 		}
@@ -214,18 +276,18 @@ class HtmlRendererTest {
 		default void withChildrenAndOneGrandchild_last() {
 			var element =
 					createWith(
-							new Text("child 1"),
-							new Text("child 2"),
+							span.id("child-1"),
+							span.id("child-2"),
 							createWith(
-									new Text("grandchild")));
+									span.id("grandchild")));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
-						child 1
-						child 2
+						<span id="child-1"></span>
+						<span id="child-2"></span>
 						<\{tag()}>
-							grandchild
+							<span id="grandchild"></span>
 						</\{tag()}>
 					</\{tag()}>
 					""");
@@ -236,35 +298,35 @@ class HtmlRendererTest {
 			var element =
 					createWith(
 							createWith(
-									new Text("grandchild 1"),
-									new Text("grandchild 2"),
-									new Text("grandchild 3")),
+									span.id("grandchild-1"),
+									span.id("grandchild-2"),
+									span.id("grandchild-3")),
 							createWith(
-									new Text("grandchild 4"),
-									new Text("grandchild 5"),
-									new Text("grandchild 6")),
+									span.id("grandchild-4"),
+									span.id("grandchild-5"),
+									span.id("grandchild-6")),
 							createWith(
-									new Text("grandchild 7"),
-									new Text("grandchild 8"),
-									new Text("grandchild 9")));
+									span.id("grandchild-7"),
+									span.id("grandchild-8"),
+									span.id("grandchild-9")));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
 					<\{tag()}>
 						<\{tag()}>
-							grandchild 1
-							grandchild 2
-							grandchild 3
+							<span id="grandchild-1"></span>
+							<span id="grandchild-2"></span>
+							<span id="grandchild-3"></span>
 						</\{tag()}>
 						<\{tag()}>
-							grandchild 4
-							grandchild 5
-							grandchild 6
+							<span id="grandchild-4"></span>
+							<span id="grandchild-5"></span>
+							<span id="grandchild-6"></span>
 						</\{tag()}>
 						<\{tag()}>
-							grandchild 7
-							grandchild 8
-							grandchild 9
+							<span id="grandchild-7"></span>
+							<span id="grandchild-8"></span>
+							<span id="grandchild-9"></span>
 						</\{tag()}>
 					</\{tag()}>
 					""");
