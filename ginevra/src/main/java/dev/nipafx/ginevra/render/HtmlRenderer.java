@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.render;
 
+import dev.nipafx.ginevra.html.Anchor;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Code;
 import dev.nipafx.ginevra.html.CodeBlock;
@@ -8,10 +9,16 @@ import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
+import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Text;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.pre;
@@ -26,12 +33,14 @@ public class HtmlRenderer {
 
 	private void render(Element element, Renderer renderer) {
 		switch (element) {
+			case Anchor(var id, var classes, var href, var title, var text, var children) -> {
+				renderer.open("a", id, classes, attributes("href", href, "title", title));
+				renderer.insertChildren(text, children, child -> render(child, renderer));
+				renderer.close("a");
+			}
 			case Code(var id, var classes, var text, var children) -> {
 				renderer.open("code", id, classes);
-				if (text == null)
-					children.forEach(child -> render(child, renderer));
-				else
-					renderer.insertText(text);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("code");
 			}
 			case CodeBlock codeBlock -> render(express(codeBlock), renderer);
@@ -42,40 +51,39 @@ public class HtmlRenderer {
 			}
 			case Heading(var level, var id, var classes, var text, var children) -> {
 				renderer.open("h" + level, id, classes);
-				if (text == null)
-					children.forEach(child -> render(child, renderer));
-				else
-					renderer.insertText(text);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("h" + level);
 			}
 			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
+			case Nothing _ -> { }
 			case Paragraph(var id, var classes, var text, var children) -> {
 				renderer.open("p", id, classes);
-				if (text == null)
-					children.forEach(child -> render(child, renderer));
-				else
-					renderer.insertText(text);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("p");
 			}
 			case Pre(var id, var classes, var text, var children) -> {
 				renderer.open("pre", id, classes);
-				if (text == null)
-					children.forEach(child -> render(child, renderer));
-				else
-					renderer.insertText(text);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("pre");
 			}
 			case Span(var id, var classes, var text, var children) -> {
 				renderer.open("span", id, classes);
-				if (text == null)
-					children.forEach(child -> render(child, renderer));
-				else
-					renderer.insertText(text);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("span");
 			}
 			case Text(var text) -> renderer.insertTextElement(text);
 			case CustomElement customElement -> customElement.render().forEach(child -> render(child, renderer));
 		}
+	}
+
+	private static Map<String, String> attributes(String... namesAndValues) {
+		if (namesAndValues.length % 2 != 0)
+			throw new IllegalArgumentException();
+
+		var attributes = new LinkedHashMap<String, String>();
+		for (int i = 0; i < namesAndValues.length; i += 2)
+			attributes.put(namesAndValues[i], namesAndValues[i+1]);
+		return attributes;
 	}
 
 	// package-visible for tests
@@ -97,10 +105,15 @@ public class HtmlRenderer {
 		private int indentation = 0;
 
 		public void open(String tag, String id, Classes classes) {
+			open(tag, id, classes, Map.of());
+		}
+
+		public void open(String tag, String id, Classes classes, Map<String, String> attributes) {
 			updateNewLine(true);
 			builder.repeat("\t", indentation).append("<").append(tag);
 			attribute("id", id);
 			attribute("class", classes.asCssString());
+			attributes.forEach(this::attribute);
 			builder.append(">");
 
 			indentation++;
@@ -129,6 +142,13 @@ public class HtmlRenderer {
 			builder.append(" ").append(name).append("=\"").append(value).append("\"");
 		}
 
+		public void insertChildren(String text, List<Element> children, Consumer<Element> renderChild) {
+			if (text == null)
+				children.forEach(renderChild);
+			else
+				insertText(text);
+		}
+
 		public void close(String tag) {
 			indentation--;
 
@@ -146,7 +166,7 @@ public class HtmlRenderer {
 			builder.append(" />\n");
 		}
 
-		public void insertText(String text) {
+		private void insertText(String text) {
 			updateNewLine(false);
 			builder.append(text);
 		}

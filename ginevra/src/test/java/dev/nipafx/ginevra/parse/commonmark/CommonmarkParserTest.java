@@ -4,6 +4,7 @@ import dev.nipafx.ginevra.html.Element;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.h2;
 import static dev.nipafx.ginevra.html.HtmlElement.h3;
@@ -79,6 +80,28 @@ class CommonmarkParserTest {
 				```
 				""",
 				codeBlock.language("java").text("void main() { println(\"When?\"); }\n"));
+	}
+
+	@Test
+	void linkReference() {
+		parseAndAssert(
+				"""
+				[nipafx.dev]: <>
+
+				[nipafx.dev]
+				""",
+				p.children(a.text("nipafx.dev")));
+	}
+
+	@Test
+	void linkReferenceWithHrefAndTitle() {
+		parseAndAssert(
+				"""
+				[nipafx.dev]: https://nipafx.dev "nipafx"
+
+				[nipafx.dev]
+				""",
+				p.children(a.href("https://nipafx.dev").title("nipafx").text("nipafx.dev")));
 	}
 
 	@Test

@@ -4,6 +4,7 @@ import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.JmlElement;
+import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.parse.MarkupParser;
 import org.commonmark.node.Document;
@@ -30,25 +31,30 @@ public class CommonmarkParser implements MarkupParser {
 
 		return streamChildren(document)
 				.map(this::parse)
+				.filter(element -> !(element instanceof Nothing))
 				.toList();
 	}
 
 	private Element parse(Node node) {
 		var children = streamChildren(node)
 				.map(this::parse)
-				.toArray(Element[]::new);
+				.filter(element -> !(element instanceof Nothing))
+				.toList();
 		return switch (node) {
-			case org.commonmark.node.FencedCodeBlock cb -> {
-				var lang = cb.getInfo().isBlank() ? null : cb.getInfo();
-				yield JmlElement
-						.codeBlock
-						.language(lang)
-						.text(cb.getLiteral())
-						.children(children);
-			}
+			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
+					.codeBlock
+					.language(nullIfBlank(cb.getInfo()))
+					.text(nullIfBlank(cb.getLiteral()))
+					.children(children);
+			case org.commonmark.node.Link a -> HtmlElement
+					.a
+					.href(nullIfBlank(a.getDestination()))
+					.title(nullIfBlank(a.getTitle()))
+					.children(children);
+			case org.commonmark.node.LinkReferenceDefinition _ -> JmlElement.nothing;
 			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
-			case org.commonmark.node.Text t -> new Text(t.getLiteral());
+			case org.commonmark.node.Text t -> new Text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			default -> throw new IllegalArgumentException(
 					STR."The node type '\{node.getClass().getSimpleName()}' is unsupported");
@@ -67,6 +73,10 @@ public class CommonmarkParser implements MarkupParser {
 		}
 
 		return children.stream();
+	}
+	
+	private static String nullIfBlank(String value) {
+		return value == null || value.isBlank() ? null : value;
 	}
 
 }

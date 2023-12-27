@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.html;
 
 public sealed interface HtmlElement extends KnownElement permits
+		Anchor,
 		Code,
 		Div,
 		Heading,
@@ -9,6 +10,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		Pre,
 		Span {
 
+	Anchor a = new Anchor();
 	Code code = new Code();
 	Div div = new Div();
 	Heading h1 = new Heading(1);
