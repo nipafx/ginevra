@@ -12,6 +12,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.h5;
 import static dev.nipafx.ginevra.html.HtmlElement.h6;
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
+import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
@@ -56,6 +57,28 @@ class CommonmarkParserTest {
 		parseAndAssert(
 				"---",
 				hr);
+	}
+
+	@Test
+	void codeBlockWithoutLanguage() {
+		parseAndAssert(
+				"""
+				```
+				void main() { println("When?"); }
+				```
+				""",
+				codeBlock.text("void main() { println(\"When?\"); }\n"));
+	}
+
+	@Test
+	void codeBlockWithLanguage() {
+		parseAndAssert(
+				"""
+				```java
+				void main() { println("When?"); }
+				```
+				""",
+				codeBlock.language("java").text("void main() { println(\"When?\"); }\n"));
 	}
 
 	@Test

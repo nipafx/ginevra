@@ -3,6 +3,7 @@ package dev.nipafx.ginevra.parse.commonmark;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HtmlElement;
+import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.parse.MarkupParser;
 import org.commonmark.node.Document;
@@ -37,6 +38,14 @@ public class CommonmarkParser implements MarkupParser {
 				.map(this::parse)
 				.toArray(Element[]::new);
 		return switch (node) {
+			case org.commonmark.node.FencedCodeBlock cb -> {
+				var lang = cb.getInfo().isBlank() ? null : cb.getInfo();
+				yield JmlElement
+						.codeBlock
+						.language(lang)
+						.text(cb.getLiteral())
+						.children(children);
+			}
 			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
 			case org.commonmark.node.Text t -> new Text(t.getLiteral());

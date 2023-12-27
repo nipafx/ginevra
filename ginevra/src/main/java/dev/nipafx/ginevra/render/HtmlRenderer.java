@@ -1,14 +1,20 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Code;
+import dev.nipafx.ginevra.html.CodeBlock;
 import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.Paragraph;
+import dev.nipafx.ginevra.html.Pre;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Text;
+
+import static dev.nipafx.ginevra.html.HtmlElement.code;
+import static dev.nipafx.ginevra.html.HtmlElement.pre;
 
 public class HtmlRenderer {
 
@@ -20,6 +26,15 @@ public class HtmlRenderer {
 
 	private void render(Element element, Renderer renderer) {
 		switch (element) {
+			case Code(var id, var classes, var text, var children) -> {
+				renderer.open("code", id, classes);
+				if (text == null)
+					children.forEach(child -> render(child, renderer));
+				else
+					renderer.insertText(text);
+				renderer.close("code");
+			}
+			case CodeBlock codeBlock -> render(express(codeBlock), renderer);
 			case Div(var id, var classes, var children) -> {
 				renderer.open("div", id, classes);
 				children.forEach(child -> render(child, renderer));
@@ -42,6 +57,14 @@ public class HtmlRenderer {
 					renderer.insertText(text);
 				renderer.close("p");
 			}
+			case Pre(var id, var classes, var text, var children) -> {
+				renderer.open("pre", id, classes);
+				if (text == null)
+					children.forEach(child -> render(child, renderer));
+				else
+					renderer.insertText(text);
+				renderer.close("pre");
+			}
 			case Span(var id, var classes, var text, var children) -> {
 				renderer.open("span", id, classes);
 				if (text == null)
@@ -53,6 +76,13 @@ public class HtmlRenderer {
 			case Text(var text) -> renderer.insertTextElement(text);
 			case CustomElement customElement -> customElement.render().forEach(child -> render(child, renderer));
 		}
+	}
+
+	// package-visible for tests
+	Element express(CodeBlock block) {
+		var codeClasses = block.language() == null ? Classes.none() : Classes.of(STR."language-\{block.language()}");
+		return pre.id(block.id()).classes(block.classes()).children(
+				code.classes(codeClasses).text(block.text()).children(block.children()));
 	}
 
 	private static class Renderer {

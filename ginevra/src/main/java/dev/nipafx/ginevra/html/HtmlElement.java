@@ -1,12 +1,15 @@
 package dev.nipafx.ginevra.html;
 
 public sealed interface HtmlElement extends KnownElement permits
+		Code,
 		Div,
 		Heading,
 		HorizontalRule,
 		Paragraph,
+		Pre,
 		Span {
 
+	Code code = new Code();
 	Div div = new Div();
 	Heading h1 = new Heading(1);
 	Heading h2 = new Heading(2);
@@ -16,6 +19,7 @@ public sealed interface HtmlElement extends KnownElement permits
 	Heading h6 = new Heading(6);
 	HorizontalRule hr = new HorizontalRule();
 	Paragraph p = new Paragraph();
+	Pre pre = new Pre();
 	Span span = new Span();
 
 }
