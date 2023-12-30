@@ -94,6 +94,7 @@ public class HtmlRenderer {
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("span");
 			}
+			case Text(var text) when text == null || text.isBlank() -> { }
 			case Text(var text) -> renderer.insertTextElement(text);
 			case UnorderedList(var id, var classes, var children) -> {
 				renderer.open("ul", id, classes);
@@ -200,10 +201,8 @@ public class HtmlRenderer {
 		}
 
 		public void insertTextElement(String text) {
-			if (!text.isBlank()) {
-				updateNewLine(true);
-				builder.repeat("\t", indentation).append(text).append("\n");
-			}
+			updateNewLine(true);
+			builder.repeat("\t", indentation).append(text).append("\n");
 		}
 
 		public String render() {

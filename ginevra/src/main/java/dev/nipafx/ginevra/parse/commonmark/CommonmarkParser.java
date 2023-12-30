@@ -6,7 +6,6 @@ import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
-import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.parse.MarkupParser;
 import org.commonmark.node.Document;
 import org.commonmark.node.Node;
@@ -15,6 +14,8 @@ import org.commonmark.parser.Parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+
+import static dev.nipafx.ginevra.html.JmlElement.text;
 
 public class CommonmarkParser implements MarkupParser {
 
@@ -74,7 +75,7 @@ public class CommonmarkParser implements MarkupParser {
 				yield HtmlElement.ol.start(start).children(listItems);
 			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
-			case org.commonmark.node.Text t -> new Text(nullIfBlank(t.getLiteral()));
+			case org.commonmark.node.Text t -> text.text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			default -> throw new IllegalArgumentException(
 					STR."The node type '\{node.getClass().getSimpleName()}' is unsupported");

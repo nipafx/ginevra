@@ -1,12 +1,12 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
-import dev.nipafx.ginevra.html.Text;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.pre;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
+import static dev.nipafx.ginevra.html.JmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CodeBlockRendererTest {
@@ -60,7 +60,7 @@ class CodeBlockRendererTest {
 
 	@Test
 	void withTextChild() {
-		var block = codeBlock.children(new Text("void main() { println(\"When?\"); }"));
+		var block = codeBlock.children(text.text("void main() { println(\"When?\"); }"));
 		var expressed = RENDERER.express(block);
 
 		assertThat(expressed).isEqualTo(
@@ -70,16 +70,16 @@ class CodeBlockRendererTest {
 	@Test
 	void withChildren() {
 		var block = codeBlock.children(
-				new Text("void main() {"),
-				new Text("\tprintln(\"When?\");"),
-				new Text("}"));
+				text.text("void main() {"),
+				text.text("\tprintln(\"When?\");"),
+				text.text("}"));
 		var expressed = RENDERER.express(block);
 
 		assertThat(expressed).isEqualTo(
 				pre.children(code.children(
-						new Text("void main() {"),
-						new Text("\tprintln(\"When?\");"),
-						new Text("}"))));
+						text.text("void main() {"),
+						text.text("\tprintln(\"When?\");"),
+						text.text("}"))));
 	}
 
 }

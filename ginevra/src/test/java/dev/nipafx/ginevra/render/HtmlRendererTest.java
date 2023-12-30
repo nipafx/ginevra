@@ -1,12 +1,12 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Element;
-import dev.nipafx.ginevra.html.Text;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.span;
+import static dev.nipafx.ginevra.html.JmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -166,7 +166,7 @@ class HtmlRendererTest {
 
 		@Test
 		default void withTextAndChildren() {
-			assertThatThrownBy(() -> createWith("inline text", new Text("text element")))
+			assertThatThrownBy(() -> createWith("inline text", text.text("text element")))
 					.isInstanceOf(IllegalArgumentException.class);
 		}
 
@@ -182,7 +182,7 @@ class HtmlRendererTest {
 
 		@Test
 		default void withSingleTextChild() {
-			var element = createWith(null, new Text("text element"));
+			var element = createWith(null, text.text("text element"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
@@ -194,9 +194,9 @@ class HtmlRendererTest {
 		default void withTextChildren() {
 			var element = createWith(
 					null,
-					new Text("text element 1"),
-					new Text("text element 2"),
-					new Text("text element 3"));
+					text.text("text element 1"),
+					text.text("text element 2"),
+					text.text("text element 3"));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""

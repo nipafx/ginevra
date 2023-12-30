@@ -1,7 +1,6 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
-import dev.nipafx.ginevra.html.Text;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +20,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.JmlElement.html;
+import static dev.nipafx.ginevra.html.JmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
@@ -224,9 +224,9 @@ class CommonmarkParserTest {
 	void codeSpanInText() {
 		parseAndAssert("There is some `code()` in the middle of this paragraph.",
 				p.children(
-						new Text("There is some "),
+						text.text("There is some "),
 						code.text("code()"),
-						new Text(" in the middle of this paragraph."))
+						text.text(" in the middle of this paragraph."))
 		);
 	}
 
