@@ -50,6 +50,7 @@ public class CommonmarkParser implements MarkupParser {
 				var listItems = (List<ListItem>) (List) children;
 				yield HtmlElement.ul.children(listItems);
 			}
+			case org.commonmark.node.Code code -> HtmlElement.code.text(code.getLiteral()).children(children);
 			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
 					.codeBlock
 					.language(nullIfBlank(cb.getInfo()))

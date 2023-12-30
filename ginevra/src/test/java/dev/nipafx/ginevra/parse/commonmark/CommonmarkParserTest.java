@@ -1,11 +1,13 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Text;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
+import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.h2;
 import static dev.nipafx.ginevra.html.HtmlElement.h3;
@@ -205,6 +207,26 @@ class CommonmarkParserTest {
 						li.children(p.text("two")),
 						li.children(p.text("three")),
 						li.children(p.text("four")))
+		);
+	}
+
+	// --- section 6 - Inlines
+
+	@Test
+	void codeSpan() {
+		parseAndAssert("`this.is().code()`",
+				p.children(
+						code.text("this.is().code()"))
+		);
+	}
+
+	@Test
+	void codeSpanInText() {
+		parseAndAssert("There is some `code()` in the middle of this paragraph.",
+				p.children(
+						new Text("There is some "),
+						code.text("code()"),
+						new Text(" in the middle of this paragraph."))
 		);
 	}
 
