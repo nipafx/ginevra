@@ -5,6 +5,7 @@ import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;
+import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.h2;
 import static dev.nipafx.ginevra.html.HtmlElement.h3;
@@ -132,6 +133,30 @@ class CommonmarkParserTest {
 				""",
 				p.text("A paragraph of text."),
 				p.text("Another paragraph of text.")
+		);
+	}
+
+	// --- section 5 - Container blocks
+
+	@Test
+	void blockQuoteWithText() {
+		parseAndAssert(
+				"> A line of text",
+				blockquote.children(p.text("A line of text"))
+		);
+	}
+
+	@Test
+	void blockQuoteWithHeaderAndText() {
+		parseAndAssert(
+				"""
+				> # A Header
+				>
+				> A line of text
+				""",
+				blockquote.children(
+						h1.text("A Header"),
+						p.text("A line of text"))
 		);
 	}
 

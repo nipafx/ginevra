@@ -41,6 +41,7 @@ public class CommonmarkParser implements MarkupParser {
 				.filter(element -> !(element instanceof Nothing))
 				.toList();
 		return switch (node) {
+			case org.commonmark.node.BlockQuote _ -> HtmlElement.blockquote.children(children);
 			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
 					.codeBlock
 					.language(nullIfBlank(cb.getInfo()))

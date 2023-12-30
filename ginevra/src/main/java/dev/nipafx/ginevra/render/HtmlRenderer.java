@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Anchor;
+import dev.nipafx.ginevra.html.BlockQuote;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Code;
 import dev.nipafx.ginevra.html.CodeBlock;
@@ -38,6 +39,11 @@ public class HtmlRenderer {
 				renderer.open("a", id, classes, attributes("href", href, "title", title));
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("a");
+			}
+			case BlockQuote(var id, var classes, var text, var children) -> {
+				renderer.open("blockquote", id, classes);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
+				renderer.close("blockquote");
 			}
 			case Code(var id, var classes, var text, var children) -> {
 				renderer.open("code", id, classes);

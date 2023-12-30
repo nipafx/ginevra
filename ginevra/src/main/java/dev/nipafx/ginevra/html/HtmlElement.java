@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.html;
 
 public sealed interface HtmlElement extends KnownElement permits
 		Anchor,
+		BlockQuote,
 		Code,
 		Div,
 		Heading,
@@ -11,6 +12,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		Span {
 
 	Anchor a = new Anchor();
+	BlockQuote blockquote = new BlockQuote();
 	Code code = new Code();
 	Div div = new Div();
 	Heading h1 = new Heading(1);
