@@ -268,4 +268,40 @@ class CommonmarkParserTest {
 		);
 	}
 
+	@Test
+	void link() {
+		parseAndAssert("[nipafx](https://nipafx.dev \"nipafx site\")",
+				p.children(
+						a.text("nipafx").title("nipafx site").href("https://nipafx.dev"))
+		);
+	}
+
+	@Test
+	void linkInText() {
+		parseAndAssert("There is [a link](https://nipafx.dev \"nipafx site\") in the middle of this paragraph.",
+				p.children(
+						text.text("There is "),
+						a.text("a link").title("nipafx site").href("https://nipafx.dev"),
+						text.text(" in the middle of this paragraph."))
+		);
+	}
+
+	@Test
+	void autolink() {
+		parseAndAssert("<https://nipafx.dev>",
+				p.children(
+						a.text("https://nipafx.dev").href("https://nipafx.dev"))
+		);
+	}
+
+	@Test
+	void autolinkInText() {
+		parseAndAssert("There is a link to <https://nipafx.dev> in the middle of this paragraph.",
+				p.children(
+						text.text("There is a link to "),
+						a.text("https://nipafx.dev").href("https://nipafx.dev"),
+						text.text(" in the middle of this paragraph."))
+		);
+	}
+
 }
