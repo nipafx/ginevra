@@ -4,6 +4,7 @@ import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.JmlElement;
+import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.parse.MarkupParser;
@@ -42,6 +43,13 @@ public class CommonmarkParser implements MarkupParser {
 				.toList();
 		return switch (node) {
 			case org.commonmark.node.BlockQuote _ -> HtmlElement.blockquote.children(children);
+			case org.commonmark.node.BulletList _ -> {
+				if (children.stream().anyMatch(child -> ! (child instanceof ListItem)))
+					throw new IllegalStateException("List contains children that aren't list items: " + children);
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				var listItems = (List<ListItem>) (List) children;
+				yield HtmlElement.ul.children(listItems);
+			}
 			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
 					.codeBlock
 					.language(nullIfBlank(cb.getInfo()))
@@ -54,7 +62,16 @@ public class CommonmarkParser implements MarkupParser {
 					.title(nullIfBlank(a.getTitle()))
 					.children(children);
 			case org.commonmark.node.LinkReferenceDefinition _ -> JmlElement.nothing;
+			case org.commonmark.node.ListItem _ -> HtmlElement.li.children(children);
 			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
+			case org.commonmark.node.OrderedList ol -> {
+				var start = ol.getStartNumber() == 1 ? null : ol.getStartNumber();
+				if (children.stream().anyMatch(child -> ! (child instanceof ListItem)))
+					throw new IllegalStateException("List contains children that aren't list items: " + children);
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				var listItems = (List<ListItem>) (List) children;
+				yield HtmlElement.ol.start(start).children(listItems);
+			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
 			case org.commonmark.node.Text t -> new Text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
@@ -76,7 +93,7 @@ public class CommonmarkParser implements MarkupParser {
 
 		return children.stream();
 	}
-	
+
 	private static String nullIfBlank(String value) {
 		return value == null || value.isBlank() ? null : value;
 	}

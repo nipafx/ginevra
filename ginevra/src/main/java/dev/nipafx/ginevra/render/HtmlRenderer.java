@@ -11,11 +11,14 @@ import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.HtmlLiteral;
+import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
+import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Text;
+import dev.nipafx.ginevra.html.UnorderedList;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,7 +67,18 @@ public class HtmlRenderer {
 			case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> { }
 			case HtmlLiteral(var literal) -> renderer.insertTextElement(literal);
 			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
+			case ListItem(String id, Classes classes, String text, List<Element> children) -> {
+				renderer.open("li", id, classes);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
+				renderer.close("li");
+			}
 			case Nothing _ -> { }
+			case OrderedList(var id, var classes, var start, var children) -> {
+				renderer.open("ol", id, classes,
+						attributes("start", start == null ? null : String.valueOf(start)));
+				children.forEach(child -> render(child, renderer));
+				renderer.close("ol");
+			}
 			case Paragraph(var id, var classes, var text, var children) -> {
 				renderer.open("p", id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));
@@ -81,6 +95,11 @@ public class HtmlRenderer {
 				renderer.close("span");
 			}
 			case Text(var text) -> renderer.insertTextElement(text);
+			case UnorderedList(var id, var classes, var children) -> {
+				renderer.open("ul", id, classes);
+				children.forEach(child -> render(child, renderer));
+				renderer.close("ul");
+			}
 			case CustomElement customElement -> customElement.render().forEach(child -> render(child, renderer));
 		}
 	}
@@ -91,7 +110,7 @@ public class HtmlRenderer {
 
 		var attributes = new LinkedHashMap<String, String>();
 		for (int i = 0; i < namesAndValues.length; i += 2)
-			attributes.put(namesAndValues[i], namesAndValues[i+1]);
+			attributes.put(namesAndValues[i], namesAndValues[i + 1]);
 		return attributes;
 	}
 

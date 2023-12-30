@@ -13,7 +13,10 @@ import static dev.nipafx.ginevra.html.HtmlElement.h4;
 import static dev.nipafx.ginevra.html.HtmlElement.h5;
 import static dev.nipafx.ginevra.html.HtmlElement.h6;
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
+import static dev.nipafx.ginevra.html.HtmlElement.li;
+import static dev.nipafx.ginevra.html.HtmlElement.ol;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
+import static dev.nipafx.ginevra.html.HtmlElement.ul;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.JmlElement.html;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -157,6 +160,51 @@ class CommonmarkParserTest {
 				blockquote.children(
 						h1.text("A Header"),
 						p.text("A line of text"))
+		);
+	}
+
+	@Test
+	void unorderedList() {
+		parseAndAssert(
+				"""
+				* one
+				* two
+				* three
+				""",
+				ul.children(
+						li.children(p.text("one")),
+						li.children(p.text("two")),
+						li.children(p.text("three")))
+		);
+	}
+
+	@Test
+	void orderedList() {
+		parseAndAssert(
+				"""
+				1. one
+				2. two
+				3. three
+				""",
+				ol.children(
+						li.children(p.text("one")),
+						li.children(p.text("two")),
+						li.children(p.text("three")))
+		);
+	}
+
+	@Test
+	void orderedListWithStart() {
+		parseAndAssert(
+				"""
+				2. two
+				3. three
+				4. four
+				""",
+				ol.start(2).children(
+						li.children(p.text("two")),
+						li.children(p.text("three")),
+						li.children(p.text("four")))
 		);
 	}
 
