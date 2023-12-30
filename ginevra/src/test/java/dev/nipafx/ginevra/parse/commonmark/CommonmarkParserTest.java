@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
+import static dev.nipafx.ginevra.html.HtmlElement.br;
 import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.em;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
@@ -301,6 +302,20 @@ class CommonmarkParserTest {
 						text.text("There is a link to "),
 						a.text("https://nipafx.dev").href("https://nipafx.dev"),
 						text.text(" in the middle of this paragraph."))
+		);
+	}
+
+	@Test
+	void lineBreakInText() {
+		parseAndAssert(
+				"""
+				This is the first\\
+				of two lines.
+				""",
+				p.children(
+						text.text("This is the first"),
+						br,
+						text.text("of two lines."))
 		);
 	}
 

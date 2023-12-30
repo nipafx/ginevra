@@ -12,6 +12,7 @@ import dev.nipafx.ginevra.html.Emphasis;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.HtmlLiteral;
+import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.OrderedList;
@@ -74,6 +75,7 @@ public class HtmlRenderer {
 			case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> { }
 			case HtmlLiteral(var literal) -> renderer.insertTextElement(literal);
 			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
+			case LineBreak(var id, var classes) -> renderer.selfClosed("br", id, classes);
 			case ListItem(String id, Classes classes, String text, List<Element> children) -> {
 				renderer.open("li", id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));

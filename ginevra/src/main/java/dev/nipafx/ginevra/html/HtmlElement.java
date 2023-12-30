@@ -8,6 +8,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		Emphasis,
 		Heading,
 		HorizontalRule,
+		LineBreak,
 		ListItem,
 		OrderedList,
 		Paragraph,
@@ -18,6 +19,7 @@ public sealed interface HtmlElement extends KnownElement permits
 
 	Anchor a = new Anchor();
 	BlockQuote blockquote = new BlockQuote();
+	LineBreak br = new LineBreak();
 	Code code = new Code();
 	Div div = new Div();
 	Emphasis em = new Emphasis();
