@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
 import static dev.nipafx.ginevra.html.HtmlElement.code;
+import static dev.nipafx.ginevra.html.HtmlElement.em;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.h2;
 import static dev.nipafx.ginevra.html.HtmlElement.h3;
@@ -17,6 +18,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.hr;
 import static dev.nipafx.ginevra.html.HtmlElement.li;
 import static dev.nipafx.ginevra.html.HtmlElement.ol;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
+import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.JmlElement.html;
@@ -226,6 +228,42 @@ class CommonmarkParserTest {
 				p.children(
 						text.text("There is some "),
 						code.text("code()"),
+						text.text(" in the middle of this paragraph."))
+		);
+	}
+
+	@Test
+	void emphasis() {
+		parseAndAssert("*emphasized*",
+				p.children(
+						em.text("emphasized"))
+		);
+	}
+
+	@Test
+	void emphasisInText() {
+		parseAndAssert("There is some *emphasized text* in the middle of this paragraph.",
+				p.children(
+						text.text("There is some "),
+						em.text("emphasized text"),
+						text.text(" in the middle of this paragraph."))
+		);
+	}
+
+	@Test
+	void strong() {
+		parseAndAssert("**emphasized**",
+				p.children(
+						strong.text("emphasized"))
+		);
+	}
+
+	@Test
+	void strongInText() {
+		parseAndAssert("There is some **emphasized text** in the middle of this paragraph.",
+				p.children(
+						text.text("There is some "),
+						strong.text("emphasized text"),
 						text.text(" in the middle of this paragraph."))
 		);
 	}

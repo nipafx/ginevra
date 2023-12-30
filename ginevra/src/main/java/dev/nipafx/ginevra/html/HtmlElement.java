@@ -5,6 +5,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		BlockQuote,
 		Code,
 		Div,
+		Emphasis,
 		Heading,
 		HorizontalRule,
 		ListItem,
@@ -12,12 +13,14 @@ public sealed interface HtmlElement extends KnownElement permits
 		Paragraph,
 		Pre,
 		Span,
+		Strong,
 		UnorderedList {
 
 	Anchor a = new Anchor();
 	BlockQuote blockquote = new BlockQuote();
 	Code code = new Code();
 	Div div = new Div();
+	Emphasis em = new Emphasis();
 	Heading h1 = new Heading(1);
 	Heading h2 = new Heading(2);
 	Heading h3 = new Heading(3);
@@ -30,6 +33,7 @@ public sealed interface HtmlElement extends KnownElement permits
 	Paragraph p = new Paragraph();
 	Pre pre = new Pre();
 	Span span = new Span();
+	Strong strong = new Strong();
 	UnorderedList ul = new UnorderedList();
 
 }

@@ -8,6 +8,7 @@ import dev.nipafx.ginevra.html.CodeBlock;
 import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Emphasis;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.HtmlLiteral;
@@ -17,6 +18,7 @@ import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
 import dev.nipafx.ginevra.html.Span;
+import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
 
@@ -59,6 +61,11 @@ public class HtmlRenderer {
 				children.forEach(child -> render(child, renderer));
 				renderer.close("div");
 			}
+			case Emphasis(var id, var classes, var text, var children) -> {
+				renderer.open("em", id, classes);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
+				renderer.close("em");
+			}
 			case Heading(var level, var id, var classes, var text, var children) -> {
 				renderer.open("h" + level, id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));
@@ -93,6 +100,11 @@ public class HtmlRenderer {
 				renderer.open("span", id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("span");
+			}
+			case Strong(var id, var classes, var text, var children) -> {
+				renderer.open("strong", id, classes);
+				renderer.insertChildren(text, children, child -> render(child, renderer));
+				renderer.close("strong");
 			}
 			case Text(var text) when text == null || text.isBlank() -> { }
 			case Text(var text) -> renderer.insertTextElement(text);

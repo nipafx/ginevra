@@ -52,6 +52,7 @@ public class CommonmarkParser implements MarkupParser {
 				yield HtmlElement.ul.children(listItems);
 			}
 			case org.commonmark.node.Code code -> HtmlElement.code.text(code.getLiteral()).children(children);
+			case org.commonmark.node.Emphasis _ -> HtmlElement.em.children(children);
 			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
 					.codeBlock
 					.language(nullIfBlank(cb.getInfo()))
@@ -75,6 +76,7 @@ public class CommonmarkParser implements MarkupParser {
 				yield HtmlElement.ol.start(start).children(listItems);
 			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
+			case org.commonmark.node.StrongEmphasis _ -> HtmlElement.strong.children(children);
 			case org.commonmark.node.Text t -> text.text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			default -> throw new IllegalArgumentException(
