@@ -20,6 +20,13 @@
 			<artifactId>ginevra</artifactId>
 			<version>0.1-SNAPSHOT</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.commonmark</groupId>
+			<artifactId>commonmark</artifactId>
+			<version>0.20.0</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
