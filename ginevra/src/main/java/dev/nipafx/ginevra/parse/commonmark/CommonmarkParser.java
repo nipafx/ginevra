@@ -46,6 +46,7 @@ public class CommonmarkParser implements MarkupParser {
 					.language(nullIfBlank(cb.getInfo()))
 					.text(nullIfBlank(cb.getLiteral()))
 					.children(children);
+			case org.commonmark.node.HtmlBlock html -> JmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.Link a -> HtmlElement
 					.a
 					.href(nullIfBlank(a.getDestination()))

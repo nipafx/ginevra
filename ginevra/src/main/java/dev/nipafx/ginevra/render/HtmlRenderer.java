@@ -9,6 +9,7 @@ import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
+import dev.nipafx.ginevra.html.HtmlLiteral;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
@@ -54,6 +55,8 @@ public class HtmlRenderer {
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("h" + level);
 			}
+			case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> { }
+			case HtmlLiteral(var literal) -> renderer.insertTextElement(literal);
 			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
 			case Nothing _ -> { }
 			case Paragraph(var id, var classes, var text, var children) -> {

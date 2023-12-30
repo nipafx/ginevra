@@ -14,6 +14,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.h6;
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
+import static dev.nipafx.ginevra.html.JmlElement.html;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
@@ -80,6 +81,15 @@ class CommonmarkParserTest {
 				```
 				""",
 				codeBlock.language("java").text("void main() { println(\"When?\"); }\n"));
+	}
+
+	@Test
+	void htmlBlock_p() {
+		parseAndAssert(
+				"""
+				<p>This is an HTML paragraph.</p>
+				""",
+				html.literal("<p>This is an HTML paragraph.</p>"));
 	}
 
 	@Test
