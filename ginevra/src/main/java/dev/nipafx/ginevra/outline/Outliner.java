@@ -1,47 +1,53 @@
 package dev.nipafx.ginevra.outline;
 
+import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.Document.DataString;
+import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
+
 import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 /**
  * Use it to build your {@link Outline}.
  */
 public interface Outliner {
 
-	StepKey registerSource(Source source);
+	// sources
 
-	StepKey sourceFileSystem(Path path);
+	<DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> registerSource(Source<DATA_OUT> source);
+
+	StepKey<FileData> sourceFileSystem(String name, Path path);
 
 	// transformers
-	StepKey transform(StepKey previous, Transformer transformer, Predicate<Document> filter);
 
-	default StepKey transform(StepKey previous, Transformer transformer) {
+	<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transform(
+			StepKey<DATA_IN> previous,
+			Transformer<DATA_IN, DATA_OUT> transformer,
+			Predicate<Document<DATA_IN>> filter);
+
+	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer) {
 		return transform(previous, transformer, _ -> true);
 	}
 
-	default StepKey transformEach(
-			StepKey previous,
-			UnaryOperator<Document> transformer,
-			Predicate<Document> filter) {
-		return transform(previous, transformer::apply, filter);
+	<DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType, Predicate<Document<DATA_IN>> filter);
+
+	default <DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType) {
+		return transformMarkdown(previous, frontMatterType, _ -> true);
 	}
-
-	default StepKey transformEach(StepKey previous, UnaryOperator<Document> transformer) {
-		return transformEach(previous, transformer, _ -> true);
-	}
-
-	StepKey transformMarkdown(StepKey previous, Predicate<Document> filter);
-
-	default StepKey transformMarkdown(StepKey previous) {
-		return transformMarkdown(previous, _ -> true);
-	}
-
 
 	// store
-	void store(StepKey previous, Predicate<Document> filter);
 
-	default void store(StepKey previous) {
+	<DATA_IN extends Record & Data>
+	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter);
+
+	default <DATA_IN extends Record & Data>
+	void store(StepKey<DATA_IN> previous) {
 		store(previous, _ -> true);
 	}
 
@@ -51,6 +57,6 @@ public interface Outliner {
 
 	// inner
 
-	interface StepKey { }
+	interface StepKey<DATA_OUT extends Record & Data> { }
 
 }

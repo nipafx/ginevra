@@ -32,7 +32,7 @@ class CommonmarkParserTest {
 
 	private void parseAndAssert(String markdown, Element... elements) {
 		var parsed = parser.parse(markdown);
-		assertThat(parsed).containsExactly(elements);
+		assertThat(parsed.content()).containsExactly(elements);
 	}
 
 	/*

@@ -7,12 +7,15 @@ import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.parse.MarkdownParser;
+import dev.nipafx.ginevra.parse.MarkupDocument;
+import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
 import org.commonmark.node.Document;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.html.JmlElement.text;
@@ -26,15 +29,21 @@ public class CommonmarkParser implements MarkdownParser {
 	}
 
 	@Override
-	public List<Element> parse(String markup) {
+	public String name() {
+		return "Commonmark";
+	}
+
+	@Override
+	public MarkupDocument parse(String markup) {
 		var root = parser.parse(markup);
 		if (!(root instanceof Document document))
 			throw new IllegalStateException("Root element is supposed to be of type 'Document'");
 
-		return streamChildren(document)
+		var content = streamChildren(document)
 				.map(this::parse)
 				.filter(element -> !(element instanceof Nothing))
 				.toList();
+		return new CommonmarkDocument(new CommonmarkFrontMatter(Map.of()), content);
 	}
 
 	private Element parse(Node node) {
@@ -102,5 +111,9 @@ public class CommonmarkParser implements MarkdownParser {
 	private static String nullIfBlank(String value) {
 		return value == null || value.isBlank() ? null : value;
 	}
+
+	private record CommonmarkDocument(FrontMatter frontMatter, List<Element> content) implements MarkupDocument { }
+
+	private record CommonmarkFrontMatter(Map<String, Object> asMap) implements FrontMatter { }
 
 }

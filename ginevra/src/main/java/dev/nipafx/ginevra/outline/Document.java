@@ -1,5 +1,10 @@
 package dev.nipafx.ginevra.outline;
 
+import dev.nipafx.ginevra.outline.Document.Data;
+
+import java.net.URI;
+import java.util.Optional;
+
 /**
  * A document can represent any coherent group of information, e.g.:
  * <ul>
@@ -9,6 +14,68 @@ package dev.nipafx.ginevra.outline;
  *     <li>lines from a CSV file</li>
  * </ul>
  */
-public interface Document {
+public interface Document<DATA extends Record & Data> {
+
+	// --- ID ---
+
+	Id id();
+
+	interface Id {
+
+		Optional<Id> parent();
+
+		default Id transform(String name) {
+			return new TransformerId(this, name);
+		}
+
+		/**
+		 * @return the full chain of parent IDs
+		 */
+		@Override
+		String toString();
+
+	}
+
+	record SourceId(String name, URI location) implements Id {
+
+		@Override
+		public Optional<Id> parent() {
+			return Optional.empty();
+		}
+
+		@Override
+		public String toString() {
+			return STR."Source[\{name}; \{location}]";
+		}
+
+	}
+
+	record TransformerId(Id theParent, String name) implements Id {
+
+		@Override
+		public Optional<Id> parent() {
+			return Optional.of(theParent);
+		}
+
+		@Override
+		public String toString() {
+			return STR."\{theParent} >>> Transformer[\{name}]";
+		}
+
+	}
+
+	// --- DATA ---
+
+	DATA data();
+
+	interface Data {
+
+	}
+
+	interface DataString extends Data {
+
+		String dataAsString();
+
+	}
 
 }
