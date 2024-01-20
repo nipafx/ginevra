@@ -69,6 +69,7 @@ public class CommonmarkParser implements MarkdownParser {
 					.children(children);
 			case org.commonmark.node.HardLineBreak _ -> HtmlElement.br;
 			case org.commonmark.node.HtmlBlock html -> JmlElement.html.literal(html.getLiteral());
+			case org.commonmark.node.HtmlInline html -> JmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.Link a -> HtmlElement
 					.a
 					.href(nullIfBlank(a.getDestination()))

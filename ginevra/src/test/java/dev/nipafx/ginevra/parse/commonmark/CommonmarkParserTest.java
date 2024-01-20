@@ -305,6 +305,31 @@ class CommonmarkParserTest {
 		);
 	}
 
+	// TODO: improve raw HTML parsing, so that there's one `html` element with children
+	//       instead of an opening and a closing `html` element with their content as siblings
+
+	@Test
+	void rawHtml() {
+		parseAndAssert("<my-tag>some text</my-tag>",
+				p.children(
+						html.literal("<my-tag>"),
+						text.text("some text"),
+						html.literal("</my-tag>"))
+		);
+	}
+
+	@Test
+	void rawHtmlInText() {
+		parseAndAssert("There is <my-tag>my tag</my-tag> in the middle of this paragraph.",
+				p.children(
+						text.text("There is "),
+						html.literal("<my-tag>"),
+						text.text("my tag"),
+						html.literal("</my-tag>"),
+						text.text(" in the middle of this paragraph."))
+		);
+	}
+
 	@Test
 	void lineBreakInText() {
 		parseAndAssert(
