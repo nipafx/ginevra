@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
+import dev.nipafx.ginevra.outline.Store.DocCollection;
 
 import java.nio.file.Path;
 import java.util.function.Predicate;
@@ -40,6 +41,14 @@ public interface Outliner {
 	}
 
 	// store
+
+	<DATA_IN extends Record & Data>
+	void store(StepKey<DATA_IN> previous, DocCollection collection, Predicate<Document<DATA_IN>> filter);
+
+	default <DATA_IN extends Record & Data>
+	void store(StepKey<DATA_IN> previous, DocCollection collection) {
+		store(previous, collection, _ -> true);
+	}
 
 	<DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter);

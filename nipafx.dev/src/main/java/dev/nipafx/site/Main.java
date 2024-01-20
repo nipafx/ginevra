@@ -4,6 +4,7 @@ import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.Ginevra.Configuration;
 import dev.nipafx.ginevra.outline.FileData;
 import dev.nipafx.ginevra.outline.Outliner.StepKey;
+import dev.nipafx.ginevra.outline.Store.DocCollection;
 
 import java.nio.file.Path;
 
@@ -17,7 +18,7 @@ public class Main {
 
 		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT.resolve("articles"));
 		StepKey<ArticleFrontMatter> markdown = outliner.transformMarkdown(content, ArticleFrontMatter.class);
-		outliner.store(markdown);
+		outliner.store(markdown, new DocCollection("articles"));
 
 		outliner.build().run();
 	}

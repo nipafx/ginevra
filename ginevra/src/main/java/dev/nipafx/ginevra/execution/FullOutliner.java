@@ -10,6 +10,7 @@ import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Store;
+import dev.nipafx.ginevra.outline.Store.DocCollection;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 
@@ -75,9 +76,17 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public <DATA_IN extends Record & Data>
+	void store(StepKey<DATA_IN> previous, DocCollection collection, Predicate<Document<DATA_IN>> filter) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		var step = new Step.StoreStep((Predicate) filter, Optional.of(collection));
+		getStepListFor(previous).add(step);
+	}
+
+	@Override
+	public <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new Step.StoreStep((Predicate) filter);
+		var step = new Step.StoreStep((Predicate) filter, Optional.empty());
 		getStepListFor(previous).add(step);
 	}
 

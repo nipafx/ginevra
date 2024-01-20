@@ -60,9 +60,12 @@ class MapOutline implements Outline {
 								.transform((Document) doc)
 								.forEach(transformedDoc -> processRecursively(transformStep, (Document<?>) transformedDoc));
 				}
-				case StoreStep(var filter) -> {
+				case StoreStep(var filter, var collection) -> {
 					if (filter.test(doc))
-						store.store(doc);
+						collection.ifPresentOrElse(
+								col -> store.store(col, doc),
+								() -> store.store(doc)
+						);
 				}
 			}
 		});

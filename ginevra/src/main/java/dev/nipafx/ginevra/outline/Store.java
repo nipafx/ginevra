@@ -9,8 +9,12 @@ public interface Store {
 
 	void store(Document<?> doc);
 
+	void store(DocCollection collection, Document<?> doc);
+
 	void commit();
 
 	record None() implements Data { }
+
+	record DocCollection(String name) { }
 
 }
