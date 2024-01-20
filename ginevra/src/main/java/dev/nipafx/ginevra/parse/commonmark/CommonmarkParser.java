@@ -9,6 +9,7 @@ import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.MarkupDocument;
 import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
+import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.node.Document;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -39,11 +40,15 @@ public class CommonmarkParser implements MarkdownParser {
 		if (!(root instanceof Document document))
 			throw new IllegalStateException("Root element is supposed to be of type 'Document'");
 
+		var frontMatterVisitor = new YamlFrontMatterVisitor();
+		document.accept(frontMatterVisitor);
+		var frontMatter = frontMatterVisitor.getData();
+
 		var content = streamChildren(document)
 				.map(this::parse)
 				.filter(element -> !(element instanceof Nothing))
 				.toList();
-		return new CommonmarkDocument(new CommonmarkFrontMatter(Map.of()), content);
+		return new CommonmarkDocument(new CommonmarkFrontMatter(frontMatter), content);
 	}
 
 	private Element parse(Node node) {
@@ -115,6 +120,6 @@ public class CommonmarkParser implements MarkdownParser {
 
 	private record CommonmarkDocument(FrontMatter frontMatter, List<Element> content) implements MarkupDocument { }
 
-	private record CommonmarkFrontMatter(Map<String, Object> asMap) implements FrontMatter { }
+	private record CommonmarkFrontMatter(Map<String, List<String>> asMap) implements FrontMatter { }
 
 }

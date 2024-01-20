@@ -12,7 +12,6 @@ import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
-import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

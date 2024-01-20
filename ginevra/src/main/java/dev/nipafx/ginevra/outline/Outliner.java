@@ -2,7 +2,6 @@ package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
-import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
 
 import java.nio.file.Path;
 import java.util.function.Predicate;

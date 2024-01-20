@@ -5,11 +5,11 @@ import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
 import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Transformer;
-import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
+import dev.nipafx.ginevra.parse.MarkupDocument;
 import dev.nipafx.ginevra.parse.MarkupParser;
+import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.util.List;
-import java.util.function.Function;
 
 class MarkupParsingTransformer<DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
 		implements Transformer<DATA_IN, DATA_OUT> {
@@ -28,12 +28,13 @@ class MarkupParsingTransformer<DATA_IN extends Record & DataString, DATA_OUT ext
 		var markupDocument = parser.parse(input);
 
 		var id = doc.id().transform(parser.name());
-		var data = parseFrontMatterToData(markupDocument.frontMatter());
+		var data = extractData(markupDocument);
 		return List.of(new GeneralDocument<>(id, data));
 	}
 
-	private DATA_OUT parseFrontMatterToData(FrontMatter frontMatter) {
-		return null;
+	private DATA_OUT extractData(MarkupDocument document) {
+		// TODO: include `MarkupDocument::content`
+		return RecordMapper.createFromMapToStringList(frontMatterType, document.frontMatter().asMap());
 	}
 
 }

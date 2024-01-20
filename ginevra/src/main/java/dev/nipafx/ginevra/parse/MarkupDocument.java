@@ -13,7 +13,7 @@ public interface MarkupDocument {
 
 	interface FrontMatter {
 
-		Map<String, Object> asMap();
+		Map<String, List<String>> asMap();
 
 	}
 

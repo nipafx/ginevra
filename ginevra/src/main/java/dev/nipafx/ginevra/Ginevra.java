@@ -6,8 +6,10 @@ import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
 
+import java.util.List;
 import java.util.Optional;
 
 public class Ginevra {
@@ -22,7 +24,11 @@ public class Ginevra {
 
 	public static Ginevra initialize(Configuration config) {
 		var store = new MapStore();
-		var markdownParser = new CommonmarkParser(Parser.builder().build());
+		var commonmarkParser = Parser
+				.builder()
+				.extensions(List.of(YamlFrontMatterExtension.create()))
+				.build();
+		var markdownParser = new CommonmarkParser(commonmarkParser);
 		return new Ginevra(store, Optional.of(markdownParser));
 	}
 
