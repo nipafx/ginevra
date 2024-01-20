@@ -10,15 +10,15 @@ import static java.util.stream.Collectors.joining;
 
 public class MapStore implements Store {
 
-	private final List<Document<?>> documents;
+	private final List<Document<?>> rootDocuments;
 
 	public MapStore() {
-		documents = new ArrayList<>();
+		rootDocuments = new ArrayList<>();
 	}
 
 	@Override
 	public void store(Document<?> doc) {
-		documents.add(doc);
+		rootDocuments.add(doc);
 	}
 
 	@Override
@@ -28,10 +28,10 @@ public class MapStore implements Store {
 
 	@Override
 	public String toString() {
-		var documents = this.documents.stream()
-				.map(Document::toString)
-				.collect(joining("\n\t", "\t", "\n"));
-		return "MapStore:\n" + documents;
+		return this
+				.rootDocuments.stream()
+				.map(doc -> STR." - \{doc.id()}")
+				.collect(joining("MapStore:\n\t", "\t", "\n"));
 	}
 
 }

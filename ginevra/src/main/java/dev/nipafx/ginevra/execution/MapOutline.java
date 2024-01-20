@@ -1,67 +1,70 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.Step.SourceStep;
+import dev.nipafx.ginevra.execution.Step.StoreStep;
+import dev.nipafx.ginevra.execution.Step.TransformStep;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Outline;
-import dev.nipafx.ginevra.outline.Source;
-import dev.nipafx.ginevra.outline.Step;
 import dev.nipafx.ginevra.outline.Store;
-import dev.nipafx.ginevra.outline.Transformer;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static java.util.Map.entry;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 class MapOutline implements Outline {
 
-	private final Map<Step<?>, List<FilteredStep<?, ?>>> stepMap;
-	private final List<Source<?>> sources;
+	private final Map<Step, List<Step>> stepMap;
 	private final Store store;
 
-	MapOutline(Map<Step<?>, List<FilteredStep<?, ?>>> stepMap, Store store) {
+	MapOutline(Map<Step, List<Step>> stepMap, Store store) {
 		this.stepMap = stepMap
 				.entrySet().stream()
 				.map(entry -> entry(entry.getKey(), List.copyOf(entry.getValue())))
 				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
-		this.sources = stepMap
-				.keySet().stream()
-				.<Source<?>>flatMap(step -> step instanceof Source ? Stream.of((Source<?>) step) : Stream.empty())
-				.toList();
 		this.store = store;
 	}
 
 	@Override
 	public void run() {
-		sources.forEach(source -> source.register(doc -> process(source, doc)));
-		sources.forEach(Source::loadAll);
+		var sourceSteps = stepMap
+				.keySet().stream()
+				.filter(SourceStep.class::isInstance)
+				.map(SourceStep.class::cast)
+				.toList();
+
+		sourceSteps.forEach(step -> step.source().register(doc -> process(step, doc)));
+		sourceSteps.forEach(step -> step.source().loadAll());
 		System.out.println(store);
 	}
 
-	private void process(Source<?> source, Document<?> doc) {
-		processRecursively(source, doc);
+	private void process(SourceStep sourceStep, Document<?> doc) {
+		processRecursively(sourceStep, doc);
 		store.commit();
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void processRecursively(Step<?> source, Document<?> doc) {
-		var steps = stepMap.get(source);
+	private void processRecursively(Step origin, Document<?> doc) {
+		var steps = stepMap.get(origin);
 		if (steps == null)
 			throw new IllegalStateException("Unknown step triggered document processing");
 
-		steps.forEach(filteredStep -> {
-			var applyStep = ((Predicate) filteredStep.filter()).test(doc);
-			if (applyStep)
-				switch (filteredStep.step()) {
-					case Source<?> _ -> throw new IllegalStateException("No step should map to a source");
-					case Transformer<?, ?> transformer -> transformer
-							.transform((Document) doc)
-							.forEach(transformedDoc -> processRecursively(transformer, (Document<?>) transformedDoc));
-					case Store store -> store.store(doc);
+		steps.forEach(step -> {
+			switch (step) {
+				case SourceStep _ -> throw new IllegalStateException("No step should map to a source");
+				case TransformStep transformStep -> {
+					if (transformStep.filter().test(doc))
+						transformStep.transformer()
+								.transform((Document) doc)
+								.forEach(transformedDoc -> processRecursively(transformStep, (Document<?>) transformedDoc));
 				}
+				case StoreStep(var filter) -> {
+					if (filter.test(doc))
+						store.store(doc);
+				}
+			}
 		});
 	}
 
