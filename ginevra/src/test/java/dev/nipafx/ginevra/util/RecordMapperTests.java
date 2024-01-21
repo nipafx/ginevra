@@ -8,12 +8,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static dev.nipafx.ginevra.util.RecordMapper.createFromMapToStringList;
-import static dev.nipafx.ginevra.util.RecordMapper.createFromMapToValues;
+import static dev.nipafx.ginevra.util.RecordMapper.createRecordFromMaps;
+import static dev.nipafx.ginevra.util.RecordMapper.createRecordFromStringListMap;
+import static dev.nipafx.ginevra.util.RecordMapper.createRecordFromValueMap;
+import static dev.nipafx.ginevra.util.RecordMapper.createValueMapFromRecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.in;
 
 class RecordMapperTests {
+
+	// TODO: test error cases
 
 	public record None() { }
 	public record OneString(String stringValue) { }
@@ -22,17 +27,62 @@ class RecordMapperTests {
 	public record OneList(List<String> stringValues) { }
 
 	@Nested
-	class FromMapToValues {
+	class FromInstanceToValueMap {
 
 		@Test
 		void noComponents() {
-			var instance = createFromMapToValues(None.class, Map.of());
+			var instance = new None();
+			var map = createValueMapFromRecord(instance);
+
+			assertThat(map).isEmpty();
+		}
+
+		@Test
+		void oneComponent() {
+			var instance = new OneString("value");
+			var map = createValueMapFromRecord(instance);
+
+			assertThat(map).containsExactlyInAnyOrderEntriesOf(Map.of("stringValue", instance.stringValue()));
+		}
+
+		@Test
+		void oneOptionalComponent() {
+			var instance = new OneOptional(Optional.of("value"));
+			var map = createValueMapFromRecord(instance);
+
+			assertThat(map).containsExactlyInAnyOrderEntriesOf(Map.of("stringValue", instance.stringValue()));
+		}
+
+		@Test
+		void oneListComponent() {
+			var instance = new OneList(List.of("value #1", "value #2", "value #3"));
+			var map = createValueMapFromRecord(instance);
+
+			assertThat(map).containsExactlyInAnyOrderEntriesOf(Map.of("stringValues", instance.stringValues()));
+		}
+
+		@Test
+		void oneSetComponent() {
+			var instance = new OneSet(Set.of("value #1", "value #2", "value #3"));
+			var map = createValueMapFromRecord(instance);
+
+			assertThat(map).containsExactlyInAnyOrderEntriesOf(Map.of("stringValues", instance.stringValues()));
+		}
+
+	}
+
+	@Nested
+	class FromValueMapToInstance {
+
+		@Test
+		void noComponents() {
+			var instance = createRecordFromValueMap(None.class, Map.of());
 			assertThat(instance).isNotNull();
 		}
 
 		@Test
 		void oneComponent_present() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneString.class,
 					Map.of(
 							"stringValue", "the string value"
@@ -43,14 +93,14 @@ class RecordMapperTests {
 
 		@Test
 		void oneComponent_absent() {
-			assertThatThrownBy(() -> createFromMapToValues(OneString.class, Map.of()))
+			assertThatThrownBy(() -> createRecordFromValueMap(OneString.class, Map.of()))
 					.hasMessageStartingWith("No values are defined for the component 'stringValue'")
 					.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test
 		void optionalComponent_empty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", Optional.empty()
@@ -61,7 +111,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_nonEmpty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", Optional.of("the string value")
@@ -72,7 +122,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_present() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", "the string value"
@@ -83,7 +133,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_absent() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneOptional.class,
 					Map.of());
 
@@ -92,7 +142,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_empty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneList.class,
 					Map.of(
 							"stringValues", List.of()
@@ -103,7 +153,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_nonEmpty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneList.class,
 					Map.of(
 							"stringValues", List.of("value #1", "value #2", "value #3")
@@ -114,7 +164,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_present() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneList.class,
 					Map.of(
 							"stringValues", "value"
@@ -125,7 +175,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_absent() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneList.class,
 					Map.of());
 
@@ -134,7 +184,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_empty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", Set.of()
@@ -145,7 +195,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_nonEmpty() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", Set.of("value #1", "value #2", "value #3")
@@ -156,7 +206,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_present() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", "value"
@@ -167,7 +217,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_absent() {
-			var instance = createFromMapToValues(
+			var instance = createRecordFromValueMap(
 					OneSet.class,
 					Map.of());
 
@@ -177,17 +227,17 @@ class RecordMapperTests {
 	}
 
 	@Nested
-	class FromMapToStringList {
+	class FromStringListMapToInstance {
 
 		@Test
 		void noComponents() {
-			var instance = createFromMapToStringList(None.class, Map.of());
+			var instance = createRecordFromStringListMap(None.class, Map.of());
 			assertThat(instance).isNotNull();
 		}
 
 		@Test
 		void oneComponent_present() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneString.class,
 					Map.of(
 							"stringValue", List.of("the string value")
@@ -198,14 +248,14 @@ class RecordMapperTests {
 
 		@Test
 		void oneComponent_absent() {
-			assertThatThrownBy(() -> createFromMapToStringList(OneString.class, Map.of()))
+			assertThatThrownBy(() -> createRecordFromStringListMap(OneString.class, Map.of()))
 					.hasMessageStartingWith("No values are defined for the component 'stringValue'")
 					.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test
 		void optionalComponent_empty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", List.of()
@@ -216,7 +266,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_nonEmpty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", List.of("the string value")
@@ -227,7 +277,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_present() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneOptional.class,
 					Map.of(
 							"stringValue", List.of("the string value")
@@ -238,7 +288,7 @@ class RecordMapperTests {
 
 		@Test
 		void optionalComponent_absent() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneOptional.class,
 					Map.of());
 
@@ -247,7 +297,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_empty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneList.class,
 					Map.of(
 							"stringValues", List.of()
@@ -258,7 +308,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_nonEmpty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneList.class,
 					Map.of(
 							"stringValues", List.of("value #1", "value #2", "value #3")
@@ -269,7 +319,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_present() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneList.class,
 					Map.of(
 							"stringValues", List.of("value")
@@ -280,7 +330,7 @@ class RecordMapperTests {
 
 		@Test
 		void listComponent_absent() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneList.class,
 					Map.of());
 
@@ -289,7 +339,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_empty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", List.of()
@@ -300,7 +350,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_nonEmpty() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", List.of("value #1", "value #2", "value #3")
@@ -311,7 +361,7 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_present() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneSet.class,
 					Map.of(
 							"stringValues", List.of("value")
@@ -322,11 +372,123 @@ class RecordMapperTests {
 
 		@Test
 		void setComponent_absent() {
-			var instance = createFromMapToStringList(
+			var instance = createRecordFromStringListMap(
 					OneSet.class,
 					Map.of());
 
 			assertThat(instance.stringValues).isEmpty();
+		}
+
+	}
+
+	@Nested
+	class FromMapsToInstance {
+
+		@Test
+		void noComponents() {
+			var instance = createRecordFromMaps(None.class, Map.of(), Map.of());
+			assertThat(instance).isNotNull();
+		}
+
+		@Test
+		void oneComponent_presentAsValue() {
+			var instance = createRecordFromMaps(
+					OneString.class,
+					Map.of(
+							"stringValue", "the string value"
+					),
+					Map.of());
+
+			assertThat(instance.stringValue).isEqualTo("the string value");
+		}
+
+		@Test
+		void oneComponent_presentAsString() {
+			var instance = createRecordFromMaps(
+					OneString.class,
+					Map.of(),
+					Map.of(
+							"stringValue", List.of("the string value")
+					));
+
+			assertThat(instance.stringValue).isEqualTo("the string value");
+		}
+
+		@Test
+		void oneComponent_absent() {
+			assertThatThrownBy(() -> createRecordFromMaps(OneString.class, Map.of(), Map.of()))
+					.hasMessageStartingWith("No values are defined for the component 'stringValue'")
+					.isInstanceOf(IllegalArgumentException.class);
+		}
+
+		@Test
+		void optionalComponent_emptyValue() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(
+							"stringValue", Optional.empty()
+					),
+					Map.of());
+
+			assertThat(instance.stringValue).isEmpty();
+		}
+
+		@Test
+		void optionalComponent_emptyList() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(),
+					Map.of(
+							"stringValue", List.of()
+					));
+
+			assertThat(instance.stringValue).isEmpty();
+		}
+
+		@Test
+		void optionalComponent_nonEmptyValue() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(
+							"stringValue", Optional.of("the string value")
+					),
+					Map.of());
+
+			assertThat(instance.stringValue).hasValue("the string value");
+		}
+
+		@Test
+		void optionalComponent_presentValue() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(
+							"stringValue", "the string value"
+					),
+					Map.of());
+
+			assertThat(instance.stringValue).hasValue("the string value");
+		}
+
+		@Test
+		void optionalComponent_presentString() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(),
+					Map.of(
+							"stringValue", List.of("the string value")
+					));
+
+			assertThat(instance.stringValue).hasValue("the string value");
+		}
+
+		@Test
+		void optionalComponent_absent() {
+			var instance = createRecordFromMaps(
+					OneOptional.class,
+					Map.of(),
+					Map.of());
+
+			assertThat(instance.stringValue).isEmpty();
 		}
 
 	}

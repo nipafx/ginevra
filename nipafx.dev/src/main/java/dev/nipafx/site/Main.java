@@ -17,7 +17,7 @@ public class Main {
 		var outliner = ginevra.newOutliner();
 
 		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT.resolve("articles"));
-		StepKey<ArticleFrontMatter> markdown = outliner.transformMarkdown(content, ArticleFrontMatter.class);
+		StepKey<FullArticle> markdown = outliner.transformMarkdown(content, FullArticle.class);
 		outliner.store(markdown, new DocCollection("articles"));
 
 		outliner.build().run();

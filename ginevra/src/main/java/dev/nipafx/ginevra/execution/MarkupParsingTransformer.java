@@ -9,6 +9,7 @@ import dev.nipafx.ginevra.parse.MarkupDocument;
 import dev.nipafx.ginevra.parse.MarkupParser;
 import dev.nipafx.ginevra.util.RecordMapper;
 
+import java.util.HashMap;
 import java.util.List;
 
 class MarkupParsingTransformer<DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
@@ -24,17 +25,18 @@ class MarkupParsingTransformer<DATA_IN extends Record & DataString, DATA_OUT ext
 
 	@Override
 	public List<Document<DATA_OUT>> transform(Document<DATA_IN> doc) {
-		var input = doc.data().dataAsString();
-		var markupDocument = parser.parse(input);
+		var inputData = doc.data();
+		var markupDocument = parser.parse(inputData.dataAsString());
 
 		var id = doc.id().transform(parser.name());
-		var data = extractData(markupDocument);
+		var data = extractData(inputData, markupDocument);
 		return List.of(new GeneralDocument<>(id, data));
 	}
 
-	private DATA_OUT extractData(MarkupDocument document) {
-		// TODO: include `MarkupDocument::content`
-		return RecordMapper.createFromMapToStringList(frontMatterType, document.frontMatter().asMap());
+	private DATA_OUT extractData(DATA_IN inputData, MarkupDocument document) {
+		var inputDataAndParsedContent = new HashMap<>(RecordMapper.createValueMapFromRecord(inputData));
+		inputDataAndParsedContent.put("contentParsedAsMarkdown", document.content());
+		return RecordMapper.createRecordFromMaps(frontMatterType, inputDataAndParsedContent, document.frontMatter().asMap());
 	}
 
 }

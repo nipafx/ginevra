@@ -11,41 +11,53 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class RecordMapper {
 
-	// TODO: proper error handling
-
-	public static <TYPE extends Record> TYPE createFromMapToValues(Class<TYPE> type, Map<String, ?> values) {
-		var constructorParameters = Stream.of(type.getRecordComponents())
-				.map(RecordComponent::getType)
-				.toArray(Class[]::new);
-		var constructorArguments = Stream.of(type.getRecordComponents())
-				.map(component -> createValueForComponent(component, values.get(component.getName())))
-				.toArray();
-
-		try {
-			var constructor = type.getConstructor(constructorParameters);
-			return constructor.newInstance(constructorArguments);
-		} catch (NoSuchMethodException ex) {
-			ex.printStackTrace();
-		} catch (InvocationTargetException ex) {
-			ex.printStackTrace();
-		} catch (InstantiationException ex) {
-			ex.printStackTrace();
-		} catch (IllegalAccessException ex) {
-			ex.printStackTrace();
-		}
-
-		throw new IllegalStateException();
+	public static Map<String, Object> createValueMapFromRecord(Record instance) {
+		return Stream
+				.of(instance.getClass().getRecordComponents())
+				.collect(toMap(
+						RecordComponent::getName,
+						component -> getComponentValue(instance, component)));
 	}
 
-	private static Object createValueForComponent(RecordComponent component, Object value) {
+	private static Object getComponentValue(Record instance, RecordComponent component) {
+		try {
+			var componentValue = component.getAccessor().invoke(instance);
+			if (component.getType().isRecord())
+				return createValueMapFromRecord((Record) componentValue);
+			else
+				return componentValue;
+		} catch (IllegalAccessException ex) {
+			var message = STR."Record '\{instance.getClass().getName()}' is inaccessible.";
+			throw new IllegalStateException(message, ex);
+		} catch (InvocationTargetException ex) {
+			var message = STR."Invoking accessor of component '\{instance.getClass().getName()}#\{component.getName()}' failed.";
+			throw new IllegalStateException(message, ex);
+		}
+	}
+
+	public static <TYPE extends Record> TYPE createRecordFromValueMap(Class<TYPE> type, Map<String, ?> values) {
+		var constructorArguments = Stream.of(type.getRecordComponents())
+				.map(component -> createValueForRecordComponent(component, values.get(component.getName())))
+				.toArray();
+		return createRecordFromValues(type, constructorArguments);
+	}
+
+	private static Object createValueForRecordComponent(RecordComponent component, Object value) {
 		if (component.getType().isRecord()) {
+			@SuppressWarnings("unchecked")
 			var nestedRecordType = (Class<? extends Record>) component.getType();
+			if (!(guaranteeNotNull(value, component) instanceof Map)) {
+				var message = STR."The component '\{component.getName()}' is of type '\{component.getType()}' but the associated map value '\{value}' is no 'Map'";
+				throw new IllegalArgumentException(message);
+			}
+			@SuppressWarnings("unchecked")
 			var nestedRecordValues = (Map<String, Object>) guaranteeNotNull(value, component);
-			return createFromMapToValues(nestedRecordType, nestedRecordValues);
+			return createRecordFromValueMap(nestedRecordType, nestedRecordValues);
 		}
 
 		return switch (component.getGenericType()) {
@@ -104,33 +116,29 @@ public class RecordMapper {
 			}
 			return value;
 		} catch (ClassNotFoundException ex) {
-			String message = STR."Value '\{value}' is supposed to be of type '\{type}' but it wasn't found";
+			String message = STR."Value '\{value}' is supposed to be of type '\{type}' but the type wasn't found";
 			throw new IllegalStateException(message, ex);
 		}
 	}
 
-	public static <TYPE extends Record> TYPE createFromMapToStringList(Class<TYPE> type, Map<String, List<String>> values) {
+	private static <TYPE extends Record> TYPE createRecordFromValues(Class<TYPE> type, Object[] constructorArguments) {
 		var constructorParameters = Stream.of(type.getRecordComponents())
 				.map(RecordComponent::getType)
 				.toArray(Class[]::new);
-		var constructorArguments = Stream.of(type.getRecordComponents())
-				.map(component -> parseValueForComponent(component, values.get(component.getName())))
-				.toArray();
-
 		try {
 			var constructor = type.getConstructor(constructorParameters);
 			return constructor.newInstance(constructorArguments);
-		} catch (NoSuchMethodException ex) {
-			ex.printStackTrace();
-		} catch (InvocationTargetException ex) {
-			ex.printStackTrace();
-		} catch (InstantiationException ex) {
-			ex.printStackTrace();
-		} catch (IllegalAccessException ex) {
-			ex.printStackTrace();
+		} catch (ReflectiveOperationException ex) {
+			var message = STR."Instantiating '\{type}' failed";
+			throw new IllegalStateException(message, ex);
 		}
+	}
 
-		throw new IllegalStateException();
+	public static <TYPE extends Record> TYPE createRecordFromStringListMap(Class<TYPE> type, Map<String, List<String>> stringValues) {
+		var constructorArguments = Stream.of(type.getRecordComponents())
+				.map(component -> parseValueForComponent(component, stringValues.get(component.getName())))
+				.toArray();
+		return createRecordFromValues(type, constructorArguments);
 	}
 
 	private static Object parseValueForComponent(RecordComponent component, List<String> values) {
@@ -184,6 +192,15 @@ public class RecordMapper {
 				throw new IllegalStateException(message.formatted(type, value));
 			}
 		};
+	}
+
+	public static <TYPE extends Record> TYPE createRecordFromMaps(Class<TYPE> type, Map<String, ?> values, Map<String, List<String>> stringValues) {
+		var constructorArguments = Stream.of(type.getRecordComponents())
+				.map(component -> values.containsKey(component.getName())
+						? createValueForRecordComponent(component, values.get(component.getName()))
+						: parseValueForComponent(component, stringValues.get(component.getName())))
+				.toArray();
+		return createRecordFromValues(type, constructorArguments);
 	}
 
 }
