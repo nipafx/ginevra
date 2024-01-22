@@ -3,10 +3,13 @@ package dev.nipafx.ginevra.html;
 public sealed interface HtmlElement extends KnownElement permits
 		Anchor,
 		BlockQuote,
+		Body,
 		Code,
 		Div,
 		Emphasis,
+		Head,
 		Heading,
+		HtmlDocument,
 		HorizontalRule,
 		LineBreak,
 		ListItem,
@@ -19,9 +22,12 @@ public sealed interface HtmlElement extends KnownElement permits
 
 	Anchor a = new Anchor();
 	BlockQuote blockquote = new BlockQuote();
+	Body body = new Body();
 	LineBreak br = new LineBreak();
 	Code code = new Code();
 	Div div = new Div();
+	Head head = new Head();
+	HtmlDocument document = new HtmlDocument();
 	Emphasis em = new Emphasis();
 	Heading h1 = new Heading(1);
 	Heading h2 = new Heading(2);

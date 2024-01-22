@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Anchor;
 import dev.nipafx.ginevra.html.BlockQuote;
+import dev.nipafx.ginevra.html.Body;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Code;
 import dev.nipafx.ginevra.html.CodeBlock;
@@ -9,8 +10,10 @@ import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Emphasis;
+import dev.nipafx.ginevra.html.Head;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
+import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.HtmlLiteral;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.ListItem;
@@ -26,10 +29,13 @@ import dev.nipafx.ginevra.html.UnorderedList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.pre;
+import static java.util.function.Predicate.not;
 
 public class HtmlRenderer {
 
@@ -51,6 +57,11 @@ public class HtmlRenderer {
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("blockquote");
 			}
+			case Body(var content) -> {
+				renderer.open("body");
+				renderer.insertChildren(content, child -> render(child, renderer));
+				renderer.close("body");
+			}
 			case Code(var id, var classes, var text, var children) -> {
 				renderer.open("code", id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));
@@ -67,10 +78,31 @@ public class HtmlRenderer {
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("em");
 			}
+			case Head(var title, var charset) -> {
+				renderer.open("head");
+				if (charset != null)
+					renderer.selfClosed("meta", attributes("charset", charset.name()));
+				if (title != null) {
+					renderer.open("title");
+					renderer.insertText(title);
+					renderer.close("title");
+				}
+				renderer.close("head");
+			}
 			case Heading(var level, var id, var classes, var text, var children) -> {
 				renderer.open("h" + level, id, classes);
 				renderer.insertChildren(text, children, child -> render(child, renderer));
 				renderer.close("h" + level);
+			}
+			case HtmlDocument(var language, var head, var body) -> {
+				renderer.insertTextElement("<!doctype html>");
+				var lang = language == null
+						? attributes()
+						: attributes("lang", language.getLanguage());
+				renderer.open("html", lang);
+				var children = Stream.of(head, body).filter(not(Objects::isNull)).toList();
+				renderer.insertChildren(children, child -> render(child, renderer));
+				renderer.close("html");
 			}
 			case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> { }
 			case HtmlLiteral(var literal) -> renderer.insertTextElement(literal);
