@@ -14,7 +14,6 @@ import static dev.nipafx.ginevra.util.RecordMapper.createRecordFromValueMap;
 import static dev.nipafx.ginevra.util.RecordMapper.createValueMapFromRecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.in;
 
 class RecordMapperTests {
 

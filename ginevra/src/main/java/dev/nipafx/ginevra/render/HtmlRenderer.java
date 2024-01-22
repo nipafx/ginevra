@@ -138,44 +138,45 @@ public class HtmlRenderer {
 
 	private static class Renderer {
 
+		private enum State { EMPTY, OPENED, INLINE, CLOSED }
+
 		private final StringBuilder builder = new StringBuilder();
 		/**
 		 * To render elements without children on one line (e.g. {@code <div></div>}),
-		 * opening tags are not followed by a new line; instead this flag is set to true
-		 * and then all follow-up actions must check and potentially add a newline.
+		 * tags are not always followed by a new line; instead this state indicates
+		 * what was previously rendered and then all follow-up actions must check and
+		 * add a newline and indentation accordingly.
 		 */
-		private boolean addNewLineBeforeNextElement = false;
+		private State state = State.EMPTY;
 		private int indentation = 0;
 
+		public void open(String tag) {
+			open(tag, null, Classes.none(), attributes());
+		}
+
 		public void open(String tag, String id, Classes classes) {
-			open(tag, id, classes, Map.of());
+			open(tag, id, classes, attributes());
+		}
+
+		public void open(String tag, Map<String, String> attributes) {
+			open(tag, null, Classes.none(), attributes);
 		}
 
 		public void open(String tag, String id, Classes classes, Map<String, String> attributes) {
-			updateNewLine(true);
-			builder.repeat("\t", indentation).append("<").append(tag);
+			switch (state)  {
+				case EMPTY, CLOSED  -> builder.repeat("\t", indentation);
+				case OPENED-> builder.append("\n").repeat("\t", indentation);
+				case INLINE -> throw new IllegalStateException();
+			}
+
+			builder.append("<").append(tag);
 			attribute("id", id);
 			attribute("class", classes.asCssString());
 			attributes.forEach(this::attribute);
 			builder.append(">");
 
 			indentation++;
-			addNewLineBeforeNextElement = true;
-		}
-
-		/**
-		 * Inserts a new line if indicated by {@code addNewLineBeforeNextElement} and {@code insertNewLine}
-		 * and resets {@code addNewLineBeforeNextElement}.
-		 *
-		 * @param insertNewLine whether a new line should be inserted
-		 * @return whether the renderer stands on a new line after this call
-		 */
-		private boolean updateNewLine(boolean insertNewLine) {
-			if (addNewLineBeforeNextElement && insertNewLine)
-				builder.append("\n");
-			var onNewLine = !addNewLineBeforeNextElement || insertNewLine;
-			addNewLineBeforeNextElement = false;
-			return onNewLine;
+			state = State.OPENED;
 		}
 
 		private void attribute(String name, String value) {
@@ -185,7 +186,11 @@ public class HtmlRenderer {
 			builder.append(" ").append(name).append("=\"").append(value).append("\"");
 		}
 
-		public void insertChildren(String text, List<Element> children, Consumer<Element> renderChild) {
+		public void insertChildren(List<? extends Element> children, Consumer<Element> renderChild) {
+			insertChildren(null, children, renderChild);
+		}
+
+		public void insertChildren(String text, List<? extends Element> children, Consumer<Element> renderChild) {
 			if (text == null)
 				children.forEach(renderChild);
 			else
@@ -194,29 +199,57 @@ public class HtmlRenderer {
 
 		public void close(String tag) {
 			indentation--;
+			switch (state)  {
+				case EMPTY -> throw new IllegalStateException();
+				case OPENED, INLINE -> { }
+				case CLOSED -> builder.repeat("\t", indentation);
+			}
 
-			var onNewLine = updateNewLine(false);
-			if (onNewLine)
-				builder.repeat("\t", indentation);
 			builder.append("</").append(tag).append(">\n");
+			state = State.CLOSED;
 		}
 
 		public void selfClosed(String tag, String id, Classes classes) {
-			updateNewLine(true);
-			builder.repeat("\t", indentation).append("<").append(tag);
+			selfClosed(tag, id, classes, attributes());
+		}
+
+		public void selfClosed(String tag, Map<String, String> attributes) {
+			selfClosed(tag, null, Classes.none(), attributes);
+		}
+
+		public void selfClosed(String tag, String id, Classes classes, Map<String, String> attributes) {
+			switch (state)  {
+				case EMPTY -> builder.repeat("\t", indentation);
+				case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
+				case INLINE -> throw new IllegalStateException();
+			}
+
+			builder.append("<").append(tag);
 			attribute("id", id);
 			attribute("class", classes.asCssString());
+			attributes.forEach(this::attribute);
 			builder.append(" />\n");
+
+			state = State.CLOSED;
 		}
 
 		private void insertText(String text) {
-			updateNewLine(false);
+			switch (state)  {
+				case EMPTY, INLINE, CLOSED -> throw new IllegalStateException();
+				case OPENED -> { }
+			}
 			builder.append(text);
+			state = State.INLINE;
 		}
 
 		public void insertTextElement(String text) {
-			updateNewLine(true);
-			builder.repeat("\t", indentation).append(text).append("\n");
+			switch (state)  {
+				case EMPTY, CLOSED -> builder.repeat("\t", indentation);
+				case OPENED -> builder.append("\n").repeat("\t", indentation);
+				case INLINE -> throw new IllegalStateException();
+			}
+			builder.append(text).append("\n");
+			state = State.CLOSED;
 		}
 
 		public String render() {

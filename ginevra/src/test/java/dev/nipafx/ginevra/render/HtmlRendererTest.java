@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.span;
 import static dev.nipafx.ginevra.html.JmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -333,6 +334,60 @@ class HtmlRendererTest {
 						<\{tag()}>
 							<span id="grandchild"></span>
 						</\{tag()}>
+					</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withChildrenAndOneTextGrandchild_first() {
+			var element =
+					createWith(
+							p.text("grandchild"),
+							span.id("child-1"),
+							span.id("child-2"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>
+						<p>grandchild</p>
+						<span id="child-1"></span>
+						<span id="child-2"></span>
+					</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withChildrenAndOneTextGrandchild_middle() {
+			var element =
+					createWith(
+							span.id("child-1"),
+							p.text("grandchild"),
+							span.id("child-3"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>
+						<span id="child-1"></span>
+						<p>grandchild</p>
+						<span id="child-3"></span>
+					</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withChildrenAndOneTextGrandchild_last() {
+			var element =
+					createWith(
+							span.id("child-1"),
+							span.id("child-2"),
+							p.text("grandchild"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>
+						<span id="child-1"></span>
+						<span id="child-2"></span>
+						<p>grandchild</p>
 					</\{tag()}>
 					""");
 		}
