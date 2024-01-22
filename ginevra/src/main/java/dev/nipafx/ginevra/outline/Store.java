@@ -28,7 +28,7 @@ public interface Store {
 	record RootQuery<RESULT extends Record>(Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
-	record CollectionQuery<RESULT extends Record>(String collection, Class<RESULT> resultType)
+	record CollectionQuery<RESULT extends Record>(DocCollection collection, Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
 }

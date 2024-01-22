@@ -15,7 +15,7 @@ public interface Outliner {
 	// sources
 
 	<DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> registerSource(Source<DATA_OUT> source);
+	StepKey<DATA_OUT> source(Source<DATA_OUT> source);
 
 	StepKey<FileData> sourceFileSystem(String name, Path path);
 
@@ -56,6 +56,16 @@ public interface Outliner {
 	default <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous) {
 		store(previous, _ -> true);
+	}
+
+	// generate
+
+	<DATA extends Record & Data>
+	void generate(Path targetFolder, Template<DATA> template, Predicate<DATA> filter);
+
+	default <DATA extends Record & Data>
+	void generate(Path targetFolder, Template<DATA> template) {
+		generate(targetFolder, template, _ -> true);
 	}
 
 	// build

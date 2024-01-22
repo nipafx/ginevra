@@ -1,6 +1,8 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.execution.Step.SourceStep;
+import dev.nipafx.ginevra.execution.Step.StoreStep;
+import dev.nipafx.ginevra.execution.Step.TemplateStep;
 import dev.nipafx.ginevra.execution.Step.TransformStep;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
@@ -11,6 +13,7 @@ import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.outline.Store.DocCollection;
+import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 
@@ -39,7 +42,7 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public <DATA_OUT extends Record & Data> StepKey<DATA_OUT>
-	registerSource(Source<DATA_OUT> source) {
+	source(Source<DATA_OUT> source) {
 		var step = new SourceStep(source);
 		createStepListFor(step);
 		return new SimpleStepKey<>(step);
@@ -47,7 +50,7 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public StepKey<FileData> sourceFileSystem(String name, Path path) {
-		return registerSource(new FileSource(name, path));
+		return source(new FileSource(name, path));
 	}
 
 	// transformers
@@ -78,7 +81,7 @@ public class FullOutliner implements Outliner {
 	public <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, DocCollection collection, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new Step.StoreStep((Predicate) filter, Optional.of(collection));
+		var step = new StoreStep((Predicate) filter, Optional.of(collection));
 		getStepListFor(previous).add(step);
 	}
 
@@ -86,7 +89,7 @@ public class FullOutliner implements Outliner {
 	public <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new Step.StoreStep((Predicate) filter, Optional.empty());
+		var step = new StoreStep((Predicate) filter, Optional.empty());
 		getStepListFor(previous).add(step);
 	}
 
@@ -97,12 +100,27 @@ public class FullOutliner implements Outliner {
 		return new MapOutline(stepMap, store);
 	}
 
+	// generate
+
+	@Override
+	public <DATA extends Record & Data>
+	void generate(Path targetFolder, Template<DATA> template, Predicate<DATA> filter) {
+		var step = new TemplateStep(filter, targetFolder, template);
+		createStepListFor(step);
+	}
+
 	// misc
 
 	private void createStepListFor(SourceStep step) {
 		var previous = stepMap.put(step, new ArrayList<>());
 		if (previous != null)
-			throw new IllegalStateException("This source was already registered");
+			throw new IllegalArgumentException("This source was already registered");
+	}
+
+	private void createStepListFor(TemplateStep step) {
+		var previous = stepMap.put(step, List.of());
+		if (previous != null)
+			throw new IllegalArgumentException("This template was already registered");
 	}
 
 	private void ensureStepListFor(TransformStep transformer) {
@@ -115,7 +133,7 @@ public class FullOutliner implements Outliner {
 
 		var stepList = stepMap.get(step);
 		if (stepList == null)
-			throw new IllegalStateException("The specified previous step is unregistered");
+			throw new IllegalArgumentException("The specified previous step is unregistered");
 		return stepList;
 	}
 

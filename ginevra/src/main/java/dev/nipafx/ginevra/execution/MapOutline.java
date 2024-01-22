@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.execution.Step.SourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreStep;
+import dev.nipafx.ginevra.execution.Step.TemplateStep;
 import dev.nipafx.ginevra.execution.Step.TransformStep;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Outline;
@@ -67,6 +68,7 @@ class MapOutline implements Outline {
 								() -> store.store(doc)
 						);
 				}
+				case TemplateStep _ -> throw new IllegalStateException("No step should map to a template");
 			}
 		});
 	}
