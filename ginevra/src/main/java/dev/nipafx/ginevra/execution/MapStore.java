@@ -1,7 +1,10 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
+import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Store;
+import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,17 +47,24 @@ public class MapStore implements Store {
 	}
 
 	@Override
-	public <RESULT extends Record> RESULT query(RootQuery<RESULT> query) {
+	public <RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query) {
 		queries.add(query);
 		// TODO: evaluate query
 		return null;
 	}
 
 	@Override
-	public <RESULT extends Record> List<RESULT> query(CollectionQuery<RESULT> query) {
+	public <RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query) {
+		if (!documents.containsKey(query.collection()))
+			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
+
 		queries.add(query);
-		// TODO: evaluate query
-		return null;
+		return documents
+				.get(query.collection()).stream()
+				.<Document<RESULT>> map(document -> new GeneralDocument<>(
+						document.id().transform("queried-" + query.resultType().getName()),
+						RecordMapper.createRecordFromRecord(query.resultType(), document.data())))
+				.toList();
 	}
 
 	@Override

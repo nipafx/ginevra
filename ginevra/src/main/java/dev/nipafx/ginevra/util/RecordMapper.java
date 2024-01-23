@@ -16,6 +16,10 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class RecordMapper {
 
+	public static <TYPE extends Record> TYPE createRecordFromRecord(Class<TYPE> type, Record instance) {
+		return createRecordFromValueMap(type, createValueMapFromRecord(instance));
+	}
+
 	public static Map<String, Object> createValueMapFromRecord(Record instance) {
 		return Stream
 				.of(instance.getClass().getRecordComponents())

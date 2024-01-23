@@ -6,4 +6,4 @@ import dev.nipafx.ginevra.outline.Document.Data;
 import java.nio.file.Path;
 import java.util.List;
 
-public record FullArticle(String title, String slug, Path file, String content, List<Element> contentParsedAsMarkdown) implements Data { }
+public record FullArticle(String title, String slug, String description, List<String> tags, Path file, String content, List<Element> contentParsedAsMarkdown) implements Data { }

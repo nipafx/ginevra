@@ -15,20 +15,18 @@ public interface Store {
 
 	List<Query<?>> commit();
 
-	<RESULT extends Record> RESULT query(RootQuery<RESULT> query);
+	<RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query);
 
-	<RESULT extends Record> List<RESULT> query(CollectionQuery<RESULT> query);
-
-	record None() implements Data { }
+	<RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query);
 
 	record DocCollection(String name) { }
 
-	sealed interface Query<RESULT extends Record> { }
+	sealed interface Query<RESULT extends Record & Data> { }
 
-	record RootQuery<RESULT extends Record>(Class<RESULT> resultType)
+	record RootQuery<RESULT extends Record & Data>(Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
-	record CollectionQuery<RESULT extends Record>(DocCollection collection, Class<RESULT> resultType)
+	record CollectionQuery<RESULT extends Record & Data>(DocCollection collection, Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
 }

@@ -3,6 +3,7 @@ package dev.nipafx.ginevra.outline;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
 import dev.nipafx.ginevra.outline.Store.DocCollection;
+import dev.nipafx.ginevra.outline.Store.Query;
 
 import java.nio.file.Path;
 import java.util.function.Predicate;
@@ -61,11 +62,11 @@ public interface Outliner {
 	// generate
 
 	<DATA extends Record & Data>
-	void generate(Path targetFolder, Template<DATA> template, Predicate<DATA> filter);
+	void generate(Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template, Path targetFolder);
 
 	default <DATA extends Record & Data>
-	void generate(Path targetFolder, Template<DATA> template) {
-		generate(targetFolder, template, _ -> true);
+	void generate(Query<DATA> query, Template<DATA> template, Path targetFolder) {
+		generate(query, _ -> true, template, targetFolder);
 	}
 
 	// build
