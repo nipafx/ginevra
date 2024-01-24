@@ -1,8 +1,12 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
@@ -23,12 +27,17 @@ import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.JmlElement.html;
+import static dev.nipafx.ginevra.html.JmlElement.nothing;
 import static dev.nipafx.ginevra.html.JmlElement.text;
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
 
-	private final CommonmarkParser parser = new CommonmarkParser(Parser.builder().build());
+	private final CommonmarkParser parser = new CommonmarkParser(Parser
+			.builder()
+			.extensions(List.of(YamlFrontMatterExtension.create()))
+			.build());
 
 	private void parseAndAssert(String markdown, Element... elements) {
 		var parsed = parser.parse(markdown);
@@ -342,6 +351,21 @@ class CommonmarkParserTest {
 						br,
 						text.text("of two lines."))
 		);
+	}
+
+	@Test
+	void yamlFrontMatter() {
+		var parsed = parser.parse("""
+				---
+				title: "The Title"
+				description: "A description of the post."
+				---
+				""");
+		assertThat(parsed.content()).isEmpty();
+		assertThat(parsed.frontMatter().asMap()).containsExactlyInAnyOrderEntriesOf(Map.of(
+				"title", List.of("The Title"),
+				"description", List.of("A description of the post.")
+		));
 	}
 
 }
