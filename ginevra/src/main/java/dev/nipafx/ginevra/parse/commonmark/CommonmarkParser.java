@@ -92,6 +92,7 @@ public class CommonmarkParser implements MarkdownParser {
 				yield HtmlElement.ol.start(start).children(listItems);
 			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
+			case org.commonmark.node.SoftLineBreak _ -> JmlElement.text.text(" ");
 			case org.commonmark.node.StrongEmphasis _ -> HtmlElement.strong.children(children);
 			case org.commonmark.node.Text t -> text.text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;

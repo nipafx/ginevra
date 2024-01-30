@@ -30,7 +30,7 @@ class TextRenderTest {
 		var text = JmlElement.text.text("This text is not empty");
 		var rendered = RENDERER.render(text);
 
-		assertThat(rendered).isEqualTo("This text is not empty\n");
+		assertThat(rendered).isEqualTo("This text is not empty");
 	}
 
 }

@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static dev.nipafx.ginevra.html.HtmlElement.br;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.span;
+import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.JmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -201,11 +203,25 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
-						text element 1
-						text element 2
-						text element 3
-					</\{tag()}>
+					<\{tag()}>text element 1text element 2text element 3</\{tag()}>
+					""");
+		}
+
+		@Test
+		default void withMixedChildren() {
+			var element = createWith(
+					null,
+					text.text("text element 1"),
+					// an element that must not have spaces before or after
+					strong.text("strong element"),
+					text.text("text element 2"),
+					// a self-closing element that must not have spaces before or after
+					br,
+					text.text("text element 3"));
+			var rendered = renderer().render(element);
+
+			assertThat(rendered).isEqualTo(STR."""
+					<\{tag()}>text element 1<strong>strong element</strong>text element 2<br />text element 3</\{tag()}>
 					""");
 		}
 

@@ -27,9 +27,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
 import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.JmlElement.html;
-import static dev.nipafx.ginevra.html.JmlElement.nothing;
 import static dev.nipafx.ginevra.html.JmlElement.text;
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
@@ -74,8 +72,10 @@ class CommonmarkParserTest {
 
 	@Test
 	void horizontalRule() {
+		// can't test with "---" because that will be
+		// interpreted as the front matter delimiter
 		parseAndAssert(
-				"---",
+				"----",
 				hr);
 	}
 
@@ -340,7 +340,7 @@ class CommonmarkParserTest {
 	}
 
 	@Test
-	void lineBreakInText() {
+	void hardLineBreakInText() {
 		parseAndAssert(
 				"""
 				This is the first\\
@@ -350,6 +350,17 @@ class CommonmarkParserTest {
 						text.text("This is the first"),
 						br,
 						text.text("of two lines."))
+		);
+	}
+
+	@Test
+	void softLineBreakInText() {
+		parseAndAssert(
+				"""
+				This is the only line
+				because soft line breaks become spaces.
+				""",
+				p.text("This is the only line because soft line breaks become spaces.")
 		);
 	}
 

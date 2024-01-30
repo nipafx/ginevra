@@ -6,13 +6,9 @@ public record CodeBlock(String id, Classes classes, String language, String text
 		List<Element> children) implements JmlElement {
 
 	public CodeBlock {
-		if (text != null && !children.isEmpty())
-			throw new IllegalArgumentException("Specify either a text or children, but not both");
-		if (children.size() == 1 && children.getFirst() instanceof Text(var childText)) {
-			children = List.of();
-			text = childText;
-		} else
-			children = List.copyOf(children);
+		var textChildren = new TextChildren(text, children);
+		text = textChildren.text();
+		children = textChildren.children();
 	}
 
 	public CodeBlock() {

@@ -7,13 +7,9 @@ public record Heading(int level, String id, Classes classes, String text, List<E
 	public Heading {
 		if (level < 1 || 6 < level)
 			throw new IllegalArgumentException("Heading level must be between 1 and 6 (both inclusive)");
-		if (text != null && !children.isEmpty())
-			throw new IllegalArgumentException("Specify either a text or children, but not both");
-		if (children.size() == 1 && children.getFirst() instanceof Text(var childText)) {
-			children = List.of();
-			text = childText;
-		} else
-			children = List.copyOf(children);
+		var textChildren = new TextChildren(text, children);
+		text = textChildren.text();
+		children = textChildren.children();
 	}
 
 	public Heading(int level) {

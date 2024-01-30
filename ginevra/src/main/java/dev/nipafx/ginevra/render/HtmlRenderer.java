@@ -95,7 +95,7 @@ public class HtmlRenderer {
 				renderer.close("h" + level);
 			}
 			case HtmlDocument(var language, var head, var body) -> {
-				renderer.insertTextElement("<!doctype html>");
+				renderer.insertText("<!doctype html>\n");
 				var lang = language == null
 						? attributes()
 						: attributes("lang", language.getLanguage());
@@ -105,7 +105,7 @@ public class HtmlRenderer {
 				renderer.close("html");
 			}
 			case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> { }
-			case HtmlLiteral(var literal) -> renderer.insertTextElement(literal);
+			case HtmlLiteral(var literal) -> renderer.insertText(literal);
 			case HorizontalRule(var id, var classes) -> renderer.selfClosed("hr", id, classes);
 			case LineBreak(var id, var classes) -> renderer.selfClosed("br", id, classes);
 			case ListItem(String id, Classes classes, String text, List<Element> children) -> {
@@ -141,7 +141,7 @@ public class HtmlRenderer {
 				renderer.close("strong");
 			}
 			case Text(var text) when text == null || text.isBlank() -> { }
-			case Text(var text) -> renderer.insertTextElement(text);
+			case Text(var text) -> renderer.insertText(text);
 			case UnorderedList(var id, var classes, var children) -> {
 				renderer.open("ul", id, classes);
 				children.forEach(child -> render(child, renderer));
@@ -195,10 +195,10 @@ public class HtmlRenderer {
 		}
 
 		public void open(String tag, String id, Classes classes, Map<String, String> attributes) {
-			switch (state)  {
-				case EMPTY, CLOSED  -> builder.repeat("\t", indentation);
-				case OPENED-> builder.append("\n").repeat("\t", indentation);
-				case INLINE -> throw new IllegalStateException();
+			switch (state) {
+				case EMPTY -> builder.repeat("\t", indentation);
+				case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
+				case INLINE -> { }
 			}
 
 			builder.append("<").append(tag);
@@ -234,10 +234,10 @@ public class HtmlRenderer {
 			switch (state)  {
 				case EMPTY -> throw new IllegalStateException();
 				case OPENED, INLINE -> { }
-				case CLOSED -> builder.repeat("\t", indentation);
+				case CLOSED -> builder.append("\n").repeat("\t", indentation);
 			}
 
-			builder.append("</").append(tag).append(">\n");
+			builder.append("</").append(tag).append(">");
 			state = State.CLOSED;
 		}
 
@@ -253,38 +253,32 @@ public class HtmlRenderer {
 			switch (state)  {
 				case EMPTY -> builder.repeat("\t", indentation);
 				case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
-				case INLINE -> throw new IllegalStateException();
+				case INLINE -> { }
 			}
 
 			builder.append("<").append(tag);
 			attribute("id", id);
 			attribute("class", classes.asCssString());
 			attributes.forEach(this::attribute);
-			builder.append(" />\n");
+			builder.append(" />");
 
 			state = State.CLOSED;
 		}
 
 		private void insertText(String text) {
 			switch (state)  {
-				case EMPTY, INLINE, CLOSED -> throw new IllegalStateException();
-				case OPENED -> { }
+				case EMPTY -> builder.repeat("\t", indentation);
+				case OPENED, INLINE, CLOSED -> { }
 			}
 			builder.append(text);
 			state = State.INLINE;
 		}
 
-		public void insertTextElement(String text) {
-			switch (state)  {
-				case EMPTY, CLOSED -> builder.repeat("\t", indentation);
-				case OPENED -> builder.append("\n").repeat("\t", indentation);
-				case INLINE -> throw new IllegalStateException();
-			}
-			builder.append(text).append("\n");
-			state = State.CLOSED;
-		}
-
 		public String render() {
+			// closing tags don't end with a newline, so
+			// add one final newline before assembling the result
+			if (state == State.CLOSED)
+				builder.append("\n");
 			return builder.toString();
 		}
 
