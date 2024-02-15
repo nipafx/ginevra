@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Strong(String id, Classes classes, String text, List<Element> children) implements HtmlElement {
+public record Strong(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Strong {
 		var textChildren = new TextChildren(text, children);
@@ -26,7 +26,7 @@ public record Strong(String id, Classes classes, String text, List<Element> chil
 		return new Strong(this.id, this.classes, text, this.children);
 	}
 
-	public Strong children(List<Element> children) {
+	public Strong children(List<? extends Element> children) {
 		return new Strong(this.id, this.classes, this.text, children);
 	}
 

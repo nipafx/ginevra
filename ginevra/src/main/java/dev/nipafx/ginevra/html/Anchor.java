@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Anchor(String id, Classes classes, String href, String title, String text, List<Element> children) implements HtmlElement {
+public record Anchor(String id, Classes classes, String href, String title, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Anchor {
 		var textChildren = new TextChildren(text, children);
@@ -34,7 +34,7 @@ public record Anchor(String id, Classes classes, String href, String title, Stri
 		return new Anchor(this.id, this.classes, this.href, this.title, text, this.children);
 	}
 
-	public Anchor children(List<Element> children) {
+	public Anchor children(List<? extends Element> children) {
 		return new Anchor(this.id, this.classes, this.href, this.title, this.text, children);
 	}
 

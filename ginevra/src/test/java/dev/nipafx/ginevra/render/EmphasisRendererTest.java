@@ -11,13 +11,13 @@ import static dev.nipafx.ginevra.html.HtmlElement.em;
 
 class EmphasisRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "em";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
 
 		@Override
-		public HtmlRenderer renderer() {
+		public Renderer renderer() {
 			return RENDERER;
 		}
 

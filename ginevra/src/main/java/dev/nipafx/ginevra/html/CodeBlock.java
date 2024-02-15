@@ -2,8 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record CodeBlock(String id, Classes classes, String language, String text,
-		List<Element> children) implements JmlElement {
+public record CodeBlock(String id, Classes classes, String language, String text, List<? extends Element> children) implements JmlElement {
 
 	public CodeBlock {
 		var textChildren = new TextChildren(text, children);
@@ -31,7 +30,7 @@ public record CodeBlock(String id, Classes classes, String language, String text
 		return new CodeBlock(this.id, this.classes, this.language, text, this.children);
 	}
 
-	public CodeBlock children(List<Element> children) {
+	public CodeBlock children(List<? extends Element> children) {
 		return new CodeBlock(this.id, this.classes, this.language, this.text, children);
 	}
 

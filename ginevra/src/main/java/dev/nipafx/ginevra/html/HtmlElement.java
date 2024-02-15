@@ -12,6 +12,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		HtmlDocument,
 		HorizontalRule,
 		LineBreak,
+		Link,
 		ListItem,
 		OrderedList,
 		Paragraph,
@@ -37,6 +38,7 @@ public sealed interface HtmlElement extends KnownElement permits
 	Heading h6 = new Heading(6);
 	HorizontalRule hr = new HorizontalRule();
 	ListItem li = new ListItem();
+	Link link = new Link();
 	OrderedList ol = new OrderedList();
 	Paragraph p = new Paragraph();
 	Pre pre = new Pre();

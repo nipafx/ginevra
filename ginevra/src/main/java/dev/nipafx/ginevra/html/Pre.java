@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Pre(String id, Classes classes, String text, List<Element> children) implements HtmlElement {
+public record Pre(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Pre {
 		var textChildren = new TextChildren(text, children);
@@ -26,7 +26,7 @@ public record Pre(String id, Classes classes, String text, List<Element> childre
 		return new Pre(this.id, this.classes, text, this.children);
 	}
 
-	public Pre children(List<Element> children) {
+	public Pre children(List<? extends Element> children) {
 		return new Pre(this.id, this.classes, this.text, children);
 	}
 

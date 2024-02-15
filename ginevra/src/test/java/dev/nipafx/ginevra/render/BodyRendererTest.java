@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class BodyRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void empty() {
@@ -25,7 +25,7 @@ class BodyRendererTest {
 
 	@Test
 	void withDiv() {
-		var element = body.elements(List.of(div));
+		var element = body.children(List.of(div));
 		var rendered = RENDERER.render(element);
 
 		assertThat(rendered).isEqualTo("""
@@ -37,7 +37,7 @@ class BodyRendererTest {
 
 	@Test
 	void withParagraphs() {
-		var element = body.elements(List.of(
+		var element = body.children(List.of(
 				p.text("Hello"),
 				p.text("World")));
 		var rendered = RENDERER.render(element);

@@ -13,13 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class OrderedListRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "ol";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
 
 		@Override
-		public HtmlRenderer renderer() {
+		public Renderer renderer() {
 			return RENDERER;
 		}
 

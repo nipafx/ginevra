@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HeadRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void empty() {

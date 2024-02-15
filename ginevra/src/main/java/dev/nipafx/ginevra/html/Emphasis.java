@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Emphasis(String id, Classes classes, String text, List<Element> children) implements HtmlElement {
+public record Emphasis(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Emphasis {
 		var textChildren = new TextChildren(text, children);
@@ -26,7 +26,7 @@ public record Emphasis(String id, Classes classes, String text, List<Element> ch
 		return new Emphasis(this.id, this.classes, text, this.children);
 	}
 
-	public Emphasis children(List<Element> children) {
+	public Emphasis children(List<? extends Element> children) {
 		return new Emphasis(this.id, this.classes, this.text, children);
 	}
 

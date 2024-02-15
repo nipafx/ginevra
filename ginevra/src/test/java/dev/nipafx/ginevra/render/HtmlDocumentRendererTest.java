@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HtmlDocumentRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void empty() {
@@ -72,7 +72,7 @@ class HtmlDocumentRendererTest {
 						.charset(StandardCharsets.UTF_8)
 						.title("The document title"))
 				.body(body
-						.elements(List.of(
+						.children(List.of(
 								p.text("Hello"),
 								p.text("World"))));
 		var rendered = RENDERER.render(element);

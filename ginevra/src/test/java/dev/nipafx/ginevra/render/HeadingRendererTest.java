@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HeadingRendererTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "h1";
 
 	@Nested
@@ -60,7 +60,7 @@ class HeadingRendererTest {
 	static class TestBasics implements HtmlRendererTest.TestBasics {
 
 		@Override
-		public HtmlRenderer renderer() {
+		public Renderer renderer() {
 			return RENDERER;
 		}
 

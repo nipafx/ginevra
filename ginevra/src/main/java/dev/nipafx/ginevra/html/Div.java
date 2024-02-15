@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Div(String id, Classes classes, List<Element> children) implements HtmlElement {
+public record Div(String id, Classes classes, List<? extends Element> children) implements HtmlElement {
 
 	public Div {
 		children = List.copyOf(children);
@@ -20,7 +20,7 @@ public record Div(String id, Classes classes, List<Element> children) implements
 		return new Div(this.id, classes, this.children);
 	}
 
-	public Div children(List<Element> children) {
+	public Div children(List<? extends Element> children) {
 		return new Div(this.id, this.classes, children);
 	}
 

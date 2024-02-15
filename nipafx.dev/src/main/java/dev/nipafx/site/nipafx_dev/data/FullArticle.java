@@ -1,4 +1,4 @@
-package dev.nipafx.site.data;
+package dev.nipafx.site.nipafx_dev.data;
 
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.outline.Document.Data;

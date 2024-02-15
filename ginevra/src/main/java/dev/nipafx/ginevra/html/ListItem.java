@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record ListItem(String id, Classes classes, String text, List<Element> children) implements HtmlElement {
+public record ListItem(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public ListItem {
 		var textChildren = new TextChildren(text, children);
@@ -26,7 +26,7 @@ public record ListItem(String id, Classes classes, String text, List<Element> ch
 		return new ListItem(this.id, this.classes, text, this.children);
 	}
 
-	public ListItem children(List<Element> children) {
+	public ListItem children(List<? extends Element> children) {
 		return new ListItem(this.id, this.classes, this.text, children);
 	}
 

@@ -16,7 +16,7 @@ import dev.nipafx.ginevra.outline.Store.DocCollection;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
-import dev.nipafx.ginevra.render.HtmlRenderer;
+import dev.nipafx.ginevra.render.Renderer;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,14 +30,16 @@ public class FullOutliner implements Outliner {
 
 	private final Store store;
 	private final Optional<MarkdownParser> markdownParser;
-	private final HtmlRenderer renderer;
+	private final Renderer renderer;
+	private final Paths paths;
 
 	private final Map<Step, List<Step>> stepMap;
 
-	public FullOutliner(Store store, HtmlRenderer renderer, Optional<MarkdownParser> markdownParser) {
+	public FullOutliner(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Paths paths) {
 		this.store = store;
 		this.renderer = renderer;
 		this.markdownParser = markdownParser;
+		this.paths = paths;
 		this.stepMap = new HashMap<>();
 	}
 
@@ -100,15 +102,15 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public Outline build() {
-		return new MapOutline(stepMap, store, renderer);
+		return new MapOutline(stepMap, store, renderer, paths);
 	}
 
 	// generate
 
 	@Override
 	public <DATA extends Record & Data>
-	void generate(Store.Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template, Path targetFolder) {
-		var step = new TemplateStep<>(query, filter, template, targetFolder);
+	void generate(Store.Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template) {
+		var step = new TemplateStep<>(query, filter, template);
 		createStepListFor(step);
 	}
 

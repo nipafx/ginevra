@@ -62,11 +62,11 @@ public interface Outliner {
 	// generate
 
 	<DATA extends Record & Data>
-	void generate(Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template, Path targetFolder);
+	void generate(Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template);
 
 	default <DATA extends Record & Data>
-	void generate(Query<DATA> query, Template<DATA> template, Path targetFolder) {
-		generate(query, _ -> true, template, targetFolder);
+	void generate(Query<DATA> query, Template<DATA> template) {
+		generate(query, _ -> true, template);
 	}
 
 	// build

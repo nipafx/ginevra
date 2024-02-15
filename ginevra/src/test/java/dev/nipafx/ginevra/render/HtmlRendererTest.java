@@ -17,7 +17,7 @@ class HtmlRendererTest {
 
 	interface TestBasics {
 
-		HtmlRenderer renderer();
+		Renderer renderer();
 
 		String tag();
 

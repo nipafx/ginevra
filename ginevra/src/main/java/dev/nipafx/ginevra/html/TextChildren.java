@@ -8,7 +8,7 @@ import java.util.stream.Gatherer;
  * A helper for the common logic of mapping between text and single children
  * and merging text children.
  */
-record TextChildren(String text, List<Element> children) {
+record TextChildren(String text, List<? extends Element> children) {
 
 	TextChildren {
 		if (text != null && !children.isEmpty())

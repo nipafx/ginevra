@@ -11,15 +11,19 @@ import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.outline.Store.CollectionQuery;
 import dev.nipafx.ginevra.outline.Store.RootQuery;
 import dev.nipafx.ginevra.outline.Template;
-import dev.nipafx.ginevra.render.HtmlRenderer;
+import dev.nipafx.ginevra.render.CssFile;
+import dev.nipafx.ginevra.render.Renderer;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.util.StreamUtils.keepOnly;
 import static java.util.Map.entry;
@@ -29,15 +33,17 @@ class MapOutline implements Outline {
 
 	private final Map<Step, List<Step>> stepMap;
 	private final Store store;
-	private final HtmlRenderer renderer;
+	private final Renderer renderer;
+	private final Paths paths;
 
-	MapOutline(Map<Step, List<Step>> stepMap, Store store, HtmlRenderer renderer) {
+	MapOutline(Map<Step, List<Step>> stepMap, Store store, Renderer renderer, Paths paths) {
 		this.stepMap = stepMap
 				.entrySet().stream()
 				.map(entry -> entry(entry.getKey(), List.copyOf(entry.getValue())))
 				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
 		this.store = store;
 		this.renderer = renderer;
+		this.paths = paths;
 	}
 
 	@Override
@@ -52,10 +58,19 @@ class MapOutline implements Outline {
 		sourceSteps.forEach(step -> step.source().register(doc -> process(step, (Document<?>) doc)));
 		sourceSteps.forEach(step -> step.source().loadAll());
 
-		stepMap
-				.keySet().stream()
-				.flatMap(keepOnly(TemplateStep.class))
-				.forEach(this::generateFromTemplate);
+		try {
+			paths.createFolders();
+			stepMap
+					.keySet().stream()
+					.flatMap(keepOnly(TemplateStep.class))
+					.flatMap(this::generateFromTemplate)
+					// TODO: find out why this cast is needed
+					.forEach((Consumer<TemplatedFile>) this::writeContentFile);
+			renderer
+					.cssFiles()
+					.forEach(this::writeCssFile);
+		} catch (IOException | UncheckedIOException ex) {
+		}
 	}
 
 	private void process(SourceStep<?> sourceStep, Document<?> doc) {
@@ -90,32 +105,50 @@ class MapOutline implements Outline {
 		});
 	}
 
-	private <DATA extends Record & Data> void generateFromTemplate(TemplateStep<DATA> templateStep) {
-		switch (templateStep.query()) {
+	private <DATA extends Record & Data> Stream<TemplatedFile> generateFromTemplate(TemplateStep<DATA> templateStep) {
+		return switch (templateStep.query()) {
 			case CollectionQuery<DATA> collectionQuery -> store
 					.query(collectionQuery).stream()
 					.filter(result -> templateStep.filter().test(result))
-					.forEach(document -> generateFromTemplate(templateStep.template(), document, templateStep.targetFolder()));
+					.map(document -> generateFromTemplate(templateStep.template(), document));
 			case RootQuery<DATA> rootQuery -> {
 				var result = store.query(rootQuery);
-				if (templateStep.filter().test(result))
-					generateFromTemplate(templateStep.template(), result, templateStep.targetFolder());
+				yield templateStep.filter().test(result)
+						? Stream.of(generateFromTemplate(templateStep.template(), result))
+						: Stream.empty();
 			}
-		}
+		};
 	}
 
-	private <DATA extends Record & Data> void generateFromTemplate(Template<DATA> template, Document<DATA> document, Path folder) {
+	private <DATA extends Record & Data> TemplatedFile generateFromTemplate(Template<DATA> template, Document<DATA> document) {
 		var renderedId = document.id().transform("template-" + template.getClass().getName());
-		var renderedDocument = template.render(document.data());
 
-		var file = folder.resolve(renderedDocument.slug() + ".html").toAbsolutePath();
-		var content = renderer.render(renderedDocument.html());
+		var renderedDocument = template.render(document.data());
+		var fileContent = renderer.render(renderedDocument.html());
+		var filePath = paths.siteFolder().resolve(renderedDocument.slug() + ".html").toAbsolutePath();
+
+		return new TemplatedFile(filePath, fileContent);
+	}
+
+	private void writeContentFile(TemplatedFile file) {
+		writeToFile(file.file(), file.content());
+	}
+
+	private void writeCssFile(CssFile cssFile) {
+		var file = paths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
+		writeToFile(file, cssFile.content());
+	}
+
+	private static void writeToFile(Path filePath, String fileContent) {
 		try {
-			Files.writeString(file, content);
+			Files.createDirectories(filePath.getParent());
+			Files.deleteIfExists(filePath);
+			Files.writeString(filePath, fileContent);
 		} catch (IOException ex) {
-			// TODO
 			ex.printStackTrace();
 		}
 	}
+
+	private record TemplatedFile(Path file, String content) { }
 
 }

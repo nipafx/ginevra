@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TextRenderTest {
 
-	private static final HtmlRenderer RENDERER = new HtmlRenderer();
+	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void nullText() {

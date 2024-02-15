@@ -1,10 +1,10 @@
-package dev.nipafx.site;
+package dev.nipafx.site.nipafx_dev;
 
 import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.outline.RenderedDocumentData;
 import dev.nipafx.ginevra.outline.Template;
-import dev.nipafx.site.data.ArticlePage;
+import dev.nipafx.site.nipafx_dev.data.ArticlePage;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ public class ArticleTemplate implements Template<ArticlePage> {
 				.head(head
 						.charset(StandardCharsets.UTF_8)
 						.title(article.title()))
-				.body(body.elements(List.of(
+				.body(body.children(List.of(
 						h1.text(article.title()),
 						p.text(article.description()),
 						div.children(article

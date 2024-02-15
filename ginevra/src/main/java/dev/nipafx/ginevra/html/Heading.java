@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Heading(int level, String id, Classes classes, String text, List<Element> children) implements HtmlElement {
+public record Heading(int level, String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Heading {
 		if (level < 1 || 6 < level)
@@ -28,7 +28,7 @@ public record Heading(int level, String id, Classes classes, String text, List<E
 		return new Heading(this.level, this.id, this.classes, text, this.children);
 	}
 
-	public Heading children(List<Element> children) {
+	public Heading children(List<? extends Element> children) {
 		return new Heading(this.level, this.id, this.classes, this.text, children);
 	}
 
