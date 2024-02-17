@@ -16,6 +16,7 @@ import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.HtmlLiteral;
+import dev.nipafx.ginevra.html.Image;
 import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.KnownElement;
 import dev.nipafx.ginevra.html.LineBreak;
@@ -87,6 +88,7 @@ class ElementResolver {
 					case Head el -> el.children(resolveChildren(el.children(), sideData));
 					case Heading el -> el.children(resolveChildren(el.children(), sideData));
 					case HorizontalRule el -> el;
+					case Image el -> el;
 					case LineBreak el -> el;
 					case Link el -> el;
 					case ListItem el -> el.children(resolveChildren(el.children(), sideData));

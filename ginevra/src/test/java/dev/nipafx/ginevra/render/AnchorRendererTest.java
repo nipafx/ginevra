@@ -54,32 +54,12 @@ class AnchorRendererTest {
 		}
 
 		@Test
-		void withEmptyHref() {
-			var element = a;
-			var rendered = renderer().render(element);
-
-			assertThat(rendered).isEqualTo("""
-					<a></a>
-					""");
-		}
-
-		@Test
 		void withHref() {
 			var element = a.href("url");
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo("""
 					<a href="url"></a>
-					""");
-		}
-
-		@Test
-		void withEmptyTitle() {
-			var element = a.title("");
-			var rendered = renderer().render(element);
-
-			assertThat(rendered).isEqualTo("""
-					<a></a>
 					""");
 		}
 

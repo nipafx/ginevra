@@ -20,6 +20,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.h4;
 import static dev.nipafx.ginevra.html.HtmlElement.h5;
 import static dev.nipafx.ginevra.html.HtmlElement.h6;
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
+import static dev.nipafx.ginevra.html.HtmlElement.img;
 import static dev.nipafx.ginevra.html.HtmlElement.li;
 import static dev.nipafx.ginevra.html.HtmlElement.ol;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
@@ -293,6 +294,31 @@ class CommonmarkParserTest {
 						text.text("There is "),
 						a.text("a link").title("nipafx site").href("https://nipafx.dev"),
 						text.text(" in the middle of this paragraph."))
+		);
+	}
+
+	@Test
+	void image() {
+		parseAndAssert("![nipafx](https://nipafx.dev/nicolai.jpg \"Nicolai looking at the camera\")",
+				p.children(img
+						.alt("nipafx")
+						.title("Nicolai looking at the camera")
+						.src("https://nipafx.dev/nicolai.jpg"))
+		);
+	}
+
+	@Test
+	void imageWithLinkInAlt() {
+		parseAndAssert("![This is [nipafx](https://nipafx.dev/).](https://nipafx.dev/nicolai.jpg \"Nicolai looking at the camera\")",
+				p.children(img
+						// TODO: The spec recommends "that in rendering to HTML, only the plain string content of
+						//       the image description be used" for the alt text but that requires mapping arbitrary
+						//       child nodes of the Image node to their string content, which is a lot of work for
+						//       what appears to be very little benefit, so I didn't do it yet. Instead, all non-Text
+						//       nodes (like the link above) are ignored.
+						.alt("This is .")
+						.title("Nicolai looking at the camera")
+						.src("https://nipafx.dev/nicolai.jpg"))
 		);
 	}
 

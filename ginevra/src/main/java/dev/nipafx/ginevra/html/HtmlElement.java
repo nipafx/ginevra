@@ -11,6 +11,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		Heading,
 		HtmlDocument,
 		HorizontalRule,
+		Image,
 		LineBreak,
 		Link,
 		ListItem,
@@ -27,9 +28,9 @@ public sealed interface HtmlElement extends KnownElement permits
 	LineBreak br = new LineBreak();
 	Code code = new Code();
 	Div div = new Div();
-	Head head = new Head();
 	HtmlDocument document = new HtmlDocument();
 	Emphasis em = new Emphasis();
+	Head head = new Head();
 	Heading h1 = new Heading(1);
 	Heading h2 = new Heading(2);
 	Heading h3 = new Heading(3);
@@ -37,6 +38,7 @@ public sealed interface HtmlElement extends KnownElement permits
 	Heading h5 = new Heading(5);
 	Heading h6 = new Heading(6);
 	HorizontalRule hr = new HorizontalRule();
+	Image img = new Image();
 	ListItem li = new ListItem();
 	Link link = new Link();
 	OrderedList ol = new OrderedList();

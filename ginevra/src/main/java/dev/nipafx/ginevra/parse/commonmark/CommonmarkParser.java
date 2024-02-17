@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static dev.nipafx.ginevra.html.JmlElement.text;
+import static dev.nipafx.ginevra.util.StreamUtils.keepOnly;
+import static java.util.stream.Collectors.joining;
 
 public class CommonmarkParser implements MarkdownParser {
 
@@ -73,8 +74,21 @@ public class CommonmarkParser implements MarkdownParser {
 					.text(nullIfBlank(cb.getLiteral()))
 					.children(children);
 			case org.commonmark.node.HardLineBreak _ -> HtmlElement.br;
+			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
 			case org.commonmark.node.HtmlBlock html -> JmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.HtmlInline html -> JmlElement.html.literal(html.getLiteral());
+			case org.commonmark.node.Image img -> {
+				var alt = streamChildren(img)
+						.flatMap(keepOnly(org.commonmark.node.Text.class))
+						.map(child -> child instanceof org.commonmark.node.Text t
+								? t.getLiteral()
+								: " ")
+						.collect(joining());
+				yield HtmlElement.img
+						.src(nullIfBlank(img.getDestination()))
+						.title(nullIfBlank(img.getTitle()))
+						.alt(alt);
+			}
 			case org.commonmark.node.Link a -> HtmlElement
 					.a
 					.href(nullIfBlank(a.getDestination()))
@@ -82,7 +96,6 @@ public class CommonmarkParser implements MarkdownParser {
 					.children(children);
 			case org.commonmark.node.LinkReferenceDefinition _ -> JmlElement.nothing;
 			case org.commonmark.node.ListItem _ -> HtmlElement.li.children(children);
-			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
 			case org.commonmark.node.OrderedList ol -> {
 				var start = ol.getStartNumber() == 1 ? null : ol.getStartNumber();
 				if (children.stream().anyMatch(child -> ! (child instanceof ListItem)))
@@ -94,7 +107,7 @@ public class CommonmarkParser implements MarkdownParser {
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
 			case org.commonmark.node.SoftLineBreak _ -> JmlElement.text.text(" ");
 			case org.commonmark.node.StrongEmphasis _ -> HtmlElement.strong.children(children);
-			case org.commonmark.node.Text t -> text.text(nullIfBlank(t.getLiteral()));
+			case org.commonmark.node.Text t -> JmlElement.text.text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			case org.commonmark.ext.front.matter.YamlFrontMatterBlock _ -> JmlElement.nothing;
 			case org.commonmark.ext.front.matter.YamlFrontMatterNode _ -> JmlElement.nothing;

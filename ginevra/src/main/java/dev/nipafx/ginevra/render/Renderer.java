@@ -15,6 +15,7 @@ import dev.nipafx.ginevra.html.HorizontalRule;
 import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.HtmlLiteral;
+import dev.nipafx.ginevra.html.Image;
 import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.Link;
@@ -126,6 +127,9 @@ public class Renderer {
 						html.close("html");
 					}
 					case HorizontalRule(var id, var classes) -> html.selfClosed("hr", id, classes);
+					case Image(var id, var classes, var src, var title, var alt) -> html
+							.selfClosed("img", id, classes,
+									attributes("src", src, "title", title, "alt", alt));
 					case LineBreak(var id, var classes) -> html.selfClosed("br", id, classes);
 					case Link(var href, var rel) -> html.selfClosed("link", attributes("href", href, "rel", rel));
 					case ListItem(var id, var classes, var text, var children) -> {
