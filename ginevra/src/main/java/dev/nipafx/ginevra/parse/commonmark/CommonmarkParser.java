@@ -89,6 +89,10 @@ public class CommonmarkParser implements MarkdownParser {
 						.title(nullIfBlank(img.getTitle()))
 						.alt(alt);
 			}
+			case org.commonmark.node.IndentedCodeBlock cb -> JmlElement
+					.codeBlock
+					.text(nullIfBlank(cb.getLiteral()))
+					.children(children);
 			case org.commonmark.node.Link a -> HtmlElement
 					.a
 					.href(nullIfBlank(a.getDestination()))
