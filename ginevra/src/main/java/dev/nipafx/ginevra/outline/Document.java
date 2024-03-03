@@ -50,6 +50,20 @@ public interface Document<DATA extends Record & Data> {
 
 	}
 
+	record StoreId(String storeName) implements Id {
+
+		@Override
+		public Optional<Id> parent() {
+			return Optional.empty();
+		}
+
+		@Override
+		public String toString() {
+			return STR."Store[\{storeName}]";
+		}
+
+	}
+
 	record TransformerId(Id theParent, String name) implements Id {
 
 		@Override

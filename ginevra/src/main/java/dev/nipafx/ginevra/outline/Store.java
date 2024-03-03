@@ -11,7 +11,7 @@ public interface Store {
 
 	void store(Document<?> doc);
 
-	void store(DocCollection collection, Document<?> doc);
+	void store(String collection, Document<?> doc);
 
 	List<Query<?>> commit();
 
@@ -19,14 +19,12 @@ public interface Store {
 
 	<RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query);
 
-	record DocCollection(String name) { }
-
 	sealed interface Query<RESULT extends Record & Data> { }
 
 	record RootQuery<RESULT extends Record & Data>(Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
-	record CollectionQuery<RESULT extends Record & Data>(DocCollection collection, Class<RESULT> resultType)
+	record CollectionQuery<RESULT extends Record & Data>(String collection, Class<RESULT> resultType)
 			implements Query<RESULT> { }
 
 }

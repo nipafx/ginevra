@@ -12,7 +12,6 @@ import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Store;
-import dev.nipafx.ginevra.outline.Store.DocCollection;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
@@ -54,6 +53,11 @@ public class FullOutliner implements Outliner {
 	}
 
 	@Override
+	public <DATA_OUT extends Record & Data> StepKey<DATA_OUT> source(DATA_OUT source) {
+		return source(new RecordSource<>(source));
+	}
+
+	@Override
 	public StepKey<FileData> sourceFileSystem(String name, Path path) {
 		return source(new FileSource(name, path));
 	}
@@ -84,7 +88,7 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, DocCollection collection, Predicate<Document<DATA_IN>> filter) {
+	void store(StepKey<DATA_IN> previous, String collection, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		var step = new StoreStep(filter, Optional.of(collection));
 		getStepListFor(previous).add(step);
@@ -134,7 +138,7 @@ public class FullOutliner implements Outliner {
 
 	private List<Step> getStepListFor(StepKey<?> previous) {
 		if (!(previous instanceof SimpleStepKey<?>(Step step)))
-			throw new IllegalStateException("Unexpected implementation of " + StepKey.class.getSimpleName());
+			throw new IllegalStateException(STR."Unexpected implementation of '\{StepKey.class.getSimpleName()}'");
 
 		var stepList = stepMap.get(step);
 		if (stepList == null)

@@ -7,9 +7,11 @@ import dev.nipafx.ginevra.outline.FileData;
 import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Outliner.StepKey;
 import dev.nipafx.ginevra.outline.Store;
-import dev.nipafx.ginevra.outline.Store.DocCollection;
 import dev.nipafx.site.nipafx_dev.data.ArticleData;
+import dev.nipafx.site.nipafx_dev.data.LandingPageData;
+import dev.nipafx.site.nipafx_dev.data.SiteData;
 import dev.nipafx.site.nipafx_dev.templates.ArticlePage;
+import dev.nipafx.site.nipafx_dev.templates.LandingPage;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -26,15 +28,18 @@ public class Main {
 		var ginevra = Ginevra.initialize(config);
 		var outliner = ginevra.newOutliner();
 
+		StepKey<SiteData> siteData = outliner.source(SiteData.create());
+		outliner.store(siteData);
+
 		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT_FOLDER.resolve("articles"));
 		StepKey<ArticleData.Markdown> markdown = outliner.transformMarkdown(content, ArticleData.Markdown.class);
 		StepKey<ArticleData.Parsed> parsed = outliner.transform(markdown, doc -> List.of(new GeneralDocument<>(
 				doc.id().transform("parsed"),
 				ArticleData.Parsed.from(doc.data()))));
-		var articleCollection = new DocCollection("articles");
-		outliner.store(parsed, articleCollection);
+		outliner.store(parsed, "articles");
 
-		outliner.generate(new Store.CollectionQuery<>(articleCollection, ArticleData.Page.class), new ArticlePage());
+		outliner.generate(new Store.CollectionQuery<>("articles", ArticleData.Page.class), new ArticlePage());
+		outliner.generate(new Store.RootQuery<>(LandingPageData.class), new LandingPage());
 
 		outliner.build().run();
 	}

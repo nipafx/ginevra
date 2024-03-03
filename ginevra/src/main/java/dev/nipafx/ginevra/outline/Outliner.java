@@ -2,7 +2,6 @@ package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
-import dev.nipafx.ginevra.outline.Store.DocCollection;
 import dev.nipafx.ginevra.outline.Store.Query;
 
 import java.nio.file.Path;
@@ -17,6 +16,9 @@ public interface Outliner {
 
 	<DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> source(Source<DATA_OUT> source);
+
+	<DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> source(DATA_OUT source);
 
 	StepKey<FileData> sourceFileSystem(String name, Path path);
 
@@ -44,10 +46,10 @@ public interface Outliner {
 	// store
 
 	<DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, DocCollection collection, Predicate<Document<DATA_IN>> filter);
+	void store(StepKey<DATA_IN> previous, String collection, Predicate<Document<DATA_IN>> filter);
 
 	default <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, DocCollection collection) {
+	void store(StepKey<DATA_IN> previous, String collection) {
 		store(previous, collection, _ -> true);
 	}
 
