@@ -79,7 +79,7 @@ public class CommonmarkParser implements MarkdownParser {
 			case org.commonmark.node.HtmlInline html -> JmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.Image img -> {
 				var alt = streamChildren(img)
-						.flatMap(keepOnly(org.commonmark.node.Text.class))
+						.mapMulti(keepOnly(org.commonmark.node.Text.class))
 						.map(child -> child instanceof org.commonmark.node.Text t
 								? t.getLiteral()
 								: " ")

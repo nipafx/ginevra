@@ -62,7 +62,7 @@ class MapOutline implements Outline {
 			paths.createFolders();
 			stepMap
 					.keySet().stream()
-					.flatMap(keepOnly(TemplateStep.class))
+					.mapMulti(keepOnly(TemplateStep.class))
 					.flatMap(this::generateFromTemplate)
 					// TODO: find out why this cast is needed
 					.forEach((Consumer<TemplatedFile>) this::writeContentFile);
