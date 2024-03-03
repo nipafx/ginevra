@@ -2,10 +2,9 @@ package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.Strong;
 import org.junit.jupiter.api.Nested;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.strong;
 
@@ -32,8 +31,8 @@ class StrongRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<Strong> {
 
 		@Override
-		public Strong createWith(String id, List<String> classes) {
-			return strong.id(id).classes(Classes.of(classes));
+		public Strong createWith(Id id, Classes classes) {
+			return strong.id(id).classes( classes);
 		}
 
 	}

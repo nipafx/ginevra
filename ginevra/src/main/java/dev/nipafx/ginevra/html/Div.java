@@ -2,17 +2,17 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Div(String id, Classes classes, List<? extends Element> children) implements HtmlElement {
+public record Div(Id id, Classes classes, List<? extends Element> children) implements HtmlElement {
 
 	public Div {
 		children = List.copyOf(children);
 	}
 
 	public Div() {
-		this(null, Classes.none(), List.of());
+		 this(Id.none(), Classes.none(), List.of());
 	}
 
-	public Div id(String id) {
+	public Div id(Id id) {
 		return new Div(id, this.classes, this.children);
 	}
 

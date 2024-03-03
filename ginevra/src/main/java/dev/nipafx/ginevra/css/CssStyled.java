@@ -1,7 +1,7 @@
 package dev.nipafx.ginevra.css;
 
-public interface CssStyled {
+public interface CssStyled<STYLE extends Record & CssStyle> {
 
-	<STYLE extends Record & CssStyle> STYLE style();
+	STYLE style();
 
 }

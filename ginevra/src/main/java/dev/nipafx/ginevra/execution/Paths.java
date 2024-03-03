@@ -12,7 +12,7 @@ public record Paths(Path siteFolder, Path cssFolder) {
 
 	public void createFolders() throws IOException {
 		Files.createDirectories(siteFolder.toAbsolutePath());
-		Files.createDirectories(cssFolder.toAbsolutePath());
+		Files.createDirectories(siteFolder.resolve(cssFolder).toAbsolutePath());
 	}
 
 }

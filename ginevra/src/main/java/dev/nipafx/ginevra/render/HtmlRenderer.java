@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Id;
 
 import java.util.Map;
 
@@ -19,18 +20,18 @@ class HtmlRenderer {
 	private int indentation = 0;
 
 	public void open(String tag) {
-		open(tag, null, Classes.none(), Map.of());
+		open(tag, Id.none(), Classes.none(), Map.of());
 	}
 
-	public void open(String tag, String id, Classes classes) {
+	public void open(String tag, Id id, Classes classes) {
 		open(tag, id, classes, Map.of());
 	}
 
 	public void open(String tag, Map<String, String> attributes) {
-		open(tag, null, Classes.none(), attributes);
+		open(tag, Id.none(), Classes.none(), attributes);
 	}
 
-	public void open(String tag, String id, Classes classes, Map<String, String> attributes) {
+	public void open(String tag, Id id, Classes classes, Map<String, String> attributes) {
 		switch (state) {
 			case EMPTY -> builder.repeat("\t", indentation);
 			case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
@@ -39,7 +40,7 @@ class HtmlRenderer {
 		}
 
 		builder.append("<").append(tag);
-		attribute("id", id);
+		attribute("id", id.asString());
 		attribute("class", classes.asCssString());
 		attributes.forEach(this::attribute);
 		builder.append(">");
@@ -68,15 +69,15 @@ class HtmlRenderer {
 		state = State.CLOSED;
 	}
 
-	public void selfClosed(String tag, String id, Classes classes) {
+	public void selfClosed(String tag, Id id, Classes classes) {
 		selfClosed(tag, id, classes, Map.of());
 	}
 
 	public void selfClosed(String tag, Map<String, String> attributes) {
-		selfClosed(tag, null, Classes.none(), attributes);
+		selfClosed(tag, Id.none(), Classes.none(), attributes);
 	}
 
-	public void selfClosed(String tag, String id, Classes classes, Map<String, String> attributes) {
+	public void selfClosed(String tag, Id id, Classes classes, Map<String, String> attributes) {
 		switch (state) {
 			case EMPTY -> builder.repeat("\t", indentation);
 			case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
@@ -85,7 +86,7 @@ class HtmlRenderer {
 		}
 
 		builder.append("<").append(tag);
-		attribute("id", id);
+		attribute("id", id.asString());
 		attribute("class", classes.asCssString());
 		attributes.forEach(this::attribute);
 		builder.append(" />");

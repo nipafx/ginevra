@@ -1,12 +1,10 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
-import dev.nipafx.ginevra.html.HorizontalRule;
+import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.Image;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.img;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,8 +32,8 @@ class ImageRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<Image> {
 
 		@Override
-		public Image createWith(String id, List<String> classes) {
-			return img.id(id).classes(Classes.of(classes));
+		public Image createWith(Id id, Classes classes) {
+			return img.id(id).classes( classes);
 		}
 
 		@Override

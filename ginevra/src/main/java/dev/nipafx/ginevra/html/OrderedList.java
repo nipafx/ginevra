@@ -2,17 +2,17 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record OrderedList(String id, Classes classes, Integer start, List<ListItem> children) implements HtmlElement {
+public record OrderedList(Id id, Classes classes, Integer start, List<ListItem> children) implements HtmlElement {
 
 	public OrderedList {
 		children = List.copyOf(children);
 	}
 
 	public OrderedList() {
-		this(null, Classes.none(), null, List.of());
+		 this(Id.none(), Classes.none(), null, List.of());
 	}
 
-	public OrderedList id(String id) {
+	public OrderedList id(Id id) {
 		return new OrderedList(id, this.classes, this.start, this.children);
 	}
 

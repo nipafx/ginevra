@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Id;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -26,11 +27,11 @@ class CodeBlockResolverTest {
 
 	@Test
 	void withId() {
-		var block = codeBlock.id("the-id");
+		var block = codeBlock.id(Id.of("the-id"));
 		var expressed = RESOLVER.express(block);
 
 		assertThat(expressed).isEqualTo(
-				pre.id("the-id").children(code));
+				pre.id(Id.of("the-id")).children(code));
 	}
 
 	@Test

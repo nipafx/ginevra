@@ -2,9 +2,8 @@ package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.HorizontalRule;
+import dev.nipafx.ginevra.html.Id;
 import org.junit.jupiter.api.Nested;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
 
@@ -31,8 +30,8 @@ class HorizontalRuleRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<HorizontalRule> {
 
 		@Override
-		public HorizontalRule createWith(String id, List<String> classes) {
-			return hr.id(id).classes(Classes.of(classes));
+		public HorizontalRule createWith(Id id, Classes classes) {
+			return hr.id(id).classes( classes);
 		}
 
 		@Override

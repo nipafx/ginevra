@@ -3,10 +3,9 @@ package dev.nipafx.ginevra.render;
 import dev.nipafx.ginevra.html.Anchor;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Id;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,8 +33,8 @@ class AnchorRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<Anchor> {
 
 		@Override
-		public Anchor createWith(String id, List<String> classes) {
-			return a.id(id).classes(Classes.of(classes));
+		public Anchor createWith(Id id, Classes classes) {
+			return a.id(id).classes( classes);
 		}
 
 	}

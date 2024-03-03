@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record BlockQuote(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
+public record BlockQuote(Id id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public BlockQuote {
 		var textChildren = new TextChildren(text, children);
@@ -11,10 +11,10 @@ public record BlockQuote(String id, Classes classes, String text, List<? extends
 	}
 
 	public BlockQuote() {
-		this(null, Classes.none(), null, List.of());
+		 this(Id.none(), Classes.none(), null, List.of());
 	}
 
-	public BlockQuote id(String id) {
+	public BlockQuote id(Id id) {
 		return new BlockQuote(id, this.classes, this.text, this.children);
 	}
 

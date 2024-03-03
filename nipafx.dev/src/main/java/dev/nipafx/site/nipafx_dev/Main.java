@@ -4,13 +4,15 @@ import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.Ginevra.Configuration;
 import dev.nipafx.ginevra.execution.Paths;
 import dev.nipafx.ginevra.outline.FileData;
+import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Outliner.StepKey;
 import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.outline.Store.DocCollection;
-import dev.nipafx.site.nipafx_dev.data.ArticlePage;
-import dev.nipafx.site.nipafx_dev.data.FullArticle;
+import dev.nipafx.site.nipafx_dev.data.ArticleData;
+import dev.nipafx.site.nipafx_dev.templates.ArticlePage;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class Main {
 
@@ -25,10 +27,14 @@ public class Main {
 		var outliner = ginevra.newOutliner();
 
 		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT_FOLDER.resolve("articles"));
-		StepKey<FullArticle> markdown = outliner.transformMarkdown(content, FullArticle.class);
+		StepKey<ArticleData.Markdown> markdown = outliner.transformMarkdown(content, ArticleData.Markdown.class);
+		StepKey<ArticleData.Parsed> parsed = outliner.transform(markdown, doc -> List.of(new GeneralDocument<>(
+				doc.id().transform("parsed"),
+				ArticleData.Parsed.from(doc.data()))));
 		var articleCollection = new DocCollection("articles");
-		outliner.store(markdown, articleCollection);
-		outliner.generate(new Store.CollectionQuery<>(articleCollection, ArticlePage.class), new ArticleTemplate());
+		outliner.store(parsed, articleCollection);
+
+		outliner.generate(new Store.CollectionQuery<>(articleCollection, ArticleData.Page.class), new ArticlePage());
 
 		outliner.build().run();
 	}

@@ -1,12 +1,12 @@
 package dev.nipafx.ginevra.html;
 
-public record LineBreak(String id, Classes classes) implements HtmlElement {
+public record LineBreak(Id id, Classes classes) implements HtmlElement {
 
 	public LineBreak() {
-		this(null, Classes.none());
+		 this(Id.none(), Classes.none());
 	}
 
-	public LineBreak id(String id) {
+	public LineBreak id(Id id) {
 		return new LineBreak(id, this.classes);
 	}
 

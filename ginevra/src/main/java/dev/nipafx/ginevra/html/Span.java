@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record Span(String id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
+public record Span(Id id, Classes classes, String text, List<? extends Element> children) implements HtmlElement {
 
 	public Span {
 		var textChildren = new TextChildren(text, children);
@@ -11,10 +11,10 @@ public record Span(String id, Classes classes, String text, List<? extends Eleme
 	}
 
 	public Span() {
-		this(null, Classes.none(), null, List.of());
+		 this(Id.none(), Classes.none(), null, List.of());
 	}
 
-	public Span id(String id) {
+	public Span id(Id id) {
 		return new Span(id, this.classes, this.text, this.children);
 	}
 

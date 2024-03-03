@@ -23,19 +23,19 @@ class CssRenderer {
 	}
 
 	public Optional<Link> process(CustomElement element) {
-		return (element instanceof CssStyled styled)
+		return (element instanceof CssStyled<?> styled)
 				? Optional.of(processStyle(styled))
 				: Optional.empty();
 	}
 
-	private Link processStyle(CssStyled styled) {
+	private Link processStyle(CssStyled<?> styled) {
 		var css = getCssFile(styled);
 		return link
-				.href(css.file().toString())
+				.href(STR."/\{css.file()}")
 				.rel("stylesheet");
 	}
 
-	private CssFile getCssFile(CssStyled styled) {
+	private CssFile getCssFile(CssStyled<?> styled) {
 		var style = styled.style();
 		var contentHash = SHA256.hash(style.style());
 		return files.computeIfAbsent(contentHash, _ -> {

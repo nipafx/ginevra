@@ -1,11 +1,10 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.OrderedList;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.li;
 import static dev.nipafx.ginevra.html.HtmlElement.ol;
@@ -34,8 +33,8 @@ class OrderedListRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<OrderedList> {
 
 		@Override
-		public OrderedList createWith(String id, List<String> classes) {
-			return ol.id(id).classes(Classes.of(classes));
+		public OrderedList createWith(Id id, Classes classes) {
+			return ol.id(id).classes( classes);
 		}
 
 	}
@@ -81,7 +80,7 @@ class OrderedListRendererTest {
 		@Test
 		void withOneChild() {
 			var element = ol.children(
-					li.id("child"));
+					li.id(Id.of("child")));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""
@@ -94,9 +93,9 @@ class OrderedListRendererTest {
 		@Test
 		void withChildren() {
 			var element = ol.children(
-					li.id("child-1"),
-					li.id("child-2"),
-					li.id("child-3"));
+					li.id(Id.of("child-1")),
+					li.id(Id.of("child-2")),
+					li.id(Id.of("child-3")));
 			var rendered = renderer().render(element);
 
 			assertThat(rendered).isEqualTo(STR."""

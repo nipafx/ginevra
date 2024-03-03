@@ -3,9 +3,8 @@ package dev.nipafx.ginevra.render;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Emphasis;
+import dev.nipafx.ginevra.html.Id;
 import org.junit.jupiter.api.Nested;
-
-import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.em;
 
@@ -32,8 +31,8 @@ class EmphasisRendererTest {
 	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<Emphasis> {
 
 		@Override
-		public Emphasis createWith(String id, List<String> classes) {
-			return em.id(id).classes(Classes.of(classes));
+		public Emphasis createWith(Id id, Classes classes) {
+			return em.id(id).classes( classes);
 		}
 
 	}

@@ -79,8 +79,8 @@ public class Renderer {
 						renderChildren(text, children, html);
 						html.close("blockquote");
 					}
-					case Body(var content) -> {
-						html.open("body");
+					case Body(var id, var classes, var content) -> {
+						html.open("body", id, classes);
 						renderChildren(content, html);
 						html.close("body");
 					}

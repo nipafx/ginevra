@@ -2,17 +2,17 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record UnorderedList(String id, Classes classes, List<ListItem> children) implements HtmlElement {
+public record UnorderedList(Id id, Classes classes, List<ListItem> children) implements HtmlElement {
 
 	public UnorderedList {
 		children = List.copyOf(children);
 	}
 
 	public UnorderedList() {
-		this(null, Classes.none(), List.of());
+		 this(Id.none(), Classes.none(), List.of());
 	}
 
-	public UnorderedList id(String id) {
+	public UnorderedList id(Id id) {
 		return new UnorderedList(id, this.classes, this.children);
 	}
 

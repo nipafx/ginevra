@@ -1,53 +1,52 @@
 package dev.nipafx.ginevra.render;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import dev.nipafx.ginevra.html.Body;
+import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Div;
+import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Id;
+import org.junit.jupiter.api.Nested;
 
 import static dev.nipafx.ginevra.html.HtmlElement.body;
 import static dev.nipafx.ginevra.html.HtmlElement.div;
-import static dev.nipafx.ginevra.html.HtmlElement.p;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class BodyRendererTest {
 
 	private static final Renderer RENDERER = new Renderer();
+	private static final String TAG = "body";
 
-	@Test
-	void empty() {
-		var element = body;
-		var rendered = RENDERER.render(element);
+	static class TestBasics implements HtmlRendererTest.TestBasics {
 
-		assertThat(rendered).isEqualTo("""
-					<body></body>
-					""");
+		@Override
+		public Renderer renderer() {
+			return RENDERER;
+		}
+
+		@Override
+		public String tag() {
+			return TAG;
+		}
+
 	}
 
-	@Test
-	void withDiv() {
-		var element = body.children(List.of(div));
-		var rendered = RENDERER.render(element);
+	@Nested
+	class IdAndClasses extends TestBasics implements HtmlRendererTest.IdAndClasses<Body> {
 
-		assertThat(rendered).isEqualTo("""
-					<body>
-						<div></div>
-					</body>
-					""");
+		@Override
+		public Body createWith(Id id, Classes classes) {
+			return body.id(id).classes( classes);
+		}
+
 	}
 
-	@Test
-	void withParagraphs() {
-		var element = body.children(List.of(
-				p.text("Hello"),
-				p.text("World")));
-		var rendered = RENDERER.render(element);
+	@Nested
+	class Children extends DivRendererTest.TestBasics implements HtmlRendererTest.Children<Div> {
 
-		assertThat(rendered).isEqualTo("""
-					<body>
-						<p>Hello</p>
-						<p>World</p>
-					</body>
-					""");
+		@Override
+		public Div createWith(Element... children) {
+			return div.children(children);
+		}
+
 	}
 
 }

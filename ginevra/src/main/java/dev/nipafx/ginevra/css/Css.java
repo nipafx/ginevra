@@ -1,16 +1,13 @@
 package dev.nipafx.ginevra.css;
 
+import dev.nipafx.ginevra.html.Classes;
+import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.util.SHA256;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 
 public class Css {
 
@@ -20,33 +17,34 @@ public class Css {
 		Class<?>[] componentTypes = Stream
 				.of(type.getRecordComponents())
 				.peek(component -> {
-					if (component.getType() != String.class) {
-						var message = STR."CSS records must have all string components but '\{component}' isn't.";
-						throw new IllegalArgumentException(message);
-					}
+					if (component.getType() == Id.class || component.getType() == Classes.class)
+						return;
+					if (component.getType() == String.class && component.getName().equals(STYLE_COMPONENT_NAME))
+						return;
+
+					var message = STR."""
+						CSS record components must be of types `Id` or `Classes` \
+						except for one `String \{STYLE_COMPONENT_NAME}` component \
+						but '\{component}' is neither.""";
+					throw new IllegalArgumentException(message);
 				})
 				.map(RecordComponent::getType)
 				.toArray(Class[]::new);
 
-
 		var prefix = createCssPrefix(type, css);
-		Map<String, String> componentsToCssClass = Stream
-				.of(type.getRecordComponents())
-				.map(RecordComponent::getName)
-				.filter(componentName -> !componentName.equals(STYLE_COMPONENT_NAME))
-				.collect(toMap(identity(), componentName -> prefix + componentName));
-
-		var replacedCss = new AtomicReference<>(css);
-		componentsToCssClass
-				.forEach((componentName, cssName) -> replacedCss.getAndUpdate(_css -> _css
-						.replaceAll("([.#])" + componentName + "([\\W\\d-_]+|$)", "$1" + cssName + "$2")));
+		var replacedCss = replaceNamesInCss(type, css, prefix);
 
 		Object[] componentValues = Stream
 				.of(type.getRecordComponents())
-				.map(RecordComponent::getName)
-				.map(componentName -> componentName.equals(STYLE_COMPONENT_NAME)
-						? replacedCss.get()
-						: componentsToCssClass.get(componentName))
+				.map(component -> {
+					if (component.getType() == Id.class)
+						return Id.of(prefix + component.getName());
+					if (component.getType() == Classes.class)
+						return Classes.of(prefix + component.getName());
+					if (component.getType() == String.class)
+						return replacedCss;
+					throw new IllegalStateException();
+				})
 				.toArray();
 
 		try {
@@ -65,6 +63,21 @@ public class Css {
 		var typeNameInCss = type.getName().replaceAll("[.$]", "-");
 		var cssHash = SHA256.hash(css);
 		return STR."\{typeNameInCss }--\{cssHash}--";
+	}
+
+	private static <STYLE extends Record & CssStyle> String replaceNamesInCss(Class<STYLE> type, String css, String prefix) {
+		var replacedCss = css;
+		for (RecordComponent component : type.getRecordComponents()) {
+			if (component.getType() == String.class)
+				continue;
+
+			var name = component.getName();
+			var cssChar = component.getType() == Id.class ? '#' : '.';
+			replacedCss = replacedCss.replaceAll(
+					STR."[\{cssChar}]\{name}([\\W\\d-_]+|$)",
+					STR."\{cssChar}\{prefix}\{name}$1");
+		}
+		return replacedCss;
 	}
 
 }

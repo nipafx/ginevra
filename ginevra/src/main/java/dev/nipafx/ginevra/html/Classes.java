@@ -39,6 +39,15 @@ public class Classes {
 		return new Classes(mergedNames);
 	}
 
+	public Classes plus(Classes... classes) {
+		var mergedNames = Stream
+				.concat(
+						names.stream(),
+						Stream.of(classes).flatMap(cl -> cl.names.stream()))
+				.toList();
+		return new Classes(mergedNames);
+	}
+
 	public Classes minus(String... names) {
 		var remainder = new ArrayList<>(this.names);
 		remainder.removeAll(List.of(names));

@@ -1,12 +1,12 @@
 package dev.nipafx.ginevra.html;
 
-public record HorizontalRule(String id, Classes classes) implements HtmlElement {
+public record HorizontalRule(Id id, Classes classes) implements HtmlElement {
 
 	public HorizontalRule() {
-		this(null, Classes.none());
+		 this(Id.none(), Classes.none());
 	}
 
-	public HorizontalRule id(String id) {
+	public HorizontalRule id(Id id) {
 		return new HorizontalRule(id, this.classes);
 	}
 

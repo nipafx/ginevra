@@ -1,12 +1,12 @@
 package dev.nipafx.ginevra.html;
 
-public record Image(String id, Classes classes, String src, String title, String alt) implements HtmlElement {
+public record Image(Id id, Classes classes, String src, String title, String alt) implements HtmlElement {
 
 	public Image() {
-		this(null, Classes.none(), null, null, null);
+		 this(Id.none(), Classes.none(), null, null, null);
 	}
 
-	public Image id(String id) {
+	public Image id(Id id) {
 		return new Image(id, this.classes, this.src, this.title, this.alt);
 	}
 
