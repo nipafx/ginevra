@@ -9,7 +9,6 @@ import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.site.nipafx_dev.components.ArticleList.Style;
 import dev.nipafx.site.nipafx_dev.data.ArticleData;
 
-import java.util.Comparator;
 import java.util.List;
 
 import static dev.nipafx.ginevra.html.HtmlElement.a;

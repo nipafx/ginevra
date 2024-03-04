@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.render;
 
+import dev.nipafx.ginevra.css.CssStyled;
 import dev.nipafx.ginevra.html.Anchor;
 import dev.nipafx.ginevra.html.BlockQuote;
 import dev.nipafx.ginevra.html.Body;
@@ -46,8 +47,9 @@ class ElementResolver {
 		this.cssRenderer = cssRenderer;
 	}
 
-	public HtmlDocument resolveDocument(HtmlDocument document) {
-		var sideData = new SideData(new ArrayList<>());
+	public HtmlDocument resolve(HtmlDocument document, Optional<?> maybeStyledTemplate) {
+		var sideData = new SideData();
+		maybeStyledTemplate.ifPresent(maybeStyled -> addStyleToSideData(maybeStyled, sideData));
 
 		var body = document.body();
 		var newBody = body == null
@@ -57,7 +59,7 @@ class ElementResolver {
 		var head = document.head();
 		var newHead = head == null
 				? null
-				: mergeLinksIntoHead(head, sideData.styles());
+				: mergeLinksIntoHead(head, sideData.links());
 
 		return document.head(newHead).body(newBody);
 	}
@@ -68,11 +70,10 @@ class ElementResolver {
 		return head.children(newHeadChildren);
 	}
 
-	public List<KnownElement> resolveElement(Element element) {
-		if (element instanceof HtmlDocument document)
-			return List.of(resolveDocument(document));
-
-		return resolve(element, new SideData(new ArrayList<>()));
+	public List<KnownElement> resolve(Element element) {
+		return (element instanceof HtmlDocument document)
+				? List.of(resolve(document, Optional.empty()))
+				: resolve(element, new SideData());
 	}
 
 	private List<KnownElement> resolve(Element element, SideData sideData) {
@@ -123,9 +124,7 @@ class ElementResolver {
 				case Text text -> List.of(text);
 			};
 			case CustomElement customElement -> {
-				cssRenderer
-						.flatMap(renderer -> renderer.process(customElement))
-						.ifPresent(sideData.styles()::add);
+				addStyleToSideData(customElement, sideData);
 				yield customElement
 						.render().stream()
 						// a custom element may return a new custom element, so keep resolving
@@ -133,6 +132,13 @@ class ElementResolver {
 						.toList();
 			}
 		};
+	}
+
+	private void addStyleToSideData(Object maybeStyled, SideData sideData) {
+		if (maybeStyled instanceof CssStyled<?> styled && cssRenderer.isPresent()) {
+			var link = cssRenderer.get().processStyle(styled);
+			sideData.links().add(link);
+		}
 	}
 
 	private List<KnownElement> resolveChildren(List<? extends Element> children, SideData sideData) {
@@ -148,6 +154,12 @@ class ElementResolver {
 				code.classes(codeClasses).text(block.text()).children(block.children()));
 	}
 
-	private record SideData(List<Link> styles) { }
+	private record SideData(List<Link> links) {
+
+		public SideData() {
+			this(new ArrayList<>());
+		}
+
+	}
 
 }

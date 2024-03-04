@@ -54,18 +54,22 @@ public class Renderer {
 		this.resolver = new ElementResolver(this.cssRenderer);
 	}
 
-	public String render(Element element) {
+	public String render(HtmlDocument document, Object maybeStyledTemplate) {
 		var html = new HtmlRenderer();
-		if (element instanceof HtmlDocument document)
-			render(resolver.resolveDocument(document), html);
-		else
-			resolver
-					.resolveElement(element)
-					.forEach(resolvedElement -> render(resolvedElement, html));
+		var resolvedDocument = resolver.resolve(document, Optional.of(maybeStyledTemplate));
+		writeToRenderer(resolvedDocument, html);
 		return html.render();
 	}
 
-	private void render(Element element, HtmlRenderer html) {
+	String render(Element element) {
+		var html = new HtmlRenderer();
+		resolver
+				.resolve(element)
+				.forEach(resolvedElement -> writeToRenderer(resolvedElement, html));
+		return html.render();
+	}
+
+	private void writeToRenderer(Element element, HtmlRenderer html) {
 		switch (element) {
 			case HtmlElement htmlElement -> {
 				switch (htmlElement) {
@@ -191,7 +195,7 @@ public class Renderer {
 	}
 
 	private void renderChildren(List<? extends Element> children, HtmlRenderer renderer) {
-		children.forEach(child -> render(child, renderer))	;
+		children.forEach(child -> writeToRenderer(child, renderer))	;
 	}
 
 	private static Map<String, String> attributes(String... namesAndValues) {

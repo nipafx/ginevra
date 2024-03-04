@@ -1,12 +1,10 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.css.CssStyled;
-import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Link;
 import dev.nipafx.ginevra.util.SHA256;
 
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -22,13 +20,7 @@ class CssRenderer {
 		this.files = new ConcurrentHashMap<>();
 	}
 
-	public Optional<Link> process(CustomElement element) {
-		return (element instanceof CssStyled<?> styled)
-				? Optional.of(processStyle(styled))
-				: Optional.empty();
-	}
-
-	private Link processStyle(CssStyled<?> styled) {
+	public Link processStyle(CssStyled<?> styled) {
 		var css = getCssFile(styled);
 		return link
 				.href(STR."/\{css.file()}")

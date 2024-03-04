@@ -124,7 +124,7 @@ class MapOutline implements Outline {
 		var renderedId = document.id().transform("template-" + template.getClass().getName());
 
 		var renderedDocument = template.render(document.data());
-		var fileContent = renderer.render(renderedDocument.html());
+		var fileContent = renderer.render(renderedDocument.html(), template);
 		var filePath = paths.siteFolder().resolve(renderedDocument.slug()).resolve("index.html").toAbsolutePath();
 
 		return new TemplatedFile(filePath, fileContent);
