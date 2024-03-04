@@ -2,10 +2,10 @@ package dev.nipafx.site.nipafx_dev.data;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 
-public record SiteData(String title) implements Data {
+public record SiteData(String title, String defaultInlineCodeLanguage) implements Data {
 
 	public static SiteData create() {
-		return new SiteData("nipafx // You. Me. Java.");
+		return new SiteData("nipafx // You. Me. Java.", "java");
 	}
 
 }

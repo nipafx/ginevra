@@ -5,6 +5,7 @@ import dev.nipafx.ginevra.outline.Document.DataString;
 import dev.nipafx.ginevra.outline.Store.Query;
 
 import java.nio.file.Path;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -41,6 +42,19 @@ public interface Outliner {
 	default <DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType) {
 		return transformMarkdown(previous, frontMatterType, _ -> true);
+	}
+
+	<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> merge(
+			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
+			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger,
+			BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter);
+
+	default <DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> merge(
+			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
+			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
+		return merge(previous1, previous2, merger, (_, _) -> true);
 	}
 
 	// store

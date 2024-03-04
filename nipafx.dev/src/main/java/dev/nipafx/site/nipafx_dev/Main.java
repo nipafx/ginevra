@@ -33,9 +33,9 @@ public class Main {
 
 		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT_FOLDER.resolve("articles"));
 		StepKey<ArticleData.Markdown> markdown = outliner.transformMarkdown(content, ArticleData.Markdown.class);
-		StepKey<ArticleData.Parsed> parsed = outliner.transform(markdown, doc -> List.of(new GeneralDocument<>(
-				doc.id().transform("parsed"),
-				ArticleData.Parsed.from(doc.data()))));
+		StepKey<ArticleData.Parsed> parsed = outliner.merge(markdown, siteData, (doc, siteD) -> List.of(new GeneralDocument<>(
+						doc.id().transform("parsed"),
+						ArticleData.Parsed.from(doc.data(), siteD.data().defaultInlineCodeLanguage()))));
 		outliner.store(parsed, "articles");
 
 		outliner.generate(new Store.CollectionQuery<>("articles", ArticleData.Page.class), new ArticlePage());

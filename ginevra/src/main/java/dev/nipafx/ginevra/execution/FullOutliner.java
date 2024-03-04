@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.Step.MergeSteps;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreStep;
 import dev.nipafx.ginevra.execution.Step.TemplateStep;
@@ -8,6 +9,7 @@ import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
 import dev.nipafx.ginevra.outline.FileData;
+import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Source;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public class FullOutliner implements Outliner {
@@ -49,7 +52,7 @@ public class FullOutliner implements Outliner {
 	source(Source<DATA_OUT> source) {
 		var step = new SourceStep<>(source);
 		createStepListFor(step);
-		return new SimpleStepKey<>(step);
+		return new SingleStepKey<>(step);
 	}
 
 	@Override
@@ -68,10 +71,9 @@ public class FullOutliner implements Outliner {
 	public <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new TransformStep(filter, transformer);
-		getStepListFor(previous).add(step);
-		ensureStepListFor(step);
-		return new SimpleStepKey<>(step);
+		var next = new TransformStep(filter, transformer);
+		appendStep(previous, next);
+		return new SingleStepKey<>(next);
 	}
 
 	@Override
@@ -84,22 +86,34 @@ public class FullOutliner implements Outliner {
 		return transform(previous, markupTransformer, filter);
 	}
 
+	@Override
+	public <DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> merge(
+			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
+			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger,
+			BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter) {
+		var next = MergeSteps.create(filter, merger);
+		appendStep(previous1, next.one());
+		appendStep(previous2, next.two());
+		return new PairStepKey<>(next.one(), next.two());
+	}
+
 	// store
 
 	@Override
 	public <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, String collection, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new StoreStep(filter, Optional.of(collection));
-		getStepListFor(previous).add(step);
+		var next = new StoreStep(filter, Optional.of(collection));
+		appendStep(previous, next);
 	}
 
 	@Override
 	public <DATA_IN extends Record & Data>
 	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var step = new StoreStep(filter, Optional.empty());
-		getStepListFor(previous).add(step);
+		var next = new StoreStep(filter, Optional.empty());
+		appendStep(previous, next);
 	}
 
 	// build
@@ -114,8 +128,8 @@ public class FullOutliner implements Outliner {
 	@Override
 	public <DATA extends Record & Data>
 	void generate(Store.Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template) {
-		var step = new TemplateStep<>(query, filter, template);
-		createStepListFor(step);
+		var next = new TemplateStep<>(query, filter, template);
+		createStepListFor(next);
 	}
 
 	// misc
@@ -132,20 +146,22 @@ public class FullOutliner implements Outliner {
 			throw new IllegalArgumentException("This template was already registered");
 	}
 
-	private void ensureStepListFor(TransformStep<?, ?> transformer) {
-		stepMap.putIfAbsent(transformer, new ArrayList<>());
+	private void appendStep(StepKey<?> previous, Step step) {
+		stepMap.putIfAbsent(step, new ArrayList<>());
+		switch (previous) {
+			case SingleStepKey<?>(Step prev) -> stepMap.get(prev).add(step);
+			case PairStepKey<?>(Step prev1, Step prev2) -> {
+				stepMap.get(prev1).add(step);
+				stepMap.get(prev2).add(step);
+			}
+			default -> {
+				var message = STR."Unexpected implementation of `\{StepKey.class.getSimpleName()}`: `\{previous.getClass().getSimpleName()}`";
+				throw new IllegalStateException(message );
+			}
+		};
 	}
 
-	private List<Step> getStepListFor(StepKey<?> previous) {
-		if (!(previous instanceof SimpleStepKey<?>(Step step)))
-			throw new IllegalStateException(STR."Unexpected implementation of '\{StepKey.class.getSimpleName()}'");
-
-		var stepList = stepMap.get(step);
-		if (stepList == null)
-			throw new IllegalArgumentException("The specified previous step is unregistered");
-		return stepList;
-	}
-
-	private record SimpleStepKey<DATA_OUT extends Record & Data>(Step step) implements StepKey<DATA_OUT> { }
+	private record SingleStepKey<DATA_OUT extends Record & Data>(Step step) implements StepKey<DATA_OUT> { }
+	private record PairStepKey<DATA_OUT extends Record & Data>(Step step1, Step step2) implements StepKey<DATA_OUT> { }
 
 }

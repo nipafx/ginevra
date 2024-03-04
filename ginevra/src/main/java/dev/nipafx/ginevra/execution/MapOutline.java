@@ -1,5 +1,7 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.Step.MergeStepOne;
+import dev.nipafx.ginevra.execution.Step.MergeStepTwo;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreStep;
 import dev.nipafx.ginevra.execution.Step.TemplateStep;
@@ -89,10 +91,17 @@ class MapOutline implements Outline {
 				case SourceStep _ -> throw new IllegalStateException("No step should map to a source");
 				case TransformStep transformStep -> {
 					if (transformStep.filter().test(doc))
-						transformStep.transformer()
+						transformStep
+								.transformer()
 								.transform(doc)
 								.forEach(transformedDoc -> processRecursively(transformStep, (Document<?>) transformedDoc));
 				}
+				case MergeStepOne mergeStepOne -> mergeStepOne
+						.merge(doc)
+						.forEach(mergedDoc -> processRecursively(mergeStepOne, (Document<?>) mergedDoc));
+				case MergeStepTwo mergeStepTwo -> mergeStepTwo
+						.merge(doc)
+						.forEach(mergedDoc -> processRecursively(mergeStepTwo, (Document<?>) mergedDoc));
 				case StoreStep(var filter, var collection) -> {
 					if (((Predicate) filter).test(doc))
 						collection.ifPresentOrElse(
