@@ -5,6 +5,7 @@ import dev.nipafx.ginevra.css.CssStyle;
 import dev.nipafx.ginevra.css.CssStyled;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.CustomElement;
+import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.site.nipafx_dev.components.ArticleList.Style;
 import dev.nipafx.site.nipafx_dev.data.ArticleData;
@@ -17,7 +18,7 @@ import static dev.nipafx.ginevra.html.HtmlElement.h2;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static java.util.Comparator.comparing;
 
-public record ArticleList(List<ArticleData.Page> articles) implements CustomElement, CssStyled<Style> {
+public record ArticleList(List<ArticleData.Page> articles) implements CustomSingleElement, CssStyled<Style> {
 
 	public record Style(Classes container, Classes article, Classes title, Classes description, String style) implements CssStyle { }
 	private static final Style STYLE = Css.parse(Style.class, """
@@ -43,15 +44,15 @@ public record ArticleList(List<ArticleData.Page> articles) implements CustomElem
 			""");
 
 	@Override
-	public Element renderSingle() {
+	public Element composeSingle() {
 		return div.classes(STYLE.container)
 				.children(articles.stream()
 						.sorted(comparing(ArticleData.Page::date).reversed())
-						.map(this::renderArticle)
+						.map(this::composeArticle)
 						.toList());
 	}
 
-	private Element renderArticle(ArticleData.Page article) {
+	private Element composeArticle(ArticleData.Page article) {
 		return div.classes(STYLE.article).children(
 				h2.classes(STYLE.article).children(
 						a.href(article.slug()).text(article.title())),

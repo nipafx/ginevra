@@ -130,11 +130,11 @@ class MapOutline implements Outline {
 	}
 
 	private <DATA extends Record & Data> TemplatedFile generateFromTemplate(Template<DATA> template, Document<DATA> document) {
-		var renderedId = document.id().transform("template-" + template.getClass().getName());
+		var id = document.id().transform("template-" + template.getClass().getName());
 
-		var renderedDocument = template.render(document.data());
-		var fileContent = renderer.render(renderedDocument.html(), template);
-		var filePath = paths.siteFolder().resolve(renderedDocument.slug()).resolve("index.html").toAbsolutePath();
+		var composedDocument = template.compose(document.data());
+		var fileContent = renderer.renderAsDocument(composedDocument.html(), template);
+		var filePath = paths.siteFolder().resolve(composedDocument.slug()).resolve("index.html").toAbsolutePath();
 
 		return new TemplatedFile(filePath, fileContent);
 	}

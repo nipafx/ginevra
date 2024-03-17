@@ -54,9 +54,9 @@ public class Renderer {
 		this.resolver = new ElementResolver(this.cssRenderer);
 	}
 
-	public String render(HtmlDocument document, Object maybeStyledTemplate) {
+	public String renderAsDocument(Element element, Object maybeStyledTemplate) {
 		var html = new HtmlRenderer();
-		var resolvedDocument = resolver.resolve(document, Optional.of(maybeStyledTemplate));
+		var resolvedDocument = resolver.resolveToDocument(element, Optional.of(maybeStyledTemplate));
 		writeToRenderer(resolvedDocument, html);
 		return html.render();
 	}
@@ -195,7 +195,7 @@ public class Renderer {
 	}
 
 	private void renderChildren(List<? extends Element> children, HtmlRenderer renderer) {
-		children.forEach(child -> writeToRenderer(child, renderer))	;
+		children.forEach(child -> writeToRenderer(child, renderer));
 	}
 
 	private static Map<String, String> attributes(String... namesAndValues) {

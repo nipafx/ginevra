@@ -5,6 +5,7 @@ import dev.nipafx.ginevra.css.CssStyle;
 import dev.nipafx.ginevra.css.CssStyled;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.CustomElement;
+import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.Span;
@@ -19,8 +20,8 @@ import static dev.nipafx.ginevra.html.HtmlElement.hr;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.span;
 
-public record Header(String title, String description, String head,
-		Optional<ChannelTags> channelTags) implements CustomElement, CssStyled<Header.Style> {
+public record Header(String title, String description, String head, Optional<ChannelTags> channelTags)
+		implements CustomSingleElement, CssStyled<Header.Style> {
 
 	public record ChannelTags(String channel, List<String> tags) { }
 
@@ -73,7 +74,7 @@ public record Header(String title, String description, String head,
 	}
 
 	@Override
-	public Element renderSingle() {
+	public Element composeSingle() {
 		return div.classes(STYLE.container).children(
 				p.id(STYLE.head).text(head),
 				h1.id(STYLE.title).text(title),

@@ -36,7 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static dev.nipafx.ginevra.html.HtmlElement.body;
 import static dev.nipafx.ginevra.html.HtmlElement.code;
+import static dev.nipafx.ginevra.html.HtmlElement.document;
 import static dev.nipafx.ginevra.html.HtmlElement.pre;
 
 class ElementResolver {
@@ -47,33 +49,30 @@ class ElementResolver {
 		this.cssRenderer = cssRenderer;
 	}
 
-	public HtmlDocument resolve(HtmlDocument document, Optional<?> maybeStyledTemplate) {
+	public HtmlDocument resolveToDocument(Element element, Optional<?> maybeStyledTemplate) {
 		var sideData = new SideData();
-		maybeStyledTemplate.ifPresent(maybeStyled -> addStyleToSideData(maybeStyled, sideData));
+		maybeStyledTemplate.ifPresent(maybeStyled -> addStyleToSideData(sideData, maybeStyled));
+		var elementResolution = resolve(element, sideData);
 
-		var body = document.body();
-		var newBody = body == null
-				? null
-				: body.children(resolveChildren(body.children(), sideData));
-
-		var head = document.head();
-		var newHead = head == null
-				? null
-				: mergeLinksIntoHead(head, sideData.links());
-
-		return document.head(newHead).body(newBody);
+		if (elementResolution.size() == 1 && elementResolution.getFirst() instanceof HtmlDocument htmlDoc)
+			return htmlDoc.head(mergeLinksIntoHead(htmlDoc.head(), sideData.links()));
+		else
+			return document.body(body.children(elementResolution));
 	}
 
 	private Head mergeLinksIntoHead(Head head, List<Link> styles) {
+		if (head == null && styles.isEmpty())
+			return null;
+		else if (head == null)
+			return HtmlElement.head.children(styles);
+
 		var newHeadChildren = new ArrayList<Element>(head.children());
 		newHeadChildren.addAll(styles);
 		return head.children(newHeadChildren);
 	}
 
 	public List<KnownElement> resolve(Element element) {
-		return (element instanceof HtmlDocument document)
-				? List.of(resolve(document, Optional.empty()))
-				: resolve(element, new SideData());
+		return resolve(element, new SideData());
 	}
 
 	private List<KnownElement> resolve(Element element, SideData sideData) {
@@ -89,6 +88,15 @@ class ElementResolver {
 					case Head el -> el.children(resolveChildren(el.children(), sideData));
 					case Heading el -> el.children(resolveChildren(el.children(), sideData));
 					case HorizontalRule el -> el;
+					case HtmlDocument doc -> {
+						var head = doc.head() == null
+								? null
+								: doc.head().children(resolveChildren(doc.head().children(), sideData));
+						var body = doc.body() == null
+								? null
+								: doc.body().children(resolveChildren(doc.body().children(), sideData));
+						yield doc.head(head).body(body);
+					}
 					case Image el -> el;
 					case LineBreak el -> el;
 					case Link el -> el;
@@ -111,11 +119,10 @@ class ElementResolver {
 									.flatMap(listItemChild -> resolve(listItemChild, sideData).stream())
 									.toList()))
 							.toList());
-					case HtmlDocument _ -> throw new IllegalArgumentException("This method should not be called with an HTML document");
 				};
 				yield List.of(resolvedElement);
 			}
-			case JmlElement jmlElement -> switch(jmlElement) {
+			case JmlElement jmlElement -> switch (jmlElement) {
 				case CodeBlock codeBlock -> List.of(express(codeBlock));
 				case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> List.of();
 				case HtmlLiteral el -> List.of(el);
@@ -124,9 +131,9 @@ class ElementResolver {
 				case Text text -> List.of(text);
 			};
 			case CustomElement customElement -> {
-				addStyleToSideData(customElement, sideData);
+				addStyleToSideData(sideData, customElement);
 				yield customElement
-						.render().stream()
+						.compose().stream()
 						// a custom element may return a new custom element, so keep resolving
 						.flatMap(resolved -> resolve(resolved, sideData).stream())
 						.toList();
@@ -134,7 +141,7 @@ class ElementResolver {
 		};
 	}
 
-	private void addStyleToSideData(Object maybeStyled, SideData sideData) {
+	private void addStyleToSideData(SideData sideData, Object maybeStyled) {
 		if (maybeStyled instanceof CssStyled<?> styled && cssRenderer.isPresent()) {
 			var link = cssRenderer.get().processStyle(styled);
 			sideData.links().add(link);
