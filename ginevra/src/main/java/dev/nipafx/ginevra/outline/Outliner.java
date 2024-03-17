@@ -2,7 +2,6 @@ package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
-import dev.nipafx.ginevra.outline.Store.Query;
 
 import java.nio.file.Path;
 import java.util.function.BiPredicate;
@@ -78,12 +77,7 @@ public interface Outliner {
 	// generate
 
 	<DATA extends Record & Data>
-	void generate(Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template);
-
-	default <DATA extends Record & Data>
-	void generate(Query<DATA> query, Template<DATA> template) {
-		generate(query, _ -> true, template);
-	}
+	void generate(Template<DATA> template);
 
 	// build
 

@@ -3,6 +3,9 @@ package dev.nipafx.ginevra.execution;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.GeneralDocument;
+import dev.nipafx.ginevra.outline.Query;
+import dev.nipafx.ginevra.outline.Query.CollectionQuery;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.util.RecordMapper;
 

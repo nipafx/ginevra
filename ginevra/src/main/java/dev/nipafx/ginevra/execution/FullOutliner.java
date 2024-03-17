@@ -127,8 +127,8 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public <DATA extends Record & Data>
-	void generate(Store.Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template) {
-		var next = new TemplateStep<>(query, filter, template);
+	void generate(Template<DATA> template) {
+		var next = new TemplateStep<>(template);
 		createStepListFor(next);
 	}
 

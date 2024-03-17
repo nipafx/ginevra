@@ -31,10 +31,14 @@ import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
+import dev.nipafx.ginevra.outline.CustomQueryElement;
+import dev.nipafx.ginevra.outline.Query;
+import dev.nipafx.ginevra.outline.Store;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.html.HtmlElement.body;
 import static dev.nipafx.ginevra.html.HtmlElement.code;
@@ -44,9 +48,15 @@ import static dev.nipafx.ginevra.html.HtmlElement.pre;
 class ElementResolver {
 
 	private final Optional<CssRenderer> cssRenderer;
+	private final Optional<Store> store;
 
-	public ElementResolver(Optional<CssRenderer> cssRenderer) {
+	public ElementResolver(Optional<CssRenderer> cssRenderer, Optional<Store> store) {
 		this.cssRenderer = cssRenderer;
+		this.store = store;
+	}
+
+	public ElementResolver() {
+		this(Optional.empty(), Optional.empty());
 	}
 
 	public HtmlDocument resolveToDocument(Element element, Optional<?> maybeStyledTemplate) {
@@ -132,8 +142,7 @@ class ElementResolver {
 			};
 			case CustomElement customElement -> {
 				addStyleToSideData(sideData, customElement);
-				yield customElement
-						.compose().stream()
+				yield composeChildren(customElement)
 						// a custom element may return a new custom element, so keep resolving
 						.flatMap(resolved -> resolve(resolved, sideData).stream())
 						.toList();
@@ -146,6 +155,23 @@ class ElementResolver {
 			var link = cssRenderer.get().processStyle(styled);
 			sideData.links().add(link);
 		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Stream<Element> composeChildren(CustomElement customElement) {
+		return switch (customElement) {
+			case CustomQueryElement queryElement -> {
+				var store = this.store.orElseThrow(() -> new IllegalStateException("Without store, query elements can't be resolved."));
+				var results = switch (queryElement.query()) {
+					case Query.CollectionQuery<?> collectionQuery -> store.query(collectionQuery).stream();
+					case Query.RootQuery<?> rootQuery -> Stream.of(store.query(rootQuery));
+				};
+				yield results
+						.filter(queryElement::filter)
+						.flatMap(result -> queryElement.compose(result.data()).stream());
+			}
+			case CustomElement _ -> customElement.compose().stream();
+		};
 	}
 
 	private List<KnownElement> resolveChildren(List<? extends Element> children, SideData sideData) {

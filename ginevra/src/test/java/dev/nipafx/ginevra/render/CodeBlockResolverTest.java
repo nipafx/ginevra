@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CodeBlockResolverTest {
 
-	private static final ElementResolver RESOLVER = new ElementResolver(Optional.empty());
+	private static final ElementResolver RESOLVER = new ElementResolver();
 
 	@Test
 	void empty() {

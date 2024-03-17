@@ -2,9 +2,9 @@ package dev.nipafx.site.nipafx_dev.templates;
 
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.outline.HtmlDocumentData;
+import dev.nipafx.ginevra.outline.Query;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Template;
-import dev.nipafx.site.nipafx_dev.components.ArticleList;
-import dev.nipafx.site.nipafx_dev.components.Header;
 import dev.nipafx.site.nipafx_dev.data.LandingPageData;
 
 import java.nio.file.Path;
@@ -16,6 +16,11 @@ import static dev.nipafx.site.nipafx_dev.components.Components.header;
 import static dev.nipafx.site.nipafx_dev.components.Components.layout;
 
 public class LandingPage implements Template<LandingPageData> {
+
+	@Override
+	public Query<LandingPageData> query() {
+		return new RootQuery<>(LandingPageData.class);
+	}
 
 	@Override
 	public HtmlDocumentData compose(LandingPageData page) {
@@ -31,7 +36,7 @@ public class LandingPage implements Template<LandingPageData> {
 								"Nice of you to stop by. I'm nipafx, but you can call me Nicolai \uD83D\uDE09, a Java enthusiast with a passion for learning and sharing, online and offline. If you want to sharpen your Java skills, you've come to the right place.",
 								"Welcome to nipafx.dev. On here, it's:",
 								Optional.empty()),
-						articleList(page.articles()));
+						articleList);
 	}
 
 }

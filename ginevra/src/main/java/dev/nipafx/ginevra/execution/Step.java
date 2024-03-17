@@ -4,7 +4,6 @@ import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Source;
-import dev.nipafx.ginevra.outline.Store.Query;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.Transformer;
 
@@ -102,6 +101,6 @@ sealed interface Step {
 			Predicate<Document<DATA>> filter, Optional<String> collection) implements Step { }
 
 	record TemplateStep<DATA extends Record & Data>(
-			Query<DATA> query, Predicate<Document<DATA>> filter, Template<DATA> template) implements Step { }
+			Template<DATA> template) implements Step { }
 
 }

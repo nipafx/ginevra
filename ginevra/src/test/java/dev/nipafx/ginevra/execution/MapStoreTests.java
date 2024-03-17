@@ -4,8 +4,8 @@ import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.StoreId;
 import dev.nipafx.ginevra.outline.GeneralDocument;
-import dev.nipafx.ginevra.outline.Store.CollectionQuery;
-import dev.nipafx.ginevra.outline.Store.RootQuery;
+import dev.nipafx.ginevra.outline.Query.CollectionQuery;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

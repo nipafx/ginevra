@@ -28,6 +28,7 @@ import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
+import dev.nipafx.ginevra.outline.Store;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -44,14 +45,14 @@ public class Renderer {
 	private final Optional<CssRenderer> cssRenderer;
 	private final ElementResolver resolver;
 
-	public Renderer(Path cssRootFolder) {
+	public Renderer(Path cssRootFolder, Store store) {
 		this.cssRenderer = Optional.of(new CssRenderer(cssRootFolder));
-		this.resolver = new ElementResolver(this.cssRenderer);
+		this.resolver = new ElementResolver(this.cssRenderer, Optional.of(store));
 	}
 
 	public Renderer() {
 		this.cssRenderer = Optional.empty();
-		this.resolver = new ElementResolver(this.cssRenderer);
+		this.resolver = new ElementResolver(this.cssRenderer, Optional.empty());
 	}
 
 	public String renderAsDocument(Element element, Object maybeStyledTemplate) {

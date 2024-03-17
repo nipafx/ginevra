@@ -4,7 +4,6 @@ import dev.nipafx.ginevra.css.Css;
 import dev.nipafx.ginevra.css.CssStyle;
 import dev.nipafx.ginevra.css.CssStyled;
 import dev.nipafx.ginevra.html.Classes;
-import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;

@@ -9,9 +9,9 @@ import dev.nipafx.ginevra.execution.Step.TransformStep;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Outline;
+import dev.nipafx.ginevra.outline.Query.CollectionQuery;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Store;
-import dev.nipafx.ginevra.outline.Store.CollectionQuery;
-import dev.nipafx.ginevra.outline.Store.RootQuery;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.render.CssFile;
 import dev.nipafx.ginevra.render.Renderer;
@@ -80,7 +80,7 @@ class MapOutline implements Outline {
 		store.commit();
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void processRecursively(Step origin, Document<?> doc) {
 		var steps = stepMap.get(origin);
 		if (steps == null)
@@ -115,18 +115,14 @@ class MapOutline implements Outline {
 	}
 
 	private <DATA extends Record & Data> Stream<TemplatedFile> generateFromTemplate(TemplateStep<DATA> templateStep) {
-		return switch (templateStep.query()) {
-			case CollectionQuery<DATA> collectionQuery -> store
-					.query(collectionQuery).stream()
-					.filter(result -> templateStep.filter().test(result))
-					.map(document -> generateFromTemplate(templateStep.template(), document));
-			case RootQuery<DATA> rootQuery -> {
-				var result = store.query(rootQuery);
-				yield templateStep.filter().test(result)
-						? Stream.of(generateFromTemplate(templateStep.template(), result))
-						: Stream.empty();
-			}
+		var template = templateStep.template();
+		var results = switch (template.query()) {
+			case CollectionQuery<DATA> collectionQuery -> store.query(collectionQuery).stream();
+			case RootQuery<DATA> rootQuery -> Stream.of(store.query(rootQuery));
 		};
+		return results
+				.filter(template::filter)
+				.map(document -> generateFromTemplate(template, document));
 	}
 
 	private <DATA extends Record & Data> TemplatedFile generateFromTemplate(Template<DATA> template, Document<DATA> document) {

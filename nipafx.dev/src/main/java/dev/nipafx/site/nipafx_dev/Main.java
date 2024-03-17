@@ -6,9 +6,7 @@ import dev.nipafx.ginevra.execution.Paths;
 import dev.nipafx.ginevra.outline.FileData;
 import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Outliner.StepKey;
-import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.site.nipafx_dev.data.ArticleData;
-import dev.nipafx.site.nipafx_dev.data.LandingPageData;
 import dev.nipafx.site.nipafx_dev.data.SiteData;
 import dev.nipafx.site.nipafx_dev.templates.ArticlePage;
 import dev.nipafx.site.nipafx_dev.templates.LandingPage;
@@ -38,8 +36,8 @@ public class Main {
 						ArticleData.Parsed.from(doc.data(), siteD.data().defaultInlineCodeLanguage()))));
 		outliner.store(parsed, "articles");
 
-		outliner.generate(new Store.CollectionQuery<>("articles", ArticleData.Page.class), new ArticlePage());
-		outliner.generate(new Store.RootQuery<>(LandingPageData.class), new LandingPage());
+		outliner.generate(new ArticlePage());
+		outliner.generate(new LandingPage());
 
 		outliner.build().run();
 	}

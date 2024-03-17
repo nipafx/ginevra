@@ -38,7 +38,7 @@ public class Ginevra {
 		return new Ginevra(
 				store,
 				Optional.of(markdownParser),
-				new Renderer(config.paths.cssFolder()),
+				new Renderer(config.paths.cssFolder(), store),
 				config.paths());
 	}
 
