@@ -4,7 +4,6 @@ import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
 
 import java.nio.file.Path;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -24,55 +23,30 @@ public interface Outliner {
 
 	// transformers
 
+	<DATA extends Record & Data>
+	StepKey<DATA> filter(StepKey<DATA> previous, Predicate<DATA> filter);
+
 	<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> transform(
 			StepKey<DATA_IN> previous,
-			Transformer<DATA_IN, DATA_OUT> transformer,
-			Predicate<Document<DATA_IN>> filter);
-
-	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer) {
-		return transform(previous, transformer, _ -> true);
-	}
+			Transformer<DATA_IN, DATA_OUT> transformer);
 
 	<DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType, Predicate<Document<DATA_IN>> filter);
-
-	default <DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType) {
-		return transformMarkdown(previous, frontMatterType, _ -> true);
-	}
+	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType);
 
 	<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> merge(
 			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
-			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger,
-			BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter);
-
-	default <DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> merge(
-			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
-			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
-		return merge(previous1, previous2, merger, (_, _) -> true);
-	}
+			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger);
 
 	// store
 
 	<DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, String collection, Predicate<Document<DATA_IN>> filter);
-
-	default <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, String collection) {
-		store(previous, collection, _ -> true);
-	}
+	void store(StepKey<DATA_IN> previous, String collection);
 
 	<DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter);
+	void store(StepKey<DATA_IN> previous);
 
-	default <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous) {
-		store(previous, _ -> true);
-	}
 
 	// generate
 

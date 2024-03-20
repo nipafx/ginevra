@@ -10,45 +10,42 @@ import dev.nipafx.ginevra.outline.Transformer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 sealed interface Step {
 
-	record SourceStep<DATA extends Record & Data>(
-			Source<DATA> source) implements Step { }
+	record SourceStep<DATA extends Record & Data>(Source<DATA> source) implements Step { }
+
+	record FilterStep<DATA extends Record & Data>(Predicate<DATA> filter) implements Step { }
 
 	record TransformStep<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>(
-			Predicate<Document<DATA_IN>> filter, Transformer<DATA_IN, DATA_OUT> transformer) implements Step { }
+			Transformer<DATA_IN, DATA_OUT> transformer) implements Step { }
 
 	final class MergeSteps<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data> {
 
-		private final BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter;
 		private final Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger;
 		private final List<Document<DATA_IN_1>> documents1;
 		private final List<Document<DATA_IN_2>> documents2;
 		private MergeStepOne<DATA_IN_1, DATA_IN_2, DATA_OUT> one;
 		private MergeStepTwo<DATA_IN_1, DATA_IN_2, DATA_OUT> two;
 
-		private MergeSteps(BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter, Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
-			this.filter = filter;
+		private MergeSteps(Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
 			this.merger = merger;
 			this.documents1 = new ArrayList<>();
 			this.documents2 = new ArrayList<>();
 		}
 
 		public static <DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
-		MergeSteps<DATA_IN_1, DATA_IN_2, DATA_OUT> create(
-				BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter, Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
-			var mergeStep = new MergeSteps<>(filter, merger);
+		MergeSteps<DATA_IN_1, DATA_IN_2, DATA_OUT> create(Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
+			var mergeStep = new MergeSteps<>(merger);
 			mergeStep.one = new MergeStepOne<>(mergeStep);
 			mergeStep.two = new MergeStepTwo<>(mergeStep);
 			return mergeStep;
 		}
 
 		private record Docs<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data>(
-				Document<DATA_IN_1> data1, Document<DATA_IN_2> data2) { }
+				Document<DATA_IN_1> doc1, Document<DATA_IN_2> doc2) { }
 
 		public MergeStepOne<DATA_IN_1, DATA_IN_2, DATA_OUT> one() {
 			return one;
@@ -72,8 +69,7 @@ sealed interface Step {
 			merge.documents1.add(data1);
 			return merge.documents2.stream()
 					.map(data2 -> new MergeSteps.Docs<>(data1, data2))
-					.filter(docs -> merge.filter.test(docs.data1, docs.data2))
-					.flatMap(docs -> merge.merger.merge(docs.data1, docs.data2).stream());
+					.flatMap(docs -> merge.merger.merge(docs.doc1, docs.doc2).stream());
 		}
 
 	}
@@ -91,16 +87,13 @@ sealed interface Step {
 			merge.documents2.add(data2);
 			return merge.documents1.stream()
 					.map(data1 -> new MergeSteps.Docs<>(data1, data2))
-					.filter(docs ->merge.filter.test(docs.data1, docs.data2))
-					.flatMap(docs ->merge.merger.merge(docs.data1, docs.data2).stream());
+					.flatMap(docs ->merge.merger.merge(docs.doc1, docs.doc2).stream());
 		}
 
 	}
 
-	record StoreStep<DATA extends Record & Data>(
-			Predicate<Document<DATA>> filter, Optional<String> collection) implements Step { }
+	record StoreStep<DATA extends Record & Data>(Optional<String> collection) implements Step { }
 
-	record TemplateStep<DATA extends Record & Data>(
-			Template<DATA> template) implements Step { }
+	record TemplateStep<DATA extends Record & Data>(Template<DATA> template) implements Step { }
 
 }

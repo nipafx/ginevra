@@ -32,12 +32,14 @@ import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
 import dev.nipafx.ginevra.outline.CustomQueryElement;
-import dev.nipafx.ginevra.outline.Query;
+import dev.nipafx.ginevra.outline.Query.CollectionQuery;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Store;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.html.HtmlElement.body;
@@ -163,11 +165,12 @@ class ElementResolver {
 			case CustomQueryElement queryElement -> {
 				var store = this.store.orElseThrow(() -> new IllegalStateException("Without store, query elements can't be resolved."));
 				var results = switch (queryElement.query()) {
-					case Query.CollectionQuery<?> collectionQuery -> store.query(collectionQuery).stream();
-					case Query.RootQuery<?> rootQuery -> Stream.of(store.query(rootQuery));
+					case CollectionQuery<?> collectionQuery -> store
+							.query(collectionQuery).stream()
+							.filter(result -> ((Predicate) collectionQuery.filter()).test(result.data()));
+					case RootQuery<?> rootQuery -> Stream.of(store.query(rootQuery));
 				};
 				yield results
-						.filter(queryElement::filter)
 						.flatMap(result -> queryElement.compose(result.data()).stream());
 			}
 			case CustomElement _ -> customElement.compose().stream();

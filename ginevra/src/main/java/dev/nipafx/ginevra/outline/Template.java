@@ -6,10 +6,6 @@ public interface Template<DATA extends Record & Data> {
 
 	Query<DATA> query();
 
-	default boolean filter(Document<DATA> document) {
-		return true;
-	}
-
-	HtmlDocumentData compose(DATA document);
+	HtmlDocumentData compose(DATA data);
 
 }

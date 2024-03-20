@@ -34,7 +34,8 @@ public class Main {
 		StepKey<ArticleData.Parsed> parsed = outliner.merge(markdown, siteData, (doc, siteD) -> List.of(new GeneralDocument<>(
 						doc.id().transform("parsed"),
 						ArticleData.Parsed.from(doc.data(), siteD.data().defaultInlineCodeLanguage()))));
-		outliner.store(parsed, "articles");
+		StepKey<ArticleData.Parsed> parsedNewArticles = outliner.filter(parsed, article -> article.date().getYear() >= 2020);
+		outliner.store(parsedNewArticles, "articles");
 
 		outliner.generate(new ArticlePage());
 		outliner.generate(new LandingPage());

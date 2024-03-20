@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.Step.FilterStep;
 import dev.nipafx.ginevra.execution.Step.MergeStepOne;
 import dev.nipafx.ginevra.execution.Step.MergeStepTwo;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
@@ -89,26 +90,24 @@ class MapOutline implements Outline {
 		steps.forEach(step -> {
 			switch (step) {
 				case SourceStep _ -> throw new IllegalStateException("No step should map to a source");
-				case TransformStep transformStep -> {
-					if (transformStep.filter().test(doc))
-						transformStep
-								.transformer()
-								.transform(doc)
-								.forEach(transformedDoc -> processRecursively(transformStep, (Document<?>) transformedDoc));
+				case FilterStep filterStep -> {
+					if (filterStep.filter().test(doc.data()))
+						processRecursively(filterStep, doc);
 				}
+				case TransformStep transformStep -> transformStep
+						.transformer()
+						.transform(doc)
+						.forEach(transformedDoc -> processRecursively(transformStep, (Document<?>) transformedDoc));
 				case MergeStepOne mergeStepOne -> mergeStepOne
 						.merge(doc)
 						.forEach(mergedDoc -> processRecursively(mergeStepOne, (Document<?>) mergedDoc));
 				case MergeStepTwo mergeStepTwo -> mergeStepTwo
 						.merge(doc)
 						.forEach(mergedDoc -> processRecursively(mergeStepTwo, (Document<?>) mergedDoc));
-				case StoreStep(var filter, var collection) -> {
-					if (((Predicate) filter).test(doc))
-						collection.ifPresentOrElse(
-								col -> store.store(col, doc),
-								() -> store.store(doc)
-						);
-				}
+				case StoreStep(var collection) -> collection.ifPresentOrElse(
+						col -> store.store(col, doc),
+						() -> store.store(doc)
+				);
 				case TemplateStep _ -> throw new IllegalStateException("No step should map to a template");
 			}
 		});
@@ -117,11 +116,12 @@ class MapOutline implements Outline {
 	private <DATA extends Record & Data> Stream<TemplatedFile> generateFromTemplate(TemplateStep<DATA> templateStep) {
 		var template = templateStep.template();
 		var results = switch (template.query()) {
-			case CollectionQuery<DATA> collectionQuery -> store.query(collectionQuery).stream();
+			case CollectionQuery<DATA> collectionQuery -> store
+					.query(collectionQuery).stream()
+					.filter(result -> collectionQuery.filter().test(result.data()));
 			case RootQuery<DATA> rootQuery -> Stream.of(store.query(rootQuery));
 		};
 		return results
-				.filter(template::filter)
 				.map(document -> generateFromTemplate(template, document));
 	}
 

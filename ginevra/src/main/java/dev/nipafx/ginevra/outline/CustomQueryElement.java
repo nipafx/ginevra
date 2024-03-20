@@ -15,10 +15,6 @@ public interface CustomQueryElement<DATA extends Record & Data> extends CustomEl
 
 	Query<DATA> query();
 
-	default boolean filter(Document<DATA> document) {
-		return true;
-	}
-
 	List<Element> compose(DATA data);
 
 }

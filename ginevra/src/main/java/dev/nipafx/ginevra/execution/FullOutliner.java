@@ -1,11 +1,11 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.Step.FilterStep;
 import dev.nipafx.ginevra.execution.Step.MergeSteps;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreStep;
 import dev.nipafx.ginevra.execution.Step.TemplateStep;
 import dev.nipafx.ginevra.execution.Step.TransformStep;
-import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.DataString;
 import dev.nipafx.ginevra.outline.FileData;
@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public class FullOutliner implements Outliner {
@@ -48,8 +47,7 @@ public class FullOutliner implements Outliner {
 	// sources
 
 	@Override
-	public <DATA_OUT extends Record & Data> StepKey<DATA_OUT>
-	source(Source<DATA_OUT> source) {
+	public <DATA_OUT extends Record & Data> StepKey<DATA_OUT> source(Source<DATA_OUT> source) {
 		var step = new SourceStep<>(source);
 		createStepListFor(step);
 		return new SingleStepKey<>(step);
@@ -68,31 +66,36 @@ public class FullOutliner implements Outliner {
 	// transformers
 
 	@Override
-	public <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer, Predicate<Document<DATA_IN>> filter) {
+	public <DATA extends Record & Data> StepKey<DATA> filter(StepKey<DATA> previous, Predicate<DATA> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var next = new TransformStep(filter, transformer);
+		var next = new FilterStep(filter);
+		appendStep(previous, next);
+		return new SingleStepKey<>(next);
+	}
+
+	@Override
+	public <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		var next = new TransformStep(transformer);
 		appendStep(previous, next);
 		return new SingleStepKey<>(next);
 	}
 
 	@Override
 	public <DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType, Predicate<Document<DATA_IN>> filter) {
+	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType) {
 		if (markdownParser.isEmpty())
 			throw new IllegalStateException("Can't transform Markdown: No Markdown parser was created");
 
 		var markupTransformer = new MarkupParsingTransformer<DATA_IN, DATA_OUT>(markdownParser.get(), frontMatterType);
-		return transform(previous, markupTransformer, filter);
+		return transform(previous, markupTransformer);
 	}
 
 	@Override
 	public <DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> merge(
-			StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2,
-			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger,
-			BiPredicate<Document<DATA_IN_1>, Document<DATA_IN_2>> filter) {
-		var next = MergeSteps.create(filter, merger);
+	StepKey<DATA_OUT> merge(StepKey<DATA_IN_1> previous1, StepKey<DATA_IN_2> previous2, Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger) {
+		var next = MergeSteps.create(merger);
 		appendStep(previous1, next.one());
 		appendStep(previous2, next.two());
 		return new PairStepKey<>(next.one(), next.two());
@@ -101,18 +104,16 @@ public class FullOutliner implements Outliner {
 	// store
 
 	@Override
-	public <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, String collection, Predicate<Document<DATA_IN>> filter) {
+	public <DATA_IN extends Record & Data> void store(StepKey<DATA_IN> previous, String collection) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var next = new StoreStep(filter, Optional.of(collection));
+		var next = new StoreStep(Optional.of(collection));
 		appendStep(previous, next);
 	}
 
 	@Override
-	public <DATA_IN extends Record & Data>
-	void store(StepKey<DATA_IN> previous, Predicate<Document<DATA_IN>> filter) {
+	public <DATA_IN extends Record & Data> void store(StepKey<DATA_IN> previous) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var next = new StoreStep(filter, Optional.empty());
+		var next = new StoreStep(Optional.empty());
 		appendStep(previous, next);
 	}
 
