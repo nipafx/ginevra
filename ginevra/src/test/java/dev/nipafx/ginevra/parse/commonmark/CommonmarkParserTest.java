@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.Src;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
 import org.junit.jupiter.api.Test;
@@ -303,7 +304,7 @@ class CommonmarkParserTest {
 				p.children(img
 						.alt("nipafx")
 						.title("Nicolai looking at the camera")
-						.src("https://nipafx.dev/nicolai.jpg"))
+						.src(Src.direct("https://nipafx.dev/nicolai.jpg")))
 		);
 	}
 
@@ -318,7 +319,7 @@ class CommonmarkParserTest {
 						//       nodes (like the link above) are ignored.
 						.alt("This is .")
 						.title("Nicolai looking at the camera")
-						.src("https://nipafx.dev/nicolai.jpg"))
+						.src(Src.direct("https://nipafx.dev/nicolai.jpg")))
 		);
 	}
 

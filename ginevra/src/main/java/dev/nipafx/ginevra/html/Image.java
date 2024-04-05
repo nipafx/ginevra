@@ -1,9 +1,9 @@
 package dev.nipafx.ginevra.html;
 
-public record Image(Id id, Classes classes, String src, String title, String alt) implements HtmlElement {
+public record Image(Id id, Classes classes, Src src, String title, String alt) implements HtmlElement {
 
 	public Image() {
-		 this(Id.none(), Classes.none(), null, null, null);
+		 this(Id.none(), Classes.none(), Src.none(), null, null);
 	}
 
 	public Image id(Id id) {
@@ -14,7 +14,7 @@ public record Image(Id id, Classes classes, String src, String title, String alt
 		return new Image(this.id, classes, this.src, this.title, this.alt);
 	}
 
-	public Image src(String src) {
+	public Image src(Src src) {
 		return new Image(this.id, this.classes, src, this.title, this.alt);
 	}
 

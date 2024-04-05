@@ -1,24 +1,20 @@
-package dev.nipafx.ginevra.outline;
+package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.Document.FileData;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 
 import java.util.List;
+import java.util.Optional;
 
-/**
- * Stores all {@link Document}s produced by various {@link Source}s and {@link Transformer}s.
- */
-public interface Store {
-
-	void store(Document<?> doc);
-
-	void store(String collection, Document<?> doc);
-
-	List<Query<?>> commit();
+public interface StoreFront {
 
 	<RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query);
 
 	<RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query);
+
+	Optional<Document<? extends FileData>> getResource(String name);
 
 }

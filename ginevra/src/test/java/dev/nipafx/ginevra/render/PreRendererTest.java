@@ -10,15 +10,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.pre;
 
 class PreRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "pre";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {
@@ -46,6 +40,8 @@ class PreRendererTest {
 		}
 
 	}
+
+	// TODO: Make sure the renderer adds no indentation inside <pre> blocksq
 
 	@Nested
 	class Children extends TestBasics implements HtmlRendererTest.Children<Pre> {

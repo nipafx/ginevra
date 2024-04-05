@@ -1,20 +1,23 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.execution.Step.FilterStep;
 import dev.nipafx.ginevra.execution.Step.MergeSteps;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
+import dev.nipafx.ginevra.execution.Step.StoreResourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreStep;
 import dev.nipafx.ginevra.execution.Step.TemplateStep;
 import dev.nipafx.ginevra.execution.Step.TransformStep;
+import dev.nipafx.ginevra.outline.BinaryFileData;
 import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.DataString;
-import dev.nipafx.ginevra.outline.FileData;
+import dev.nipafx.ginevra.outline.Document.FileData;
+import dev.nipafx.ginevra.outline.Document.StringData;
 import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.outline.Source;
-import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.outline.Template;
+import dev.nipafx.ginevra.outline.TextFileData;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.render.Renderer;
@@ -25,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class FullOutliner implements Outliner {
@@ -32,11 +36,11 @@ public class FullOutliner implements Outliner {
 	private final Store store;
 	private final Optional<MarkdownParser> markdownParser;
 	private final Renderer renderer;
-	private final Paths paths;
+	private final Ginevra.Paths paths;
 
 	private final Map<Step, List<Step>> stepMap;
 
-	public FullOutliner(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Paths paths) {
+	public FullOutliner(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Ginevra.Paths paths) {
 		this.store = store;
 		this.renderer = renderer;
 		this.markdownParser = markdownParser;
@@ -59,8 +63,13 @@ public class FullOutliner implements Outliner {
 	}
 
 	@Override
-	public StepKey<FileData> sourceFileSystem(String name, Path path) {
-		return source(new FileSource(name, path));
+	public StepKey<TextFileData> sourceTextFiles(String name, Path path) {
+		return source(FileSource.forTextFiles(name, path));
+	}
+
+	@Override
+	public StepKey<BinaryFileData> sourceBinaryFiles(String name, Path path) {
+		return source(FileSource.forBinaryFiles(name, path));
 	}
 
 	// transformers
@@ -83,7 +92,7 @@ public class FullOutliner implements Outliner {
 	}
 
 	@Override
-	public <DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
+	public <DATA_IN extends Record & StringData, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> transformMarkdown(StepKey<DATA_IN> previous, Class<DATA_OUT> frontMatterType) {
 		if (markdownParser.isEmpty())
 			throw new IllegalStateException("Can't transform Markdown: No Markdown parser was created");
@@ -114,6 +123,13 @@ public class FullOutliner implements Outliner {
 	public <DATA_IN extends Record & Data> void store(StepKey<DATA_IN> previous) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		var next = new StoreStep(Optional.empty());
+		appendStep(previous, next);
+	}
+
+	@Override
+	public <DATA_IN extends Record & FileData> void storeResource(StepKey<DATA_IN> previous, Function<DATA_IN, String> naming) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		var next = new StoreResourceStep(naming);
 		appendStep(previous, next);
 	}
 

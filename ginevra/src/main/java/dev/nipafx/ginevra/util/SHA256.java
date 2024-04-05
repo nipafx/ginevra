@@ -25,4 +25,12 @@ public class SHA256 {
 		}
 	}
 
+	public static String hash(byte[] bytes) {
+		synchronized (SHA_256) {
+			SHA_256.update(bytes);
+			var hash = Base64.getEncoder().encodeToString(SHA_256.digest());
+			return hash.replaceAll("\\W", "");
+		}
+	}
+
 }

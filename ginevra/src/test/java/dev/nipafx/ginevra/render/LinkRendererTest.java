@@ -4,11 +4,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.link;
+import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LinkRendererTest {
-
-	private static final Renderer RENDERER = new Renderer();
 
 	@Nested
 	class Attributes {

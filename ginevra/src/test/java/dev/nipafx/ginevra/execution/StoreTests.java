@@ -14,9 +14,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class MapStoreTests {
+public class StoreTests {
 
-	private final MapStore store = new MapStore();
+	private final Store store = new Store();
 
 	@Nested
 	class Root {

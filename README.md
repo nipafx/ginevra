@@ -7,4 +7,8 @@ During the exploration, the project is co-habituated with the budding reimplemen
 
 So far:
 
-* can render some HTML elements 
+* can read files from disk
+* can transform Markdown
+* supports custom transformations
+* can render all HTML elements that Commonmark supports
+* elements and templates can be styled

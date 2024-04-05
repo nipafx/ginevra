@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.Document.FileData;
 import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Template;
@@ -10,6 +11,7 @@ import dev.nipafx.ginevra.outline.Transformer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -93,6 +95,8 @@ sealed interface Step {
 	}
 
 	record StoreStep<DATA extends Record & Data>(Optional<String> collection) implements Step { }
+
+	record StoreResourceStep<DATA extends Record & FileData>(Function<DATA, String> naming) implements Step { }
 
 	record TemplateStep<DATA extends Record & Data>(Template<DATA> template) implements Step { }
 

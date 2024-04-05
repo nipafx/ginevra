@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.DataString;
+import dev.nipafx.ginevra.outline.Document.StringData;
 import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Transformer;
 import dev.nipafx.ginevra.parse.MarkupDocument;
@@ -12,7 +12,7 @@ import dev.nipafx.ginevra.util.RecordMapper;
 import java.util.HashMap;
 import java.util.List;
 
-class MarkupParsingTransformer<DATA_IN extends Record & DataString, DATA_OUT extends Record & Data>
+class MarkupParsingTransformer<DATA_IN extends Record & StringData, DATA_OUT extends Record & Data>
 		implements Transformer<DATA_IN, DATA_OUT> {
 
 	private final MarkupParser parser;

@@ -3,6 +3,7 @@ package dev.nipafx.ginevra.outline;
 import dev.nipafx.ginevra.outline.Document.Data;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -86,7 +87,13 @@ public interface Document<DATA extends Record & Data> {
 
 	}
 
-	interface DataString extends Data {
+	interface FileData extends Data {
+
+		Path file();
+
+	}
+
+	interface StringData extends Data {
 
 		String dataAsString();
 

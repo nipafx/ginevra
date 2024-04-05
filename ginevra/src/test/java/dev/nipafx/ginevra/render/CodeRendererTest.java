@@ -10,15 +10,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.code;
 
 class CodeRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "code";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

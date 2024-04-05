@@ -2,11 +2,10 @@ package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.Document.FileData;
 import dev.nipafx.ginevra.outline.GeneralDocument;
-import dev.nipafx.ginevra.outline.Query;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
-import dev.nipafx.ginevra.outline.Store;
 import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.lang.reflect.ParameterizedType;
@@ -14,33 +13,29 @@ import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
-public class MapStore implements Store {
+public class Store implements StoreFront {
 
 	private final Map<String, Object> root;
 	private final Map<String, List<Document<?>>> collections;
-	private final Set<Query<?>> queries;
+	private final Map<String, Document<? extends FileData>> resources;
 
-	public MapStore() {
+	public Store() {
 		root = new HashMap<>();
 		collections = new HashMap<>();
-		queries = new HashSet<>();
+		resources = new HashMap<>();
 	}
 
-	@Override
 	public void store(Document<?> doc) {
 		var documentData = RecordMapper.createValueMapFromRecord(doc.data());
 		mergeData(root, documentData);
-		// TODO: detect changes and mark impacted queries as dirty
 	}
 
 	@SuppressWarnings("unchecked")
@@ -57,22 +52,21 @@ public class MapStore implements Store {
 		});
 	}
 
-	@Override
 	public void store(String collection, Document<?> doc) {
 		collections
 				.computeIfAbsent(collection, _ -> new ArrayList<>())
 				.add(doc);
 	}
 
-	@Override
-	public List<Query<?>> commit() {
-		// TODO: return dirty queries
-		return List.of();
+	public void storeResource(String name, Document<? extends FileData> doc) {
+		var previous = resources.put(name, doc);
+		if (previous != null) {
+			var message = STR."Resources must have unique names, but both \{previous.data()} and \{doc} are named '\{name}'.";
+			throw new IllegalArgumentException(message);
+		}
 	}
 
-	@Override
 	public <RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query) {
-		queries.add(query);
 		var type = query.resultType();
 		var data = Stream
 				.of(type.getRecordComponents())
@@ -116,22 +110,25 @@ public class MapStore implements Store {
 					.map(data -> RecordMapper.createRecordFromRecord(type, data.data()))
 					.toList();
 		} catch (ClassNotFoundException ex) {
+			// TODO: handle error
 			throw new IllegalArgumentException(ex);
 		}
 	}
 
-	@Override
 	public <RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query) {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
-		queries.add(query);
 		return collections
 				.get(query.collection()).stream()
 				.<Document<RESULT>> map(document -> new GeneralDocument<>(
 						document.id().transform("queried-" + query.resultType().getName()),
 						RecordMapper.createRecordFromRecord(query.resultType(), document.data())))
 				.toList();
+	}
+
+	public Optional<Document<? extends FileData>> getResource(String name) {
+		return Optional.ofNullable(resources.get(name));
 	}
 
 	@Override

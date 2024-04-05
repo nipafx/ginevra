@@ -10,15 +10,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.li;
 
 class ListItemRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "li";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

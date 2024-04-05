@@ -12,15 +12,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.div;
 
 class BodyRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "body";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

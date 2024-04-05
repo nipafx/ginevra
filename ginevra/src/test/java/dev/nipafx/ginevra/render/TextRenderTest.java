@@ -3,11 +3,10 @@ package dev.nipafx.ginevra.render;
 import dev.nipafx.ginevra.html.JmlElement;
 import org.junit.jupiter.api.Test;
 
+import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TextRenderTest {
-
-	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void nullText() {

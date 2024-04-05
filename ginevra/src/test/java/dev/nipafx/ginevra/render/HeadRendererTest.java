@@ -5,11 +5,10 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 
 import static dev.nipafx.ginevra.html.HtmlElement.head;
+import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HeadRendererTest {
-
-	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void empty() {

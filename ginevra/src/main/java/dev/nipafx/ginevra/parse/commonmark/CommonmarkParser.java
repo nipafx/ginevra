@@ -6,6 +6,8 @@ import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
+import dev.nipafx.ginevra.html.Src;
+import dev.nipafx.ginevra.outline.Resources;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.MarkupDocument;
 import dev.nipafx.ginevra.parse.MarkupDocument.FrontMatter;
@@ -85,7 +87,7 @@ public class CommonmarkParser implements MarkdownParser {
 								: " ")
 						.collect(joining());
 				yield HtmlElement.img
-						.src(nullIfBlank(img.getDestination()))
+						.src(img.getDestination() == null ? Src.none() : Resources.includeIfLocal(img.getDestination()))
 						.title(nullIfBlank(img.getTitle()))
 						.alt(alt);
 			}

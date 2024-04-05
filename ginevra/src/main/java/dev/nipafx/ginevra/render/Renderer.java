@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.render;
 
+import dev.nipafx.ginevra.execution.StoreFront;
 import dev.nipafx.ginevra.html.Anchor;
 import dev.nipafx.ginevra.html.BlockQuote;
 import dev.nipafx.ginevra.html.Body;
@@ -28,7 +29,7 @@ import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
-import dev.nipafx.ginevra.outline.Store;
+import dev.nipafx.ginevra.outline.Template;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -42,26 +43,20 @@ import static java.util.function.Predicate.not;
 
 public class Renderer {
 
-	private final Optional<CssRenderer> cssRenderer;
 	private final ElementResolver resolver;
 
-	public Renderer(Path cssRootFolder, Store store) {
-		this.cssRenderer = Optional.of(new CssRenderer(cssRootFolder));
-		this.resolver = new ElementResolver(this.cssRenderer, Optional.of(store));
+	public Renderer(StoreFront store, Path resourceFolder, Path cssFolder) {
+		this.resolver = new ElementResolver(store, resourceFolder, cssFolder);
 	}
 
-	public Renderer() {
-		this.cssRenderer = Optional.empty();
-		this.resolver = new ElementResolver(this.cssRenderer, Optional.empty());
-	}
-
-	public String renderAsDocument(Element element, Object maybeStyledTemplate) {
-		var html = new HtmlRenderer();
+	public HtmlWithResources renderAsDocument(Element element, Template<?> maybeStyledTemplate) {
 		var resolvedDocument = resolver.resolveToDocument(element, Optional.of(maybeStyledTemplate));
-		writeToRenderer(resolvedDocument, html);
-		return html.render();
+		var html = new HtmlRenderer();
+		writeToRenderer(resolvedDocument.document(), html);
+		return new HtmlWithResources(html.render(), resolvedDocument.referencedResources());
 	}
 
+	// package visible for tests
 	String render(Element element) {
 		var html = new HtmlRenderer();
 		resolver
@@ -134,7 +129,7 @@ public class Renderer {
 					case HorizontalRule(var id, var classes) -> html.selfClosed("hr", id, classes);
 					case Image(var id, var classes, var src, var title, var alt) -> html
 							.selfClosed("img", id, classes,
-									attributes("src", src, "title", title, "alt", alt));
+									attributes("src", src.path(), "title", title, "alt", alt));
 					case LineBreak(var id, var classes) -> html.selfClosed("br", id, classes);
 					case Link(var href, var rel) -> html.selfClosed("link", attributes("href", href, "rel", rel));
 					case ListItem(var id, var classes, var text, var children) -> {
@@ -207,10 +202,6 @@ public class Renderer {
 		for (int i = 0; i < namesAndValues.length; i += 2)
 			attributes.put(namesAndValues[i], namesAndValues[i + 1]);
 		return attributes;
-	}
-
-	public Stream<CssFile> cssFiles() {
-		return cssRenderer.stream().flatMap(CssRenderer::cssFiles);
 	}
 
 }

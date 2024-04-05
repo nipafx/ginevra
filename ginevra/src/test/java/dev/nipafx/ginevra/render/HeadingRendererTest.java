@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
+import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HeadingRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "h1";
 
 	@Nested
@@ -57,11 +57,6 @@ class HeadingRendererTest {
 	}
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

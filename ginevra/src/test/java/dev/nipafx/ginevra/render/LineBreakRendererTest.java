@@ -9,15 +9,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.br;
 
 class LineBreakRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "br";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

@@ -12,15 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AnchorRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "a";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {

@@ -8,6 +8,7 @@ import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.Span;
+import dev.nipafx.ginevra.outline.Resources;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import static dev.nipafx.ginevra.html.HtmlElement.div;
 import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.hr;
+import static dev.nipafx.ginevra.html.HtmlElement.img;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.span;
 
@@ -25,7 +27,7 @@ public record Header(String title, String description, String head, Optional<Cha
 	public record ChannelTags(String channel, List<String> tags) { }
 
 	public record Style(
-			Classes container, Id title, Id description, Id head, Id tags, Classes channel, Classes divider,
+			Classes container, Id logo, Id title, Id description, Id head, Id tags, Classes channel, Classes divider,
 			Classes tag, String style) implements CssStyle { }
 
 	private static final Style STYLE = Css.parse(Style.class, """
@@ -35,6 +37,10 @@ public record Header(String title, String description, String head, Optional<Cha
 				align-items: center;
 				gap: 18px;
 				margin: 1em 0 0.5em;
+			}
+			
+			#logo {
+				height: 96px;
 			}
 			
 			#head {
@@ -75,6 +81,7 @@ public record Header(String title, String description, String head, Optional<Cha
 	@Override
 	public Element composeSingle() {
 		return div.classes(STYLE.container).children(
+				img.id(STYLE.logo).src(Resources.include("logo-bg.png")),
 				p.id(STYLE.head).text(head),
 				h1.id(STYLE.title).text(title),
 				div.id(STYLE.tags).children(tagSpans()),

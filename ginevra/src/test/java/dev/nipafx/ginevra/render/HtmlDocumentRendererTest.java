@@ -10,11 +10,10 @@ import static dev.nipafx.ginevra.html.HtmlElement.body;
 import static dev.nipafx.ginevra.html.HtmlElement.document;
 import static dev.nipafx.ginevra.html.HtmlElement.head;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
+import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HtmlDocumentRendererTest {
-
-	private static final Renderer RENDERER = new Renderer();
 
 	@Test
 	void empty() {

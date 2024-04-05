@@ -2,10 +2,10 @@ package dev.nipafx.site.nipafx_dev;
 
 import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.Ginevra.Configuration;
-import dev.nipafx.ginevra.execution.Paths;
-import dev.nipafx.ginevra.outline.FileData;
+import dev.nipafx.ginevra.outline.BinaryFileData;
 import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.outline.Outliner.StepKey;
+import dev.nipafx.ginevra.outline.TextFileData;
 import dev.nipafx.site.nipafx_dev.data.ArticleData;
 import dev.nipafx.site.nipafx_dev.data.SiteData;
 import dev.nipafx.site.nipafx_dev.templates.ArticlePage;
@@ -16,12 +16,13 @@ import java.util.List;
 
 public class Main {
 
+	private static final Path STATIC_FOLDER = Path.of(Main.class.getClassLoader().getResource("static").getPath());
 	private static final Path CONTENT_FOLDER = Path.of(Main.class.getClassLoader().getResource("content").getPath());
 	private static final Path SITE_FOLDER = Path.of("nipafx.dev/target/site");
 
 	public static void main(String[] args) {
 		var config = new Configuration(
-				new Paths(SITE_FOLDER)
+				new Ginevra.Paths(SITE_FOLDER)
 		).update(args);
 		var ginevra = Ginevra.initialize(config);
 		var outliner = ginevra.newOutliner();
@@ -29,7 +30,10 @@ public class Main {
 		StepKey<SiteData> siteData = outliner.source(SiteData.create());
 		outliner.store(siteData);
 
-		StepKey<FileData> content = outliner.sourceFileSystem("articles", CONTENT_FOLDER.resolve("articles"));
+		StepKey<BinaryFileData> images = outliner.sourceBinaryFiles("images", STATIC_FOLDER);
+		outliner.storeResource(images);
+
+		StepKey<TextFileData> content = outliner.sourceTextFiles("articles", CONTENT_FOLDER.resolve("articles"));
 		StepKey<ArticleData.Markdown> markdown = outliner.transformMarkdown(content, ArticleData.Markdown.class);
 		StepKey<ArticleData.Parsed> parsed = outliner.merge(markdown, siteData, (doc, siteD) -> List.of(new GeneralDocument<>(
 						doc.id().transform("parsed"),

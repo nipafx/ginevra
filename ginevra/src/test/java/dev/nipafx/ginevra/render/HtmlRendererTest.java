@@ -1,9 +1,19 @@
 package dev.nipafx.ginevra.render;
 
+import dev.nipafx.ginevra.execution.StoreFront;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
+import dev.nipafx.ginevra.outline.Document;
+import dev.nipafx.ginevra.outline.Document.Data;
+import dev.nipafx.ginevra.outline.Document.FileData;
+import dev.nipafx.ginevra.outline.Query.CollectionQuery;
+import dev.nipafx.ginevra.outline.Query.RootQuery;
 import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 
 import static dev.nipafx.ginevra.html.HtmlElement.br;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
@@ -15,9 +25,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HtmlRendererTest {
 
+	public static final Renderer RENDERER = new Renderer(new EmptyStore(), Path.of(""), Path.of(""));
+	public static final ElementResolver RESOLVER = new ElementResolver(new EmptyStore(), Path.of(""), Path.of(""));
+
 	interface TestBasics {
 
-		Renderer renderer();
+		default Renderer renderer() {
+			return RENDERER;
+		}
 
 		String tag();
 
@@ -445,6 +460,25 @@ class HtmlRendererTest {
 						</\{tag()}>
 					</\{tag()}>
 					""");
+		}
+
+	}
+
+	private static class EmptyStore implements StoreFront {
+
+		@Override
+		public <RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query) {
+			throw new IllegalStateException("The empty store can't answer queries");
+		}
+
+		@Override
+		public <RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query) {
+			throw new IllegalStateException("The empty store can't answer queries");
+		}
+
+		@Override
+		public Optional<Document<? extends FileData>> getResource(String name) {
+			throw new IllegalStateException("The empty store can't answer queries");
 		}
 
 	}

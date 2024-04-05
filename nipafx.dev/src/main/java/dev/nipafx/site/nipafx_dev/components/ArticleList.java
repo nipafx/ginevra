@@ -35,13 +35,13 @@ public record ArticleList() implements CustomSingleQueryElement<ArticleList.Arti
 			
 			}
 			
-			#title {
+			.title {
 				margin: 0;
 				font-size: 1.5em;
 				font-weight: bold;
 			}
 			
-			#description {
+			.description {
 				margin: 12px 0 0;
 			}
 			""");

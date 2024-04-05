@@ -10,15 +10,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.strong;
 
 class StrongRendererTest {
 
-	private static final Renderer RENDERER = new Renderer();
 	private static final String TAG = "strong";
 
 	static class TestBasics implements HtmlRendererTest.TestBasics {
-
-		@Override
-		public Renderer renderer() {
-			return RENDERER;
-		}
 
 		@Override
 		public String tag() {
