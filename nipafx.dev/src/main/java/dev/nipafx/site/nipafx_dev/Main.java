@@ -13,18 +13,20 @@ import dev.nipafx.site.nipafx_dev.templates.LandingPage;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 public class Main {
 
 	private static final Path STATIC_FOLDER = Path.of(Main.class.getClassLoader().getResource("static").getPath());
 	private static final Path CONTENT_FOLDER = Path.of(Main.class.getClassLoader().getResource("content").getPath());
+
 	private static final Path SITE_FOLDER = Path.of("nipafx.dev/target/site");
 
 	public static void main(String[] args) {
-		var config = new Configuration(
-				new Ginevra.Paths(SITE_FOLDER)
-		).update(args);
-		var ginevra = Ginevra.initialize(config);
+		var ginevra = Ginevra.initialize(args, cfg -> new Configuration(
+				cfg.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
+				cfg.resourcesFolder(),
+				cfg.cssFolder()));
 		var outliner = ginevra.newOutliner();
 
 		StepKey<SiteData> siteData = outliner.source(SiteData.create());

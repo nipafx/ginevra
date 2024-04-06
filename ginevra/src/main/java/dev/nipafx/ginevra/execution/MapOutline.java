@@ -1,6 +1,5 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.Ginevra.Paths;
 import dev.nipafx.ginevra.execution.Step.FilterStep;
 import dev.nipafx.ginevra.execution.Step.MergeStepOne;
 import dev.nipafx.ginevra.execution.Step.MergeStepTwo;

@@ -28,6 +28,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>dev.nipafx.args</groupId>
+			<artifactId>record-args</artifactId>
+			<version>0.8.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark</artifactId>
 			<version>0.20.0</version>

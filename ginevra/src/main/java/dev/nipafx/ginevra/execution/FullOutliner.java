@@ -1,6 +1,5 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.execution.Step.FilterStep;
 import dev.nipafx.ginevra.execution.Step.MergeSteps;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
@@ -36,11 +35,11 @@ public class FullOutliner implements Outliner {
 	private final Store store;
 	private final Optional<MarkdownParser> markdownParser;
 	private final Renderer renderer;
-	private final Ginevra.Paths paths;
+	private final Paths paths;
 
 	private final Map<Step, List<Step>> stepMap;
 
-	public FullOutliner(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Ginevra.Paths paths) {
+	public FullOutliner(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Paths paths) {
 		this.store = store;
 		this.renderer = renderer;
 		this.markdownParser = markdownParser;
