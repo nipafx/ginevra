@@ -23,6 +23,7 @@ import dev.nipafx.ginevra.html.KnownElement;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.Link;
 import dev.nipafx.ginevra.html.ListItem;
+import dev.nipafx.ginevra.html.Meta;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
@@ -114,6 +115,7 @@ class ElementResolver {
 					case LineBreak el -> el;
 					case Link el -> el;
 					case ListItem el -> el.children(resolveChildren(el.children(), resources));
+					case Meta el -> el;
 					case OrderedList list -> list.children(list
 							.children().stream()
 							.map(listItem -> listItem.children(listItem

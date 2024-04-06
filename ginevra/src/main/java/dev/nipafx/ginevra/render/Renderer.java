@@ -21,6 +21,7 @@ import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.Link;
 import dev.nipafx.ginevra.html.ListItem;
+import dev.nipafx.ginevra.html.Meta;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
@@ -137,6 +138,7 @@ public class Renderer {
 						renderChildren(text, children, html);
 						html.close("li");
 					}
+					case Meta(var name, var content) -> html.selfClosed("meta", attributes("name", name, "content", content));
 					case OrderedList(var id, var classes, var start, var children) -> {
 						html.open("ol", id, classes,
 								attributes("start", start == null ? null : String.valueOf(start)));

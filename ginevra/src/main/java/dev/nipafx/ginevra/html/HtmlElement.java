@@ -15,6 +15,7 @@ public sealed interface HtmlElement extends KnownElement permits
 		LineBreak,
 		Link,
 		ListItem,
+		Meta,
 		OrderedList,
 		Paragraph,
 		Pre,
@@ -41,6 +42,7 @@ public sealed interface HtmlElement extends KnownElement permits
 	Image img = new Image();
 	ListItem li = new ListItem();
 	Link link = new Link();
+	Meta meta = new Meta();
 	OrderedList ol = new OrderedList();
 	Paragraph p = new Paragraph();
 	Pre pre = new Pre();
