@@ -51,10 +51,11 @@ class ResourceGatherer {
 			return;
 
 		var style = styled.style();
-		var contentHash = SHA256.hash(style.style());
+		var css = style.css().replaceSources(this::includeResource).interpolateSources();
+		var contentHash = SHA256.hash(css);
 		cssFiles.computeIfAbsent(contentHash, _ -> {
 			var file = Path.of(computeCssFileName(style, contentHash));
-			return new CssFile(cssFolder.resolve(file), style.style());
+			return new CssFile(cssFolder.resolve(file), css);
 		});
 	}
 

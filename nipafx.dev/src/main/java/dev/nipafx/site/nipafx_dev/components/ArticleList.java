@@ -23,7 +23,7 @@ import static java.util.Comparator.comparing;
 
 public record ArticleList() implements CustomSingleQueryElement<ArticleList.Articles>, CssStyled<Style> {
 
-	public record Style(Classes container, Classes article, Classes title, Classes description, String style) implements CssStyle { }
+	public record Style(Classes container, Classes article, Classes title, Classes description, Css css) implements CssStyle { }
 	private static final Style STYLE = Css.parse(Style.class, """
 			.container {
 				display: flex;

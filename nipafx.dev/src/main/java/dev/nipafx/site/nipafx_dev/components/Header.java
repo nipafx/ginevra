@@ -28,7 +28,7 @@ public record Header(String title, String description, String head, Optional<Cha
 
 	public record Style(
 			Classes container, Id logo, Id title, Id description, Id head, Id tags, Classes channel, Classes divider,
-			Classes tag, String style) implements CssStyle { }
+			Classes tag, Css css) implements CssStyle { }
 
 	private static final Style STYLE = Css.parse(Style.class, """
 			.container {

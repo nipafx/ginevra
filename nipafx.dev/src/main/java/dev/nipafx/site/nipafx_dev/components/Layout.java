@@ -8,6 +8,8 @@ import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Head;
 import dev.nipafx.ginevra.html.HtmlElement;
+import dev.nipafx.ginevra.html.Id;
+import dev.nipafx.ginevra.outline.Resources;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -26,7 +28,7 @@ public record Layout(Head head, List<? extends Element> children) implements Cus
 			head.charset(StandardCharsets.UTF_8);
 	}
 
-	public record Style(Classes layout, Classes content, String style) implements CssStyle { }
+	public record Style(Classes layout, Classes content, Id icon, Css css) implements CssStyle { }
 	private static final Style STYLE = Css.parse(Style.class, """
 			body {
 				margin: 0;
@@ -53,6 +55,17 @@ public record Layout(Head head, List<? extends Element> children) implements Cus
 			.content {
 				grid-area: content;
 			}
+			
+			#icon {
+				position: fixed;
+				width: 32px;
+				height: 32px;
+				right: 12px;
+				bottom: 12px;
+				background-image: url(\"""", Resources.include("icon.png"), """
+			");
+				background-size: contain;
+			}
 			""");
 
 	@Override
@@ -66,7 +79,9 @@ public record Layout(Head head, List<? extends Element> children) implements Cus
 				.language(Locale.US)
 				.head(head)
 				.body(body.classes(STYLE.layout).children(
-						div.classes(STYLE.content).children(children)));
+						div.classes(STYLE.content).children(children),
+						div.id(STYLE.icon)
+				));
 	}
 
 	public Layout head(Head head) {
