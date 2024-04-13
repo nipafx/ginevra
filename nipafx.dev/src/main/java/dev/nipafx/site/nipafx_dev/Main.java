@@ -23,11 +23,16 @@ public class Main {
 	private static final Path SITE_FOLDER = Path.of("nipafx.dev/target/site");
 
 	public static void main(String[] args) {
-		var ginevra = Ginevra.initialize(args, cfg -> new Configuration(
-				cfg.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
-				cfg.resourcesFolder(),
-				cfg.cssFolder()));
-		var outliner = ginevra.newOutliner();
+		var ginevraWithConfig = Ginevra.initialize(
+				args,
+				Config.class,
+				cfg -> new Configuration(
+						cfg.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
+						cfg.resourcesFolder(),
+						cfg.cssFolder())
+		);
+		var config = ginevraWithConfig.config();
+		var outliner = ginevraWithConfig.ginevra().newOutliner();
 
 		StepKey<SiteData> siteData = outliner.source(SiteData.create());
 		outliner.store(siteData);
@@ -48,5 +53,7 @@ public class Main {
 
 		outliner.build().run();
 	}
+
+	public record Config(Optional<Boolean> haveFun) { }
 
 }
