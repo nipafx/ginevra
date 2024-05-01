@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.execution.Step.FilterStep;
+import dev.nipafx.ginevra.execution.Step.GenerateResourcesStep;
 import dev.nipafx.ginevra.execution.Step.MergeStepOne;
 import dev.nipafx.ginevra.execution.Step.MergeStepTwo;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
@@ -53,35 +54,22 @@ class MapOutline implements Outline {
 		this.paths = paths;
 	}
 
+	private <STEP extends Step> Stream<STEP> streamSteps(Class<STEP> stepType) {
+		return stepMap.keySet().stream().mapMulti(keepOnly(stepType));
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public void run() {
 		runOutlineUntilStorage();
 		renderTemplates();
+		generateResources();
 	}
 
 	private void runOutlineUntilStorage() {
-		var sourceSteps = stepMap
-				.keySet().stream()
-				.mapMulti(keepOnly(SourceStep.class))
-				.toList();
+		var sourceSteps = streamSteps(SourceStep.class).toList();
 		sourceSteps.forEach(step -> step.source().register(doc -> processRecursively(step, (Document<?>) doc)));
 		sourceSteps.forEach(step -> step.source().loadAll());
-	}
-
-	private void renderTemplates() {
-		try {
-			paths.createFolders();
-			stepMap
-					.keySet().stream()
-					.mapMulti(keepOnly(TemplateStep.class))
-					.flatMap(this::generateFromTemplate)
-					// TODO: find out why this cast is needed
-					.forEach((Consumer<TemplatedFile>) this::writeTemplatedFile);
-		} catch (IOException | UncheckedIOException ex) {
-			// TODO: handle error
-			ex.printStackTrace();
-		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -117,8 +105,22 @@ class MapOutline implements Outline {
 					store.storeResource(name, fileDoc);
 				}
 				case TemplateStep _ -> throw new IllegalStateException("No step should map to a template");
+				case GenerateResourcesStep _ -> throw new IllegalStateException("No step should map to resource generation");
 			}
 		});
+	}
+
+	private void renderTemplates() {
+		try {
+			paths.createFolders();
+			streamSteps(TemplateStep.class)
+					.flatMap(this::generateFromTemplate)
+					// TODO: find out why this cast is needed
+					.forEach((Consumer<TemplatedFile>) this::writeTemplatedFile);
+		} catch (IOException | UncheckedIOException ex) {
+			// TODO: handle error
+			ex.printStackTrace();
+		}
 	}
 
 	private <DATA extends Record & Data> Stream<TemplatedFile> generateFromTemplate(TemplateStep<DATA> templateStep) {
@@ -158,6 +160,8 @@ class MapOutline implements Outline {
 	private void copyFile(CopiedFile copiedFile) {
 		var target = paths.siteFolder().resolve(copiedFile.target());
 		try {
+			// copied files have a hashed name, so if a target file of that name already exists
+			// it can be assumed to be up-to-date and nothing needs to be done
 			if (!Files.exists(target))
 				Files.copy(copiedFile.source(), target);
 		} catch (IOException ex) {
@@ -167,15 +171,47 @@ class MapOutline implements Outline {
 	}
 
 	private void writeCssFile(CssFile cssFile) {
-		var file = paths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
-		writeToFile(file, cssFile.content());
+		var targetFile = paths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
+		// CSS files have a hashed name, so if a target file of that name already exists
+		// it can be assumed to be up-to-date and nothing needs to be done
+		if (!Files.exists(targetFile))
+			writeToFile(targetFile, cssFile.content());
 	}
 
 	private static void writeToFile(Path filePath, String fileContent) {
 		try {
+			// some files can change without Ginevra noticing,
+			// so they need to be deleted and recreated
 			Files.createDirectories(filePath.getParent());
 			Files.deleteIfExists(filePath);
 			Files.writeString(filePath, fileContent);
+		} catch (IOException ex) {
+			// TODO: handle error
+			ex.printStackTrace();
+		}
+	}
+
+	private void generateResources() {
+		streamSteps(GenerateResourcesStep.class)
+				.forEach(step -> copyStaticFiles(step.folder(), step.resourceNames()));
+	}
+
+	private void copyStaticFiles(Path folder, List<String> resourceNames) {
+		try {
+			var folderPath = paths.siteFolder().resolve(folder).toAbsolutePath();
+			Files.createDirectories(folderPath);
+			for (String resourceName : resourceNames) {
+				var source = store
+						.getResource(resourceName)
+						.orElseThrow(() -> new IllegalArgumentException(STR."No resource with name '\{resourceName}'."))
+						.data()
+						.file();
+				var target = folderPath.resolve(resourceName);
+				// these files can change without Ginevra noticing,
+				// so they need to be deleted and recreated
+				Files.deleteIfExists(target);
+				Files.copy(source, target);
+			}
 		} catch (IOException ex) {
 			// TODO: handle error
 			ex.printStackTrace();

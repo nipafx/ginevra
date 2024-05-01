@@ -1,6 +1,7 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.execution.Step.FilterStep;
+import dev.nipafx.ginevra.execution.Step.GenerateResourcesStep;
 import dev.nipafx.ginevra.execution.Step.MergeSteps;
 import dev.nipafx.ginevra.execution.Step.SourceStep;
 import dev.nipafx.ginevra.execution.Step.StoreResourceStep;
@@ -148,6 +149,12 @@ public class FullOutliner implements Outliner {
 		createStepListFor(next);
 	}
 
+	@Override
+	public void generateStaticResources(Path folder, String... resources) {
+		var next = new GenerateResourcesStep(folder, List.of(resources));
+		createStepListFor(next);
+	}
+
 	// misc
 
 	private void createStepListFor(SourceStep<?> step) {
@@ -160,6 +167,12 @@ public class FullOutliner implements Outliner {
 		var previous = stepMap.put(step, List.of());
 		if (previous != null)
 			throw new IllegalArgumentException("This template was already registered");
+	}
+
+	private void createStepListFor(GenerateResourcesStep step) {
+		var previous = stepMap.put(step, List.of());
+		if (previous != null)
+			throw new IllegalArgumentException("This resource generation was already registered");
 	}
 
 	private void appendStep(StepKey<?> previous, Step step) {

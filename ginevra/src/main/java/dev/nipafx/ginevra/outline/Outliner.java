@@ -64,6 +64,8 @@ public interface Outliner {
 	<DATA extends Record & Data>
 	void generate(Template<DATA> template);
 
+	void generateStaticResources(Path folder, String... resources);
+
 	// build
 
 	Outline build();

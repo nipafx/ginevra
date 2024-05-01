@@ -51,6 +51,8 @@ public class Main {
 		outliner.generate(new ArticlePage());
 		outliner.generate(new LandingPage());
 
+		outliner.generateStaticResources(Path.of(""), "icon.png");
+
 		outliner.build().run();
 	}
 

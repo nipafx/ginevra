@@ -8,6 +8,7 @@ import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.Transformer;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,5 +100,7 @@ sealed interface Step {
 	record StoreResourceStep<DATA extends Record & FileData>(Function<DATA, String> naming) implements Step { }
 
 	record TemplateStep<DATA extends Record & Data>(Template<DATA> template) implements Step { }
+
+	record GenerateResourcesStep(Path folder, List<String> resourceNames) implements Step { }
 
 }
