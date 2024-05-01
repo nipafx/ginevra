@@ -57,6 +57,7 @@ class FileSource<DATA extends Record & FileData> implements Source<DATA> {
 		try (var files = Files.walk(directory, 1)) {
 			return files
 					.filter(not(Files::isDirectory))
+					.filter(file -> !file.getFileName().toString().startsWith("."))
 					.map(this::loadFile)
 					.flatMap(Optional::stream)
 					.toList();
