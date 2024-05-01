@@ -26,10 +26,12 @@ import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
+import dev.nipafx.ginevra.html.Source;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
+import dev.nipafx.ginevra.html.Video;
 import dev.nipafx.ginevra.outline.Template;
 
 import java.nio.file.Path;
@@ -140,8 +142,7 @@ public class Renderer {
 					}
 					case Meta(var name, var content) -> html.selfClosed("meta", attributes("name", name, "content", content));
 					case OrderedList(var id, var classes, var start, var children) -> {
-						html.open("ol", id, classes,
-								attributes("start", start == null ? null : String.valueOf(start)));
+						html.open("ol", id, classes, attributes("start", start));
 						renderChildren(children, html);
 						html.close("ol");
 					}
@@ -155,6 +156,7 @@ public class Renderer {
 						renderChildren(text, children, html);
 						html.close("pre");
 					}
+					case Source(var src, var type) -> html.selfClosed("source", attributes("src", src.path(), "type", type));
 					case Span(var id, var classes, var text, var children) -> {
 						html.open("span", id, classes);
 						renderChildren(text, children, html);
@@ -169,6 +171,22 @@ public class Renderer {
 						html.open("ul", id, classes);
 						renderChildren(children, html);
 						html.close("ul");
+					}
+					case Video(
+							var id, var classes, var src, var height, var width, var poster, var preload,
+							var autoplay, var loop, var muted, var playInline,
+							var controls, var disablePictureInPicture, var disableRemotePlayback,
+							var children) -> {
+						var attributes = attributes(
+								"src", src.path(), "height", height, "width", width, "poster", poster.path(), "preload", preload,
+								"autoplay", autoplay, "loop", loop, "muted", muted, "playinline", playInline,
+								"disablepictureinpicture", disablePictureInPicture, "disableremoteplayback", disableRemotePlayback);
+						var properties = controls != null && controls
+								? List.of("controls")
+								: List.<String> of();
+						html.open("video", id, classes, attributes, properties);
+						renderChildren(children, html);
+						html.close("video");
 					}
 				}
 			}
@@ -196,13 +214,17 @@ public class Renderer {
 		children.forEach(child -> writeToRenderer(child, renderer));
 	}
 
-	private static Map<String, String> attributes(String... namesAndValues) {
+	private static Map<String, String> attributes(Object... namesAndValues) {
 		if (namesAndValues.length % 2 != 0)
 			throw new IllegalArgumentException();
 
 		var attributes = new LinkedHashMap<String, String>();
-		for (int i = 0; i < namesAndValues.length; i += 2)
-			attributes.put(namesAndValues[i], namesAndValues[i + 1]);
+		for (int i = 0; i < namesAndValues.length; i += 2) {
+			if (!(namesAndValues[i] instanceof String name))
+				throw new IllegalArgumentException();
+			var value = namesAndValues[i + 1] == null ? null : namesAndValues[i + 1].toString();
+			attributes.put(name, value);
+		}
 		return attributes;
 	}
 

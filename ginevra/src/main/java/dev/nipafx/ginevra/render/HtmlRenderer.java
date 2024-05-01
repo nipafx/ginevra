@@ -3,6 +3,7 @@ package dev.nipafx.ginevra.render;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Id;
 
+import java.util.List;
 import java.util.Map;
 
 class HtmlRenderer {
@@ -32,17 +33,21 @@ class HtmlRenderer {
 	}
 
 	public void open(String tag, Id id, Classes classes, Map<String, String> attributes) {
+		open(tag, id, classes, attributes, List.of());
+	}
+
+	public void open(String tag, Id id, Classes classes, Map<String, String> attributes, List<String> properties) {
 		switch (state) {
 			case EMPTY -> builder.repeat("\t", indentation);
 			case OPENED, CLOSED -> builder.append("\n").repeat("\t", indentation);
-			case INLINE -> {
-			}
+			case INLINE -> { }
 		}
 
 		builder.append("<").append(tag);
 		attribute("id", id.asString());
 		attribute("class", classes.asCssString());
 		attributes.forEach(this::attribute);
+		properties.forEach(this::property);
 		builder.append(">");
 
 		indentation++;
@@ -54,6 +59,10 @@ class HtmlRenderer {
 			return;
 
 		builder.append(" ").append(name).append("=\"").append(value).append("\"");
+	}
+
+	private void property(String name) {
+		builder.append(" ").append(name);
 	}
 
 	public void close(String tag) {

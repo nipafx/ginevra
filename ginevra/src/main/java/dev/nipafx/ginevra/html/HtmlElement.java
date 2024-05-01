@@ -19,9 +19,11 @@ public sealed interface HtmlElement extends KnownElement permits
 		OrderedList,
 		Paragraph,
 		Pre,
+		Source,
 		Span,
 		Strong,
-		UnorderedList {
+		UnorderedList,
+		Video {
 
 	Anchor a = new Anchor();
 	BlockQuote blockquote = new BlockQuote();
@@ -46,8 +48,10 @@ public sealed interface HtmlElement extends KnownElement permits
 	OrderedList ol = new OrderedList();
 	Paragraph p = new Paragraph();
 	Pre pre = new Pre();
+	Source source = new Source();
 	Span span = new Span();
 	Strong strong = new Strong();
 	UnorderedList ul = new UnorderedList();
+	Video video = new Video();
 
 }

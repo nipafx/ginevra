@@ -28,10 +28,12 @@ import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.OrderedList;
 import dev.nipafx.ginevra.html.Paragraph;
 import dev.nipafx.ginevra.html.Pre;
+import dev.nipafx.ginevra.html.Source;
 import dev.nipafx.ginevra.html.Span;
 import dev.nipafx.ginevra.html.Strong;
 import dev.nipafx.ginevra.html.Text;
 import dev.nipafx.ginevra.html.UnorderedList;
+import dev.nipafx.ginevra.html.Video;
 import dev.nipafx.ginevra.outline.CustomQueryElement;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
@@ -125,6 +127,7 @@ class ElementResolver {
 							.toList());
 					case Paragraph el -> el.children(resolveChildren(el.children(), resources));
 					case Pre el -> el.children(resolveChildren(el.children(), resources));
+					case Source el -> el.src(resources.includeResource(el.src()));
 					case Span el -> el.children(resolveChildren(el.children(), resources));
 					case Strong el -> el.children(resolveChildren(el.children(), resources));
 					case UnorderedList list -> list.children(list
@@ -134,6 +137,10 @@ class ElementResolver {
 									.flatMap(listItemChild -> resolve(listItemChild, resources).stream())
 									.toList()))
 							.toList());
+					case Video el -> el
+							.src(resources.includeResource(el.src()))
+							.poster(resources.includeResource(el.poster()))
+							.children(resolveChildren(el.children(), resources));
 				};
 				yield List.of(resolvedElement);
 			}

@@ -39,7 +39,7 @@ class ImageRendererTest {
 	}
 
 	@Nested
-	class SrcAndTitleAndAlt extends AnchorRendererTest.TestBasics {
+	class SrcAndTitleAndAlt extends TestBasics {
 
 		@Test
 		void neither() {
