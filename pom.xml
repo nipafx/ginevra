@@ -20,7 +20,7 @@
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
-				<version>5.10.1</version>
+				<version>5.10.2</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -37,13 +37,13 @@
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark</artifactId>
-			<version>0.20.0</version>
+			<version>0.22.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark-ext-yaml-front-matter</artifactId>
-			<version>0.20.0</version>
+			<version>0.22.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.24.2</version>
+			<version>3.26.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -71,7 +71,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
+				<version>3.13.0</version>
 				<configuration>
 					<enablePreview>true</enablePreview>
 					<compilerArgs>--enable-preview</compilerArgs>
@@ -79,7 +79,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.2.3</version>
+				<version>3.3.0</version>
 				<configuration>
 					<argLine>
 						--enable-preview
