@@ -39,7 +39,7 @@ public class Id {
 
 	@Override
 	public String toString() {
-		return STR."ID{\{id}}";
+		return "ID{%s}".formatted(id);
 	}
 
 }

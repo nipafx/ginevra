@@ -61,7 +61,7 @@ class ResourceGatherer {
 
 	private static String computeCssFileName(Record style, String contentHash) {
 		var baseName = style.getClass().getName().replaceAll("[.$]", "-");
-		return STR."\{baseName}--\{contentHash}.css";
+		return "%s--%s.css".formatted(baseName, contentHash);
 	}
 
 	public Src includeResource(Src src) {
@@ -71,7 +71,7 @@ class ResourceGatherer {
 		return resources.computeIfAbsent(reSrc.resourceName(), resourceName -> {
 			var sourceFile = store
 					.getResource(resourceName)
-					.orElseThrow(() -> new IllegalArgumentException(STR."No resource with name '\{resourceName}'."))
+					.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName)))
 					.data()
 					.file();
 			var targetFile = computeResourceFileName(sourceFile, resourceName);
@@ -111,7 +111,7 @@ class ResourceGatherer {
 		return cssFiles
 				.values().stream()
 				.map(css -> link
-						.href(STR."/\{css.file()}")
+						.href("/%s".formatted(css.file()))
 						.rel("stylesheet"));
 	}
 

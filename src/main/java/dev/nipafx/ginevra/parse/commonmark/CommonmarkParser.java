@@ -117,8 +117,7 @@ public class CommonmarkParser implements MarkdownParser {
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
 			case org.commonmark.ext.front.matter.YamlFrontMatterBlock _ -> JmlElement.nothing;
 			case org.commonmark.ext.front.matter.YamlFrontMatterNode _ -> JmlElement.nothing;
-			default -> throw new IllegalArgumentException(
-					STR."The node type '\{node.getClass().getSimpleName()}' is unsupported");
+			default -> throw new IllegalArgumentException("The node type '%s' is unsupported".formatted(node.getClass().getSimpleName()));
 		};
 	}
 

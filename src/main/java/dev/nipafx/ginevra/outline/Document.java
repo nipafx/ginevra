@@ -46,7 +46,7 @@ public interface Document<DATA extends Record & Data> {
 
 		@Override
 		public String toString() {
-			return STR."Source[\{name}; \{location}]";
+			return "Source[%s; %s]".formatted(name, location);
 		}
 
 	}
@@ -60,7 +60,7 @@ public interface Document<DATA extends Record & Data> {
 
 		@Override
 		public String toString() {
-			return STR."Store[\{storeName}]";
+			return "Store[%s]".formatted(storeName);
 		}
 
 	}
@@ -74,7 +74,7 @@ public interface Document<DATA extends Record & Data> {
 
 		@Override
 		public String toString() {
-			return STR."\{theParent} >>> Transformer[\{name}]";
+			return "%s >>> Transformer[%s]".formatted(theParent, name);
 		}
 
 	}

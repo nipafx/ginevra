@@ -187,7 +187,7 @@ class ElementResolver {
 
 	// package-visible for tests
 	HtmlElement express(CodeBlock block) {
-		var codeClasses = block.language() == null ? Classes.none() : Classes.of(STR."language-\{block.language()}");
+		var codeClasses = block.language() == null ? Classes.none() : Classes.of("language-%s".formatted(block.language()));
 		return pre.id(block.id()).classes(block.classes()).children(
 				code.classes(codeClasses).text(block.text()).children(block.children()));
 	}

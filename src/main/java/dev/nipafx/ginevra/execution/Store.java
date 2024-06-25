@@ -61,7 +61,7 @@ public class Store implements StoreFront {
 	public void storeResource(String name, Document<? extends FileData> doc) {
 		var previous = resources.put(name, doc);
 		if (previous != null) {
-			var message = STR."Resources must have unique names, but both \{previous.data()} and \{doc} are named '\{name}'.";
+			var message = "Resources must have unique names, but both %s and %s are named '%s'.".formatted(previous.data(), doc, name);
 			throw new IllegalArgumentException(message);
 		}
 	}
@@ -93,17 +93,17 @@ public class Store implements StoreFront {
 			throw new IllegalArgumentException("Unknown document collection: " + collection);
 		if (!(genericType instanceof ParameterizedType parameterizedType
 			  && parameterizedType.getRawType().getTypeName().equals("java.util.List")))
-			throw new IllegalArgumentException(STR."""
-					A root query's component that queries a collection needs to be of type 'java.util.List' \
-					but '\{collection}' is of type '\{genericType.getTypeName()}'.""");
+			throw new IllegalArgumentException(
+					"A root query's component that queries a collection needs to be of type 'java.util.List' but '%s' is of type '%s'."
+							.formatted(collection, genericType.getTypeName()));
 
 		try {
 			@SuppressWarnings("unchecked")
 			var type = (Class<Record>) Class.forName(parameterizedType.getActualTypeArguments()[0].getTypeName());
 			if (!type.isRecord())
-				throw new IllegalArgumentException(STR."""
-					A root query's component that queries a collection needs to be a list of some record type \
-					but '\{collection}' is a list of '\{type.getTypeName()}'.""");
+				throw new IllegalArgumentException(
+						"A root query's component that queries a collection needs to be a list of some record type but '%s' is a list of '%s'."
+								.formatted(collection, type.getTypeName()));
 
 			return collections
 					.get(collection).stream()
@@ -136,7 +136,7 @@ public class Store implements StoreFront {
 		return this
 				.collections
 				.entrySet().stream()
-				.map(entry -> STR." - \{entry.getKey()}: \{entry.getValue().size()}")
+				.map(entry -> " - %s: %d".formatted(entry.getKey(), entry.getValue().size()))
 				.collect(joining(", ", "MapStore {", "}"));
 	}
 

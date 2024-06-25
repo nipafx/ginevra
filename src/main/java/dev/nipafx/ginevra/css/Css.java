@@ -86,14 +86,14 @@ public record Css(List<String> fragments, List<Src> sources) {
 	private <STYLE extends Record & CssStyle> String createCssPrefix(Class<STYLE> type) {
 		var typeNameInCss = type.getName().replaceAll("[.$]", "-");
 		var cssHash = SHA256.hash(interpolateSources());
-		return STR."\{typeNameInCss }--\{cssHash}--";
+		return "%s--%s--".formatted(typeNameInCss, cssHash);
 	}
 
 	private <STYLE extends Record & CssStyle> List<Name> identifyNames(Class<STYLE> type) {
 		return Stream
 				.of(type.getRecordComponents())
 				.filter(component -> component.getType() != Css.class)
-				.map(component ->  new Name(component.getType() == Id.class ? '#' : '.', component.getName()))
+				.map(component -> new Name(component.getType() == Id.class ? '#' : '.', component.getName()))
 				.toList();
 	}
 
@@ -132,10 +132,8 @@ public record Css(List<String> fragments, List<Src> sources) {
 					if (component.getType() == Css.class && component.getName().equals(STYLE_COMPONENT_NAME))
 						return;
 
-					var message = STR."""
-						CSS record components must be of types `Id` or `Classes` \
-						except for one `Css \{STYLE_COMPONENT_NAME}` component \
-						but '\{component}' is neither.""";
+					var message = "CSS record components must be of types `Id` or `Classes` except for one `Css %s` component but '%s' is neither."
+							.formatted(STYLE_COMPONENT_NAME, component);
 					throw new IllegalArgumentException(message);
 				})
 				.map(RecordComponent::getType)
@@ -154,6 +152,7 @@ public record Css(List<String> fragments, List<Src> sources) {
 			throw new IllegalStateException(message, ex);
 		}
 	}
+
 	private record Name(char identifier, String name) { }
 
 }

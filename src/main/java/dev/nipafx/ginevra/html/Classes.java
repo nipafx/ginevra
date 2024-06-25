@@ -77,7 +77,7 @@ public class Classes {
 
 	@Override
 	public String toString() {
-		return STR."ClassList{\{names}}";
+		return "ClassList{%s}".formatted(names);
 	}
 
 }

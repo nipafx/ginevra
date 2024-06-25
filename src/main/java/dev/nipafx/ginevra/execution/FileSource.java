@@ -69,7 +69,7 @@ class FileSource<DATA extends Record & FileData> implements Source<DATA> {
 	}
 
 	private Optional<Document<DATA>> loadFile(Path file) {
-		var id = new SourceId(STR."FileSystem: '\{name}'", file.toUri());
+		var id = new SourceId("FileSystem: '%s'".formatted(name), file.toUri());
 		try {
 			var data = loader.load(file);
 			return Optional.of(new GeneralDocument<>(id, data));

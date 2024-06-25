@@ -66,9 +66,9 @@ class OrderedListRendererTest {
 			var element = ol;
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -77,11 +77,11 @@ class OrderedListRendererTest {
 					li.id(Id.of("child")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<li id="child"></li>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -92,13 +92,13 @@ class OrderedListRendererTest {
 					li.id(Id.of("child-3")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<li id="child-1"></li>
 						<li id="child-2"></li>
 						<li id="child-3"></li>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 	}

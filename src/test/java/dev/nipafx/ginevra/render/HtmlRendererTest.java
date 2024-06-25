@@ -52,13 +52,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -67,13 +67,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -82,13 +82,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} id="the-id" />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s id="the-id" />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} id="the-id"></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s id="the-id"></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -97,13 +97,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -112,13 +112,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} class="the-class" />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s class="the-class" />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} class="the-class"></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s class="the-class"></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -127,13 +127,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -142,13 +142,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} class="one-class another-class" />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s class="one-class another-class" />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} class="one-class another-class"></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s class="one-class another-class"></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -157,13 +157,13 @@ class HtmlRendererTest {
 			var rendered = renderer().render(element);
 
 			if (isSelfClosing())
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} id="the-id" class="one-class another-class" />
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s id="the-id" class="one-class another-class" />
+					""".formatted(tag()));
 			else
-				assertThat(rendered).isEqualTo(STR."""
-					<\{tag()} id="the-id" class="one-class another-class"></\{tag()}>
-					""");
+				assertThat(rendered).isEqualTo("""
+					<%s id="the-id" class="one-class another-class"></%s>
+					""".formatted(tag(), tag()));
 		}
 
 	}
@@ -177,9 +177,9 @@ class HtmlRendererTest {
 			var element = createWith(null);
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -193,9 +193,9 @@ class HtmlRendererTest {
 			var element = createWith("inline text");
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>inline text</\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s>inline text</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -203,9 +203,9 @@ class HtmlRendererTest {
 			var element = createWith(null, text.text("text element"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>text element</\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s>text element</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -217,9 +217,9 @@ class HtmlRendererTest {
 					text.text("text element 3"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>text element 1text element 2text element 3</\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s>text element 1text element 2text element 3</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -235,9 +235,9 @@ class HtmlRendererTest {
 					text.text("text element 3"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>text element 1<strong>strong element</strong>text element 2<br />text element 3</\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s>text element 1<strong>strong element</strong>text element 2<br />text element 3</%s>
+					""".formatted(tag(), tag()));
 		}
 
 	}
@@ -252,9 +252,9 @@ class HtmlRendererTest {
 					createWith();
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}></\{tag()}>
-					""");
+			assertThat(rendered).isEqualTo("""
+					<%s></%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -264,11 +264,11 @@ class HtmlRendererTest {
 							span.id(Id.of("child")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -280,13 +280,13 @@ class HtmlRendererTest {
 							span.id(Id.of("child-3")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child-1"></span>
 						<span id="child-2"></span>
 						<span id="child-3"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -297,13 +297,13 @@ class HtmlRendererTest {
 									span.id(Id.of("grandchild"))));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
-						<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
+						<%s>
 							<span id="grandchild"></span>
-						</\{tag()}>
-					</\{tag()}>
-					""");
+						</%s>
+					</%s>
+					""".formatted(tag(), tag(), tag(), tag()));
 		}
 
 		@Test
@@ -316,15 +316,15 @@ class HtmlRendererTest {
 							span.id(Id.of("child-2")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
-						<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
+						<%s>
 							<span id="grandchild"></span>
-						</\{tag()}>
+						</%s>
 						<span id="child-1"></span>
 						<span id="child-2"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag(), tag(), tag()));
 		}
 
 		@Test
@@ -337,15 +337,15 @@ class HtmlRendererTest {
 							span.id(Id.of("child-2")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child-1"></span>
-						<\{tag()}>
+						<%s>
 							<span id="grandchild"></span>
-						</\{tag()}>
+						</%s>
 						<span id="child-2"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag(), tag(), tag()));
 		}
 
 		@Test
@@ -358,15 +358,15 @@ class HtmlRendererTest {
 									span.id(Id.of("grandchild"))));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child-1"></span>
 						<span id="child-2"></span>
-						<\{tag()}>
+						<%s>
 							<span id="grandchild"></span>
-						</\{tag()}>
-					</\{tag()}>
-					""");
+						</%s>
+					</%s>
+					""".formatted(tag(), tag(), tag(), tag()));
 		}
 
 		@Test
@@ -378,13 +378,13 @@ class HtmlRendererTest {
 							span.id(Id.of("child-2")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<p>grandchild</p>
 						<span id="child-1"></span>
 						<span id="child-2"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -396,13 +396,13 @@ class HtmlRendererTest {
 							span.id(Id.of("child-3")));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child-1"></span>
 						<p>grandchild</p>
 						<span id="child-3"></span>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -414,13 +414,13 @@ class HtmlRendererTest {
 							p.text("grandchild"));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
 						<span id="child-1"></span>
 						<span id="child-2"></span>
 						<p>grandchild</p>
-					</\{tag()}>
-					""");
+					</%s>
+					""".formatted(tag(), tag()));
 		}
 
 		@Test
@@ -441,25 +441,25 @@ class HtmlRendererTest {
 									span.id(Id.of("grandchild-9"))));
 			var rendered = renderer().render(element);
 
-			assertThat(rendered).isEqualTo(STR."""
-					<\{tag()}>
-						<\{tag()}>
+			assertThat(rendered).isEqualTo("""
+					<%s>
+						<%s>
 							<span id="grandchild-1"></span>
 							<span id="grandchild-2"></span>
 							<span id="grandchild-3"></span>
-						</\{tag()}>
-						<\{tag()}>
+						</%s>
+						<%s>
 							<span id="grandchild-4"></span>
 							<span id="grandchild-5"></span>
 							<span id="grandchild-6"></span>
-						</\{tag()}>
-						<\{tag()}>
+						</%s>
+						<%s>
 							<span id="grandchild-7"></span>
 							<span id="grandchild-8"></span>
 							<span id="grandchild-9"></span>
-						</\{tag()}>
-					</\{tag()}>
-					""");
+						</%s>
+					</%s>
+					""".formatted(tag(), tag(), tag(), tag(), tag(), tag(), tag(), tag()));
 		}
 
 	}

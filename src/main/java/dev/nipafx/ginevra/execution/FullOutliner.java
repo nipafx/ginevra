@@ -184,7 +184,7 @@ public class FullOutliner implements Outliner {
 				stepMap.get(prev2).add(step);
 			}
 			default -> {
-				var message = STR."Unexpected implementation of `\{StepKey.class.getSimpleName()}`: `\{previous.getClass().getSimpleName()}`";
+				var message = "Unexpected implementation of `%s`: `%s`".formatted(StepKey.class.getSimpleName(), previous.getClass().getSimpleName());
 				throw new IllegalStateException(message );
 			}
 		};

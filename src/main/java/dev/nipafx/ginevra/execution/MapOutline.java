@@ -203,7 +203,7 @@ class MapOutline implements Outline {
 			for (String resourceName : resourceNames) {
 				var source = store
 						.getResource(resourceName)
-						.orElseThrow(() -> new IllegalArgumentException(STR."No resource with name '\{resourceName}'."))
+						.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName)))
 						.data()
 						.file();
 				var target = folderPath.resolve(resourceName);

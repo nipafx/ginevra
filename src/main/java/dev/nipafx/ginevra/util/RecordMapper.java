@@ -36,10 +36,10 @@ public class RecordMapper {
 			else
 				return componentValue;
 		} catch (IllegalAccessException ex) {
-			var message = STR."Record '\{instance.getClass().getName()}' is inaccessible.";
+			var message = "Record '%s' is inaccessible.".formatted(instance.getClass().getName());
 			throw new IllegalStateException(message, ex);
 		} catch (InvocationTargetException ex) {
-			var message = STR."Invoking accessor of component '\{instance.getClass().getName()}#\{component.getName()}' failed.";
+			var message = "Invoking accessor of component '%s#%s' failed.".formatted(instance.getClass().getName(), component.getName());
 			throw new IllegalStateException(message, ex);
 		}
 	}
@@ -56,7 +56,7 @@ public class RecordMapper {
 			@SuppressWarnings("unchecked")
 			var nestedRecordType = (Class<? extends Record>) component.getType();
 			if (!(guaranteeNotNull(value, component) instanceof Map)) {
-				var message = STR."The component '\{component.getName()}' is of type '\{component.getType()}' but the associated map value '\{value}' is no 'Map'";
+				var message = "The component '%s' is of type '%s' but the associated map value '%s' is no 'Map'".formatted(component.getName(), component.getType(), value);
 				throw new IllegalArgumentException(message);
 			}
 			@SuppressWarnings("unchecked")
@@ -103,7 +103,7 @@ public class RecordMapper {
 
 	private static <T> T guaranteeNotNull(T value, RecordComponent component) {
 		if (value == null) {
-			var message = STR."No values are defined for the component '\{component.getName()}' of type '\{component.getType()}'";
+			var message = "No values are defined for the component '%s' of type '%s'".formatted(component.getName(), component.getType());
 			throw new IllegalArgumentException(message);
 		}
 		return value;
@@ -115,12 +115,12 @@ public class RecordMapper {
 					.forName(type.getTypeName())
 					.isInstance(value);
 			if (!correctType) {
-				String message = STR."Value '\{value}' is supposed to be of type '\{type}' but isn't";
+				String message = "Value '%s' is supposed to be of type '%s' but isn't".formatted(value, type);
 				throw new IllegalArgumentException(message);
 			}
 			return value;
 		} catch (ClassNotFoundException ex) {
-			String message = STR."Value '\{value}' is supposed to be of type '\{type}' but the type wasn't found";
+			String message = "Value '%s' is supposed to be of type '%s' but the type wasn't found".formatted(value, type);
 			throw new IllegalStateException(message, ex);
 		}
 	}
@@ -133,7 +133,7 @@ public class RecordMapper {
 			var constructor = type.getConstructor(constructorParameters);
 			return constructor.newInstance(constructorArguments);
 		} catch (ReflectiveOperationException ex) {
-			var message = STR."Instantiating '\{type}' failed";
+			var message = "Instantiating '%s' failed".formatted(type);
 			throw new IllegalStateException(message, ex);
 		}
 	}
@@ -149,7 +149,7 @@ public class RecordMapper {
 		return switch (component.getGenericType()) {
 			case Class<?> classType -> {
 				if (guaranteeNotNull(values, component).size() != 1) {
-					var message = STR."\{values.size()} values are defined for the component '\{component.getName()}' of type '\{component.getType()} but there should be exactly 1.";
+					var message = "%d values are defined for the component '%s' of type '%s but there should be exactly 1.".formatted(values.size(), component.getName(), component.getType());
 					throw new IllegalArgumentException(message);
 				}
 				yield parseValue(classType, values.getFirst());
@@ -161,7 +161,7 @@ public class RecordMapper {
 							case 0 -> Optional.empty();
 							case 1 -> Optional.of(parseValue(paramType.getActualTypeArguments()[0], values.getFirst()));
 							default -> {
-								var message = STR."\{values.size()} values are defined for the component '\{component.getName()}' of type '\{component.getType()} but there should be 0 or 1.";
+								var message = "%d values are defined for the component '%s' of type '%s but there should be 0 or 1.".formatted(values.size(), component.getName(), component.getType());
 								throw new IllegalArgumentException(message);
 							}
 				};
