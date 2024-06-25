@@ -1,0 +1,15 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Set up JDK 23
+        uses: oracle-actions/setup-java@v1
+        with:
+          website: 'jdk.java.net'
+          release: '23'
+      - name: Run build
+        run: mvn verify --no-transfer-progress

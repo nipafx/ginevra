@@ -6,13 +6,43 @@
 
 	<groupId>dev.nipafx.ginevra</groupId>
 	<artifactId>ginevra</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>${revision}</version>
+
+	<name>Ginevra</name>
+	<description>A Gatsby-like static site generator written in Java.</description>
+	<inceptionYear>2024</inceptionYear>
+	<url>https://github.com/nipafx/ginevra</url>
+
+	<licenses>
+		<license>
+			<name>The GNU General Public License v3.0</name>
+			<url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Nicolai Parlog</name>
+			<email>nicolai@nipafx.dev</email>
+			<url>https://nipafx.dev</url>
+			<id>nipafx</id>
+		</developer>
+	</developers>
+
+	<scm>
+		<url>https://github.com/nipafx/ginevra</url>
+		<connection>scm:git:git://github.com/nipafx/ginevra</connection>
+	</scm>
 
 	<properties>
+		<maven.compiler.release>23</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>23</maven.compiler.source>
-		<maven.compiler.target>23</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- the revision needs to be a value that works for `––module-version`,
+		     which, e.g., SNAPSHOT or ${sha1} don't -->
+		<revision>0</revision>
+		<!-- Maven should deploy files to this directory, so JReleaser can pick them up here -->
+		<stagingRepository>target/staging-deploy</stagingRepository>
+		<altDeploymentRepository>local::file:./${stagingRepository}</altDeploymentRepository>
 	</properties>
 
 	<dependencyManagement>
@@ -67,11 +97,55 @@
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.13.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.3.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>flatten-maven-plugin</artifactId>
+					<version>1.6.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.4.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.7.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.3.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jreleaser</groupId>
+					<artifactId>jreleaser-maven-plugin</artifactId>
+					<version>1.12.0</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
 				<configuration>
 					<enablePreview>true</enablePreview>
 					<compilerArgs>--enable-preview</compilerArgs>
@@ -79,14 +153,129 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.3.0</version>
 				<configuration>
 					<argLine>
 						--enable-preview
 					</argLine>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<configuration>
+					<flattenMode>resolveCiFriendliesOnly</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<doclint>all</doclint>
+							<failOnWarnings>false</failOnWarnings>
+							<additionalJOption>--enable-preview</additionalJOption>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jreleaser</groupId>
+				<artifactId>jreleaser-maven-plugin</artifactId>
+				<configuration>
+					<jreleaser>
+						<files>
+							<active>ALWAYS</active>
+							<globs>
+								<glob>
+									<pattern>target/ginevra-*.jar</pattern>
+								</glob>
+							</globs>
+						</files>
+						<signing>
+							<active>ALWAYS</active>
+							<armored>true</armored>
+						</signing>
+						<deploy>
+							<maven>
+								<nexus2>
+									<maven-central>
+										<active>ALWAYS</active>
+										<stagingRepositories>${stagingRepository}</stagingRepositories>
+										<url>https://s01.oss.sonatype.org/service/local</url>
+										<closeRepository>true</closeRepository>
+										<releaseRepository>true</releaseRepository>
+									</maven-central>
+								</nexus2>
+							</maven>
+						</deploy>
+						<release>
+							<github>
+								<overwrite>true</overwrite>
+							</github>
+						</release>
+					</jreleaser>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>flatten-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>flatten</id>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>flatten</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.jreleaser</groupId>
+						<artifactId>jreleaser-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>deploy</phase>
+								<goals>
+									<goal>release</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
