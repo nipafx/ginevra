@@ -2,9 +2,11 @@ package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.FileData;
+import dev.nipafx.ginevra.outline.Document.Id;
 import dev.nipafx.ginevra.outline.Document.StringData;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -30,8 +32,39 @@ public interface Outliner {
 	<DATA extends Record & Data>
 	StepKey<DATA> filter(StepKey<DATA> previous, Predicate<DATA> filter);
 
-	<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
 	StepKey<DATA_OUT> transform(
+			StepKey<DATA_IN> previous,
+			String transformerName,
+			Function<DATA_IN, DATA_OUT> transformer) {
+		return transformToMany(previous, in -> List.of(new GeneralDocument<>(
+				in.id().transform(transformerName),
+				transformer.apply(in.data()))));
+	}
+
+	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transform(
+			StepKey<DATA_IN> previous,
+			Function<Id, Id> idTransformer,
+			Function<DATA_IN, DATA_OUT> transformer) {
+		return transformToMany(previous, in -> List.of(new GeneralDocument<>(
+				idTransformer.apply(in.id()),
+				transformer.apply(in.data()))));
+	}
+
+	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transformToMany(
+			StepKey<DATA_IN> previous,
+			String transformerName,
+			Function<DATA_IN, List<DATA_OUT>> transformer) {
+		return transformToMany(previous, in -> transformer
+				.apply(in.data()).stream()
+				.<Document<DATA_OUT>> map(out -> new GeneralDocument<>(in.id().transform(transformerName), out))
+				.toList());
+	}
+
+	<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
+	StepKey<DATA_OUT> transformToMany(
 			StepKey<DATA_IN> previous,
 			Transformer<DATA_IN, DATA_OUT> transformer);
 

@@ -2,13 +2,11 @@ package dev.nipafx.ginevra.site;
 
 import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.Ginevra.Configuration;
-import dev.nipafx.ginevra.outline.GeneralDocument;
 import dev.nipafx.ginevra.site.data.LandingPageText;
 import dev.nipafx.ginevra.site.data.SiteData;
 import dev.nipafx.ginevra.site.templates.LandingPage;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 public class Main {
@@ -33,13 +31,10 @@ public class Main {
 
 		var landingTexts = outliner.sourceTextFiles("landing", LANDING_FOLDER);
 		var landingTextsMd = outliner.transformMarkdown(landingTexts, LandingPageText.Markdown.class);
-		var landingTextsParsed = outliner.transform(landingTextsMd, md -> List.of(new GeneralDocument<>(
-				md.id().transform("parsed"),
-				LandingPageText.Parsed.parse(md.data()))));
+		var landingTextsParsed = outliner.transform(landingTextsMd, "parsed", LandingPageText.Parsed::parse);
 		outliner.store(landingTextsParsed, "landingPageTexts");
 
 		outliner.generate(new LandingPage());
-
 		outliner.generateStaticResources(Path.of(""), "favicon.ico");
 
 		outliner.build().run();

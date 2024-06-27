@@ -84,7 +84,7 @@ public class FullOutliner implements Outliner {
 
 	@Override
 	public <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	StepKey<DATA_OUT> transform(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer) {
+	StepKey<DATA_OUT> transformToMany(StepKey<DATA_IN> previous, Transformer<DATA_IN, DATA_OUT> transformer) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		var next = new TransformStep(transformer);
 		appendStep(previous, next);
@@ -98,7 +98,7 @@ public class FullOutliner implements Outliner {
 			throw new IllegalStateException("Can't transform Markdown: No Markdown parser was created");
 
 		var markupTransformer = new MarkupParsingTransformer<DATA_IN, DATA_OUT>(markdownParser.get(), frontMatterType);
-		return transform(previous, markupTransformer);
+		return transformToMany(previous, markupTransformer);
 	}
 
 	@Override
