@@ -1,14 +1,14 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.execution.Step.FilterStep;
-import dev.nipafx.ginevra.execution.Step.GenerateResourcesStep;
-import dev.nipafx.ginevra.execution.Step.MergeStepOne;
-import dev.nipafx.ginevra.execution.Step.MergeStepTwo;
-import dev.nipafx.ginevra.execution.Step.SourceStep;
-import dev.nipafx.ginevra.execution.Step.StoreResourceStep;
-import dev.nipafx.ginevra.execution.Step.StoreStep;
-import dev.nipafx.ginevra.execution.Step.TemplateStep;
-import dev.nipafx.ginevra.execution.Step.TransformStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.FilterStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.GenerateResourcesStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.MergeStepOne;
+import dev.nipafx.ginevra.execution.ExecutionStep.MergeStepTwo;
+import dev.nipafx.ginevra.execution.ExecutionStep.SourceStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.StoreResourceStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.StoreStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.TemplateStep;
+import dev.nipafx.ginevra.execution.ExecutionStep.TransformStep;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Document.Data;
 import dev.nipafx.ginevra.outline.Document.FileData;
@@ -39,12 +39,12 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 
 class MapOutline implements Outline {
 
-	private final Map<Step, List<Step>> stepMap;
+	private final Map<ExecutionStep, List<ExecutionStep>> stepMap;
 	private final Store store;
 	private final Renderer renderer;
 	private final Paths paths;
 
-	MapOutline(Map<Step, List<Step>> stepMap, Store store, Renderer renderer, Paths paths) {
+	MapOutline(Map<ExecutionStep, List<ExecutionStep>> stepMap, Store store, Renderer renderer, Paths paths) {
 		this.stepMap = stepMap
 				.entrySet().stream()
 				.map(entry -> entry(entry.getKey(), List.copyOf(entry.getValue())))
@@ -54,7 +54,7 @@ class MapOutline implements Outline {
 		this.paths = paths;
 	}
 
-	private <STEP extends Step> Stream<STEP> streamSteps(Class<STEP> stepType) {
+	private <STEP extends ExecutionStep> Stream<STEP> streamSteps(Class<STEP> stepType) {
 		return stepMap.keySet().stream().mapMulti(keepOnly(stepType));
 	}
 
@@ -73,7 +73,7 @@ class MapOutline implements Outline {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void processRecursively(Step origin, Document<?> doc) {
+	private void processRecursively(ExecutionStep origin, Document<?> doc) {
 		var steps = stepMap.get(origin);
 		if (steps == null)
 			throw new IllegalStateException("Unknown step triggered document processing");

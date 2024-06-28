@@ -23,16 +23,18 @@ public class Main {
 				cfg.cssFolder()));
 		var outliner = ginevra.newOutliner();
 
-		var siteData = outliner.source(new SiteData("Ginevra"));
-		outliner.store(siteData);
+		outliner
+				.source(new SiteData("Ginevra"))
+				.store();
+		outliner
+				.sourceBinaryFiles("static", STATIC_FOLDER)
+				.storeResource();
 
-		var staticResources = outliner.sourceBinaryFiles("static", STATIC_FOLDER);
-		outliner.storeResource(staticResources);
-
-		var landingTexts = outliner.sourceTextFiles("landing", LANDING_FOLDER);
-		var landingTextsMd = outliner.transformMarkdown(landingTexts, LandingPageText.Markdown.class);
-		var landingTextsParsed = outliner.transform(landingTextsMd, "parsed", LandingPageText.Parsed::parse);
-		outliner.store(landingTextsParsed, "landingPageTexts");
+		outliner
+				.sourceTextFiles("landing", LANDING_FOLDER)
+				.transformMarkdown(LandingPageText.Markdown.class)
+				.transform("parsed", LandingPageText.Parsed::parse)
+				.store("landingPageTexts");
 
 		outliner.generate(new LandingPage());
 		outliner.generateStaticResources(Path.of(""), "favicon.ico");

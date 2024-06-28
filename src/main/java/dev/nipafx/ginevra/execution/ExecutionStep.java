@@ -16,14 +16,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-sealed interface Step {
+sealed interface ExecutionStep {
 
-	record SourceStep<DATA extends Record & Data>(Source<DATA> source) implements Step { }
+	record SourceStep<DATA extends Record & Data>(Source<DATA> source) implements ExecutionStep { }
 
-	record FilterStep<DATA extends Record & Data>(Predicate<DATA> filter) implements Step { }
+	record FilterStep<DATA extends Record & Data>(Predicate<DATA> filter) implements ExecutionStep { }
 
 	record TransformStep<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>(
-			Transformer<DATA_IN, DATA_OUT> transformer) implements Step { }
+			Transformer<DATA_IN, DATA_OUT> transformer) implements ExecutionStep { }
 
 	final class MergeSteps<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data> {
 
@@ -60,7 +60,7 @@ sealed interface Step {
 
 	}
 
-	final class MergeStepOne<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data> implements Step {
+	final class MergeStepOne<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data> implements ExecutionStep {
 
 		private final MergeSteps<DATA_IN_1, DATA_IN_2, DATA_OUT> merge;
 
@@ -78,7 +78,7 @@ sealed interface Step {
 	}
 
 	final class MergeStepTwo<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
-			implements Step {
+			implements ExecutionStep {
 
 		private final MergeSteps<DATA_IN_1, DATA_IN_2, DATA_OUT> merge;
 
@@ -95,12 +95,12 @@ sealed interface Step {
 
 	}
 
-	record StoreStep<DATA extends Record & Data>(Optional<String> collection) implements Step { }
+	record StoreStep<DATA extends Record & Data>(Optional<String> collection) implements ExecutionStep { }
 
-	record StoreResourceStep<DATA extends Record & FileData>(Function<DATA, String> naming) implements Step { }
+	record StoreResourceStep<DATA extends Record & FileData>(Function<DATA, String> naming) implements ExecutionStep { }
 
-	record TemplateStep<DATA extends Record & Data>(Template<DATA> template) implements Step { }
+	record TemplateStep<DATA extends Record & Data>(Template<DATA> template) implements ExecutionStep { }
 
-	record GenerateResourcesStep(Path folder, List<String> resourceNames) implements Step { }
+	record GenerateResourcesStep(Path folder, List<String> resourceNames) implements ExecutionStep { }
 
 }
