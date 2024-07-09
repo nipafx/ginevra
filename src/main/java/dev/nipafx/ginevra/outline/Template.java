@@ -1,11 +1,9 @@
 package dev.nipafx.ginevra.outline;
 
-import dev.nipafx.ginevra.outline.Document.Data;
+public interface Template<DOCUMENT extends Record & Document> {
 
-public interface Template<DATA extends Record & Data> {
+	Query<DOCUMENT> query();
 
-	Query<DATA> query();
-
-	HtmlDocumentData compose(DATA data);
+	HtmlPage compose(DOCUMENT data);
 
 }

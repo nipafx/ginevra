@@ -4,9 +4,12 @@ import dev.nipafx.args.Args;
 import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.args.Parsed2;
 import dev.nipafx.args.Parsed3;
-import dev.nipafx.ginevra.execution.FullOutliner;
+import dev.nipafx.ginevra.execution.Executor;
+import dev.nipafx.ginevra.execution.FileSystem;
+import dev.nipafx.ginevra.execution.NodeOutliner;
 import dev.nipafx.ginevra.execution.Paths;
 import dev.nipafx.ginevra.execution.Store;
+import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
@@ -23,17 +26,15 @@ import static java.util.function.UnaryOperator.identity;
 
 public class Ginevra {
 
-	private final Store store;
-	private final Optional<MarkdownParser> markdownParser;
-	private final Renderer renderer;
-	private final Paths paths;
+	private final Outliner outliner;
+	private final Executor executor;
 
-	private Ginevra(Store store, Optional<MarkdownParser> markdownParser, Renderer renderer, Paths paths) {
-		this.store = store;
-		this.renderer = renderer;
-		this.markdownParser = markdownParser;
-		this.paths = paths;
+	private Ginevra(Outliner outliner, Executor executor) {
+		this.outliner = outliner;
+		this.executor = executor;
 	}
+
+	// initialization
 
 	public static Ginevra initialize(String[] args) {
 		return initialize(args, identity());
@@ -97,9 +98,11 @@ public class Ginevra {
 
 	private static Ginevra createGinevra(Paths paths) {
 		var store = new Store();
-		var markdownParser = locateMarkdownParser();
+		var outliner = new NodeOutliner(locateMarkdownParser());
 		var renderer = new Renderer(store, paths.resourcesFolder(), paths.cssFolder());
-		return new Ginevra(store, markdownParser, renderer, paths);
+		var fileSystem = FileSystem.create(paths);
+		var executor = new Executor(store, renderer, fileSystem);
+		return new Ginevra(outliner, executor);
 	}
 
 	private static Optional<MarkdownParser> locateMarkdownParser() {
@@ -129,10 +132,6 @@ public class Ginevra {
 		}
 	}
 
-	public Outliner newOutliner() {
-		return new FullOutliner(store, markdownParser, renderer, paths);
-	}
-
 	public record Configuration(Optional<Path> siteFolder, Optional<Path> resourcesFolder, Optional<Path> cssFolder) {
 
 		public Paths createPaths() {
@@ -148,5 +147,15 @@ public class Ginevra {
 	public record GinevraWithArgs<CONFIG extends Record>(Ginevra ginevra, CONFIG config) { }
 
 	public record GinevraWith2Args<CONFIG1 extends Record, CONFIG2 extends Record>(Ginevra ginevra, CONFIG1 config1, CONFIG2 config2) { }
+
+	// misc
+
+	public Outliner outliner() {
+		return outliner;
+	}
+
+	public void build(Outline outline) {
+		executor.build(outline);
+	}
 
 }

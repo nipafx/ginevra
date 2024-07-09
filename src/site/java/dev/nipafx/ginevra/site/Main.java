@@ -21,7 +21,7 @@ public class Main {
 				cfg.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
 				cfg.resourcesFolder(),
 				cfg.cssFolder()));
-		var outliner = ginevra.newOutliner();
+		var outliner = ginevra.outliner();
 
 		outliner
 				.source(new SiteData("Ginevra"))
@@ -39,7 +39,8 @@ public class Main {
 		outliner.generate(new LandingPage());
 		outliner.generateStaticResources(Path.of(""), "favicon.ico");
 
-		outliner.build().run();
+		var outline = outliner.build();
+		ginevra.build(outline);
 	}
 
 }

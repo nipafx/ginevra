@@ -1,17 +1,16 @@
 package dev.nipafx.ginevra.outline;
 
-import dev.nipafx.ginevra.outline.Document.Data;
-
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * A source will load files (e.g. Markdown or JSON), query external services, etc. to push
- * to {@link Source#register(Consumer) registered} {@link Document} consumers.
+ * A source will load files (e.g. Markdown or JSON), query external services, etc.
+ * and provide them as {@link Document documents}.
  */
-public interface Source<DATA_OUT extends Record & Data> {
+public interface Source<DOCUMENT_OUT extends Record & Document> {
 
-	void register(Consumer<Document<DATA_OUT>> consumer);
+	void onChange(Consumer<SourceEvent<DOCUMENT_OUT>> listener);
 
-	void loadAll();
+	List<Envelope<DOCUMENT_OUT>> loadAll();
 
 }

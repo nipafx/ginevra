@@ -1,10 +1,5 @@
 package dev.nipafx.ginevra.outline;
 
-import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.FileData;
-import dev.nipafx.ginevra.outline.Document.Id;
-import dev.nipafx.ginevra.outline.Document.StringData;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
@@ -17,11 +12,11 @@ public interface Outliner {
 
 	// sources
 
-	<DATA_OUT extends Record & Data>
-	Step<DATA_OUT> source(Source<DATA_OUT> source);
+	<DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> source(Source<DOCUMENT_OUT> source);
 
-	<DATA_OUT extends Record & Data>
-	Step<DATA_OUT> source(DATA_OUT source);
+	<DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> source(DOCUMENT_OUT source);
 
 	TextFileDataStep<TextFileData> sourceTextFiles(String name, Path path);
 
@@ -29,73 +24,47 @@ public interface Outliner {
 
 	// transformers
 
-	<DATA extends Record & Data>
-	Step<DATA> filter(Step<DATA> previous, Predicate<DATA> filter);
+	<DOCUMENT extends Record & Document>
+	Step<DOCUMENT> filter(Step<DOCUMENT> previous, Predicate<DOCUMENT> filter);
 
-	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transform(
-			Step<DATA_IN> previous,
+	<DOCUMENT_IN extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transform(
+			Step<DOCUMENT_IN> previous,
 			String transformerName,
-			Function<DATA_IN, DATA_OUT> transformer) {
-		return transformToMany(previous, in -> List.of(new GeneralDocument<>(
-				in.id().transform(transformerName),
-				transformer.apply(in.data()))));
-	}
+			Function<DOCUMENT_IN, DOCUMENT_OUT> transformer);
 
-	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transform(
-			Step<DATA_IN> previous,
-			Function<Id, Id> idTransformer,
-			Function<DATA_IN, DATA_OUT> transformer) {
-		return transformToMany(previous, in -> List.of(new GeneralDocument<>(
-				idTransformer.apply(in.id()),
-				transformer.apply(in.data()))));
-	}
-
-	default <DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transformToMany(
-			Step<DATA_IN> previous,
+	<DOCUMENT_IN extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformToMany(
+			Step<DOCUMENT_IN> previous,
 			String transformerName,
-			Function<DATA_IN, List<DATA_OUT>> transformer) {
-		return transformToMany(previous, in -> transformer
-				.apply(in.data()).stream()
-				.<Document<DATA_OUT>> map(out -> new GeneralDocument<>(in.id().transform(transformerName), out))
-				.toList());
-	}
+			Function<DOCUMENT_IN, List<DOCUMENT_OUT>> transformer);
 
-	<DATA_IN extends Record & Data, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transformToMany(
-			Step<DATA_IN> previous,
-			Transformer<DATA_IN, DATA_OUT> transformer);
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformMarkdown(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> frontMatterType);
 
-	<DATA_IN extends Record & StringData, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transformMarkdown(Step<DATA_IN> previous, Class<DATA_OUT> frontMatterType);
-
-	<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data>
-	Step<DATA_OUT> merge(
-			Step<DATA_IN_1> previous1, Step<DATA_IN_2> previous2,
-			Merger<DATA_IN_1, DATA_IN_2, DATA_OUT> merger);
+	<DOCUMENT_IN_1 extends Record & Document, DOCUMENT_IN_2 extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> merge(
+			Step<DOCUMENT_IN_1> left, Step<DOCUMENT_IN_2> right,
+			Merger<DOCUMENT_IN_1, DOCUMENT_IN_2, DOCUMENT_OUT> merger);
 
 	// store
 
-	<DATA_IN extends Record & Data>
-	void store(Step<DATA_IN> previous, String collection);
+	<DOCUMENT_IN extends Record & Document>
+	void store(Step<DOCUMENT_IN> previous, String collection);
 
-	<DATA_IN extends Record & Data>
-	void store(Step<DATA_IN> previous);
+	<DOCUMENT_IN extends Record & Document>
+	void store(Step<DOCUMENT_IN> previous);
 
-	<DATA_IN extends Record & FileData>
-	void storeResource(Step<DATA_IN> previous, Function<DATA_IN, String> naming);
+	<DOCUMENT_IN extends Record & FileDocument>
+	void storeResource(Step<DOCUMENT_IN> previous, Function<DOCUMENT_IN, String> naming);
 
-	default <DATA_IN extends Record & FileData>
-	void storeResource(Step<DATA_IN> previous) {
-		storeResource(previous, fileData -> fileData.file().getFileName().toString());
-	}
+	<DOCUMENT_IN extends Record & FileDocument>
+	void storeResource(Step<DOCUMENT_IN> previous);
 
 	// generate
 
-	<DATA extends Record & Data>
-	void generate(Template<DATA> template);
+	<DOCUMENT extends Record & Document>
+	void generate(Template<DOCUMENT> template);
 
 	void generateStaticResources(Path folder, String... resources);
 

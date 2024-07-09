@@ -72,7 +72,6 @@ class ResourceGatherer {
 			var sourceFile = store
 					.getResource(resourceName)
 					.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName)))
-					.data()
 					.file();
 			var targetFile = computeResourceFileName(sourceFile, resourceName);
 			var targetPath = resourceFolder.resolve(targetFile);

@@ -169,11 +169,11 @@ class ElementResolver {
 				var results = switch (queryElement.query()) {
 					case CollectionQuery<?> collectionQuery -> store
 							.query(collectionQuery).stream()
-							.filter(result -> ((Predicate) collectionQuery.filter()).test(result.data()));
+							.filter(result -> ((Predicate) collectionQuery.filter()).test(result));
 					case RootQuery<?> rootQuery -> Stream.of(store.query(rootQuery));
 				};
 				yield results
-						.flatMap(result -> queryElement.compose(result.data()).stream());
+						.flatMap(result -> queryElement.compose(result).stream());
 			}
 			case CustomElement _ -> customElement.compose().stream();
 		};

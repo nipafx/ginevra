@@ -1,9 +1,8 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.FileData;
-import dev.nipafx.ginevra.outline.GeneralDocument;
+import dev.nipafx.ginevra.outline.Envelope;
+import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.util.RecordMapper;
@@ -24,8 +23,8 @@ import static java.util.stream.Collectors.toMap;
 public class Store implements StoreFront {
 
 	private final Map<String, Object> root;
-	private final Map<String, List<Document<?>>> collections;
-	private final Map<String, Document<? extends FileData>> resources;
+	private final Map<String, List<Envelope<?>>> collections;
+	private final Map<String, Envelope<? extends FileDocument>> resources;
 
 	public Store() {
 		root = new HashMap<>();
@@ -33,8 +32,8 @@ public class Store implements StoreFront {
 		resources = new HashMap<>();
 	}
 
-	public void store(Document<?> doc) {
-		var documentData = RecordMapper.createValueMapFromRecord(doc.data());
+	public void store(Envelope<?> envelope) {
+		var documentData = RecordMapper.createValueMapFromRecord(envelope.document());
 		mergeData(root, documentData);
 	}
 
@@ -52,27 +51,26 @@ public class Store implements StoreFront {
 		});
 	}
 
-	public void store(String collection, Document<?> doc) {
+	public void store(String collection, Envelope<?> envelope) {
 		collections
 				.computeIfAbsent(collection, _ -> new ArrayList<>())
-				.add(doc);
+				.add(envelope);
 	}
 
-	public void storeResource(String name, Document<? extends FileData> doc) {
-		var previous = resources.put(name, doc);
+	public void storeResource(String name, Envelope<? extends FileDocument> envelope) {
+		var previous = resources.put(name, envelope);
 		if (previous != null) {
-			var message = "Resources must have unique names, but both %s and %s are named '%s'.".formatted(previous.data(), doc, name);
+			var message = "Resources must have unique names, but both %s and %s are named '%s'.".formatted(previous.document(), envelope, name);
 			throw new IllegalArgumentException(message);
 		}
 	}
 
-	public <RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query) {
+	public <RESULT extends Record & Document> RESULT query(RootQuery<RESULT> query) {
 		var type = query.resultType();
 		var data = Stream
 				.of(type.getRecordComponents())
 				.collect(toMap(RecordComponent::getName, this::queryData));
-		var instance = RecordMapper.createRecordFromValueMap(type, data);
-		return new GeneralDocument<>(new Document.StoreId("MapStore"), instance);
+		return RecordMapper.createRecordFromValueMap(type, data);
 	}
 
 	private Object queryData(RecordComponent component) {
@@ -107,7 +105,7 @@ public class Store implements StoreFront {
 
 			return collections
 					.get(collection).stream()
-					.map(data -> RecordMapper.createRecordFromRecord(type, data.data()))
+					.map(envelope -> RecordMapper.createRecordFromRecord(type, envelope.document()))
 					.toList();
 		} catch (ClassNotFoundException ex) {
 			// TODO: handle error
@@ -115,20 +113,20 @@ public class Store implements StoreFront {
 		}
 	}
 
-	public <RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query) {
+	public <RESULT extends Record & Document> List<RESULT> query(CollectionQuery<RESULT> query) {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
 		return collections
 				.get(query.collection()).stream()
-				.<Document<RESULT>> map(document -> new GeneralDocument<>(
-						document.id().transform("queried-" + query.resultType().getName()),
-						RecordMapper.createRecordFromRecord(query.resultType(), document.data())))
+				.map(envelope -> RecordMapper.createRecordFromRecord(query.resultType(), envelope.document()))
 				.toList();
 	}
 
-	public Optional<Document<? extends FileData>> getResource(String name) {
-		return Optional.ofNullable(resources.get(name));
+	public Optional<? extends FileDocument> getResource(String name) {
+		return Optional
+				.ofNullable(resources.get(name))
+				.map(Envelope::document);
 	}
 
 	@Override

@@ -1,11 +1,8 @@
 package dev.nipafx.ginevra.outline;
 
-import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.StringData;
+public interface StringDataStep<DOCUMENT extends Record & StringDocument> extends Step<DOCUMENT> {
 
-public interface StringDataStep<DATA extends Record & StringData> extends Step<DATA> {
-
-	<DATA_OUT extends Record & Data>
-	Step<DATA_OUT> transformMarkdown(Class<DATA_OUT> frontMatterType);
+	<DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformMarkdown(Class<DOCUMENT_OUT> frontMatterType);
 
 }

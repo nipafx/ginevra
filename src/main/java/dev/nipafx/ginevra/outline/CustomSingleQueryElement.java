@@ -1,17 +1,16 @@
 package dev.nipafx.ginevra.outline;
 
 import dev.nipafx.ginevra.html.Element;
-import dev.nipafx.ginevra.outline.Document.Data;
 
 import java.util.List;
 
-public interface CustomSingleQueryElement<DATA extends Record & Data> extends CustomQueryElement<DATA> {
+public interface CustomSingleQueryElement<DOCUMENT extends Record & Document> extends CustomQueryElement<DOCUMENT> {
 
 	@Override
-	default List<Element> compose(DATA data) {
+	default List<Element> compose(DOCUMENT data) {
 		return List.of(composeSingle(data));
 	}
 
-	Element composeSingle(DATA data);
+	Element composeSingle(DOCUMENT data);
 
 }

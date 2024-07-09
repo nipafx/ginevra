@@ -4,9 +4,9 @@ import dev.nipafx.ginevra.execution.StoreFront;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
+import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.FileData;
+import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 import org.junit.jupiter.api.Test;
@@ -467,17 +467,17 @@ class HtmlRendererTest {
 	private static class EmptyStore implements StoreFront {
 
 		@Override
-		public <RESULT extends Record & Data> Document<RESULT> query(RootQuery<RESULT> query) {
+		public <RESULT extends Record & Document> RESULT query(RootQuery<RESULT> query) {
 			throw new IllegalStateException("The empty store can't answer queries");
 		}
 
 		@Override
-		public <RESULT extends Record & Data> List<Document<RESULT>> query(CollectionQuery<RESULT> query) {
+		public <RESULT extends Record & Document> List<RESULT> query(CollectionQuery<RESULT> query) {
 			throw new IllegalStateException("The empty store can't answer queries");
 		}
 
 		@Override
-		public Optional<Document<? extends FileData>> getResource(String name) {
+		public Optional<? extends FileDocument> getResource(String name) {
 			throw new IllegalStateException("The empty store can't answer queries");
 		}
 

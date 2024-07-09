@@ -1,7 +1,7 @@
 package dev.nipafx.ginevra.site.templates;
 
 import dev.nipafx.ginevra.html.Element;
-import dev.nipafx.ginevra.outline.HtmlDocumentData;
+import dev.nipafx.ginevra.outline.HtmlPage;
 import dev.nipafx.ginevra.outline.Query;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Template;
@@ -22,8 +22,8 @@ public class LandingPage implements Template<LandingPageData> {
 	}
 
 	@Override
-	public HtmlDocumentData compose(LandingPageData page) {
-		return new HtmlDocumentData(Path.of(""), composePage(page));
+	public HtmlPage compose(LandingPageData page) {
+		return new HtmlPage(Path.of(""), composePage(page));
 	}
 
 	private Element composePage(LandingPageData page) {

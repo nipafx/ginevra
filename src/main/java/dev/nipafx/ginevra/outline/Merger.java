@@ -1,14 +1,12 @@
 package dev.nipafx.ginevra.outline;
 
-import dev.nipafx.ginevra.outline.Document.Data;
-
 import java.util.List;
 
 /**
- * Merges two {@link Document}s.
+ * Merges two {@link Envelope}s.
  */
-public interface Merger<DATA_IN_1 extends Record & Data, DATA_IN_2 extends Record & Data, DATA_OUT extends Record & Data> {
+public interface Merger<DOCUMENT_IN_1 extends Record & Document, DOCUMENT_IN_2 extends Record & Document, DOCUMENT_OUT extends Record & Document> {
 
-	List<Document<DATA_OUT>> merge(Document<DATA_IN_1> doc1, Document<DATA_IN_2> doc2);
+	List<DOCUMENT_OUT> merge(DOCUMENT_IN_1 doc1, DOCUMENT_IN_2 doc2);
 
 }

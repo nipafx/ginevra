@@ -1,39 +1,32 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.Document.Data;
-import dev.nipafx.ginevra.outline.Document.StringData;
-import dev.nipafx.ginevra.outline.GeneralDocument;
-import dev.nipafx.ginevra.outline.Transformer;
+import dev.nipafx.ginevra.outline.StringDocument;
 import dev.nipafx.ginevra.parse.MarkupDocument;
 import dev.nipafx.ginevra.parse.MarkupParser;
 import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.function.Function;
 
-class MarkupParsingTransformer<DATA_IN extends Record & StringData, DATA_OUT extends Record & Data>
-		implements Transformer<DATA_IN, DATA_OUT> {
+class MarkupParsingTransformer<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+		implements Function<DOCUMENT_IN, DOCUMENT_OUT> {
 
 	private final MarkupParser parser;
-	private final Class<DATA_OUT> frontMatterType;
+	private final Class<DOCUMENT_OUT> frontMatterType;
 
-	public MarkupParsingTransformer(MarkupParser parser, Class<DATA_OUT> frontMatterType) {
+	public MarkupParsingTransformer(MarkupParser parser, Class<DOCUMENT_OUT> frontMatterType) {
 		this.parser = parser;
 		this.frontMatterType = frontMatterType;
 	}
 
 	@Override
-	public List<Document<DATA_OUT>> transform(Document<DATA_IN> doc) {
-		var inputData = doc.data();
-		var markupDocument = parser.parse(inputData.dataAsString());
-
-		var id = doc.id().transform(parser.name());
-		var data = extractData(inputData, markupDocument);
-		return List.of(new GeneralDocument<>(id, data));
+	public DOCUMENT_OUT apply(DOCUMENT_IN document) {
+		var markupDocument = parser.parse(document.dataAsString());
+		return extractData(document, markupDocument);
 	}
 
-	private DATA_OUT extractData(DATA_IN inputData, MarkupDocument document) {
+	private DOCUMENT_OUT extractData(DOCUMENT_IN inputData, MarkupDocument document) {
 		var inputDataAndParsedContent = new HashMap<>(RecordMapper.createValueMapFromRecord(inputData));
 		inputDataAndParsedContent.put("contentParsedAsMarkdown", document.content());
 		return RecordMapper.createRecordFromMaps(frontMatterType, inputDataAndParsedContent, document.frontMatter().asMap());
