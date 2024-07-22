@@ -7,10 +7,12 @@ import java.util.stream.Stream;
 
 public class StreamUtils {
 
-	public static <IN, OUT> BiConsumer<IN, Consumer<OUT>> keepOnly(Class<OUT> type) {
+	@SafeVarargs
+	public static <IN, OUT> BiConsumer<IN, Consumer<OUT>> keepOnly(Class<? extends OUT>... types) {
 		return (in, consumer) -> {
-			if (type.isInstance(in))
-				consumer.accept(type.cast(in));
+			for (var type : types)
+				if (type.isInstance(in))
+					consumer.accept(type.cast(in));
 		};
 	}
 

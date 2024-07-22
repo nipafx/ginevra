@@ -103,12 +103,12 @@ public class CommonmarkParser implements MarkdownParser {
 			case org.commonmark.node.LinkReferenceDefinition _ -> JmlElement.nothing;
 			case org.commonmark.node.ListItem _ -> HtmlElement.li.children(children);
 			case org.commonmark.node.OrderedList ol -> {
-				var start = ol.getStartNumber() == 1 ? null : ol.getStartNumber();
+				var start = ol.getMarkerStartNumber();
 				if (children.stream().anyMatch(child -> ! (child instanceof ListItem)))
 					throw new IllegalStateException("List contains children that aren't list items: " + children);
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				var listItems = (List<ListItem>) (List) children;
-				yield HtmlElement.ol.start(start).children(listItems);
+				yield HtmlElement.ol.start(start == 1 ? null : start).children(listItems);
 			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
 			case org.commonmark.node.SoftLineBreak _ -> JmlElement.text.text(" ");

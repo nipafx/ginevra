@@ -1,8 +1,8 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.DocumentId;
 import dev.nipafx.ginevra.outline.Envelope;
+import dev.nipafx.ginevra.outline.SenderId;
 import dev.nipafx.ginevra.outline.SimpleEnvelope;
 import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.SourceEvent;
@@ -15,14 +15,14 @@ class RecordSource<DOCUMENT extends Record & Document> implements Source<DOCUMEN
 
 	private final Envelope<DOCUMENT> data;
 
-	public RecordSource(DOCUMENT data) {
+	RecordSource(DOCUMENT data) {
 		this.data = new SimpleEnvelope<>(
-				DocumentId.sourcedFrom("record-instance", URI.create(data.getClass().getName())),
-				data);
+				SenderId.source("record-instance", URI.create(data.getClass().getName())),
+				List.of(data));
 	}
 
 	@Override
-	public void onChange(Consumer<SourceEvent<DOCUMENT>> listener) {
+	public void onChange(Consumer<SourceEvent> listener) {
 		// this source is immutable and thus no changes can be observed
 	}
 

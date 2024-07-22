@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class RecordMapper {
@@ -23,7 +23,7 @@ public class RecordMapper {
 	public static Map<String, Object> createValueMapFromRecord(Record instance) {
 		return Stream
 				.of(instance.getClass().getRecordComponents())
-				.collect(toMap(
+				.collect(toUnmodifiableMap(
 						RecordComponent::getName,
 						component -> getComponentValue(instance, component)));
 	}

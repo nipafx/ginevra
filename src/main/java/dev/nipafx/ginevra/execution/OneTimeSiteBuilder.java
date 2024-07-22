@@ -11,12 +11,10 @@ import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreDocumentNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreResourceNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.TransformNode;
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
-import dev.nipafx.ginevra.outline.SimpleEnvelope;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.render.Renderer;
 
@@ -29,87 +27,79 @@ import static dev.nipafx.ginevra.util.StreamUtils.crossProduct;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
-class Builder {
+class OneTimeSiteBuilder implements SiteBuilder {
 
-	private final NodeOutline outline;
-	private final Store store;
+	private final OneTimeStore store;
 	private final Renderer renderer;
 	private final FileSystem fileSystem;
-	private final Map<MergeNode, MergeCache> mergeCaches;
 
-	Builder(NodeOutline outline, Store store, Renderer renderer, FileSystem fileSystem) {
-		this.outline = outline;
+	private NodeOutline outline;
+	private Map<MergeNode, MergeCache> mergeCaches;
+
+	OneTimeSiteBuilder(OneTimeStore store, Renderer renderer, FileSystem fileSystem) {
 		this.store = store;
 		this.renderer = renderer;
 		this.fileSystem = fileSystem;
+	}
+
+	@Override
+	public void build(NodeOutline outline) {
+		this.outline = outline;
 		this.mergeCaches = outline
 				.streamNodes(MergeNode.class)
 				.collect(toUnmodifiableMap(identity(), MergeCache::new));
-	}
 
-	public void build() {
-		runUntilStorage();
+		fillStore();
 
 		fileSystem.initialize();
 		renderTemplates();
 		generateResources();
 	}
 
-	private void runUntilStorage() {
+	private void fillStore() {
 		outline
 				.streamNodes(SourceNode.class)
 				.forEach(this::runFromSource);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void runFromSource(SourceNode sourceNode) {
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var envelopes = (List<Envelope<?>>) (List) sourceNode.source().loadAll();
-		processRecursively(sourceNode, envelopes);
+		sourceNode
+				.source()
+				.loadAll().stream()
+				.map(envelope -> (List<Document>) envelope.documents())
+				.forEach(documents -> processRecursively(sourceNode, documents));
 	}
 
-	private void processRecursively(Node previous, List<Envelope<?>> envelopes) {
+	private void processRecursively(Node previous, List<Document> documents) {
+		if (documents.isEmpty())
+			return;
 		var children = outline.getChildrenOf(previous);
 		if (children == null)
 			throw new IllegalStateException("Unknown step triggered document processing");
-		if (envelopes.isEmpty())
-			return;
 
 		children.forEach(next -> {
 			switch (next) {
 				case SourceNode _ -> throw new IllegalStateException("No step should map to a source");
 				case FilterNode nextFilter -> {
-					var filteredEnvelopes = envelopes.stream()
-							.filter(envelope -> nextFilter.filter().test(envelope.document()))
+					var filteredDocuments = documents.stream()
+							.filter(nextFilter.filter())
 							.toList();
-					processRecursively(nextFilter, filteredEnvelopes);
+					processRecursively(nextFilter, filteredDocuments);
 				}
 				case TransformNode nextTransform -> {
-					var transformedEnvelopes = envelopes.stream()
-							.flatMap(envelope -> {
-								var id = envelope.id().transformedBy(nextTransform.transformerName());
-								return nextTransform
-										.transformer()
-										.apply(envelope.document()).stream()
-										.<Envelope<?>> map(doc -> new SimpleEnvelope<>(id, (Record & Document) doc));
-							})
+					var transformedDocuments = documents.stream()
+							.flatMap(document -> nextTransform.transformer().apply(document).stream())
 							.toList();
-					processRecursively(nextTransform, transformedEnvelopes);
+					processRecursively(nextTransform, transformedDocuments);
 				}
 				case MergeNode nextMerge -> mergeCaches
 						.get(nextMerge)
-						.update(previous, envelopes)
+						.setInput(previous, documents)
 						.merge()
-						.ifPresent(mergedEnvelopes -> processRecursively(nextMerge, mergedEnvelopes));
-				case StoreDocumentNode(var collection) -> collection.ifPresentOrElse(
-						col -> envelopes.forEach(envelope -> store.store(col, envelope)),
-						() -> envelopes.forEach(store::store)
-				);
-				case StoreResourceNode(var naming) -> envelopes.forEach(envelope -> {
-					var name = naming.apply(envelope.document());
-					@SuppressWarnings("unchecked")
-					var fileDoc = (Envelope<? extends FileDocument>) envelope;
-					store.storeResource(name, fileDoc);
-				});
+						.ifPresent(mergedDocuments -> processRecursively(nextMerge, mergedDocuments));
+				case StoreDocumentNode(var collection) -> documents.forEach(doc -> store.storeDocument(collection, doc));
+				case StoreResourceNode(var naming) -> documents.forEach(doc -> store.storeResource(naming.apply(doc), (FileDocument) doc));
 				case GenerateTemplateNode _ -> throw new IllegalStateException("No step should map to a template");
 				case GenerateResourcesNode _ -> throw new IllegalStateException("No step should map to resource generation");
 			}
@@ -137,9 +127,9 @@ class Builder {
 	}
 
 	private <DOCUMENT extends Record & Document> TemplatedFile generateFromTemplate(Template<DOCUMENT> template, DOCUMENT document) {
-		var composedDocument = template.compose(document);
-		var fileContent = renderer.renderAsDocument(composedDocument.html(), template);
-		return new TemplatedFile(composedDocument.slug(), fileContent.html(), fileContent.referencedResources());
+		var page = template.compose(document);
+		var rendered = renderer.renderAsHtml(page.html(), template);
+		return new TemplatedFile(page.slug(), rendered.html(), rendered.referencedResources());
 	}
 
 	private void generateResources() {
@@ -149,14 +139,13 @@ class Builder {
 	}
 
 	private void generateResources(GenerateResourcesNode node) {
-		var resources = node
+		node
 				.resourceNames().stream()
 				.map(resourceName -> store
 						.getResource(resourceName)
-						.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName)))
-						.file())
-				.toList();
-		fileSystem.copyStaticFiles(node.folder(), resources);
+						.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName))))
+				.map(FileDocument::file)
+				.forEach(resource -> fileSystem.copyStaticFile(resource, node.targetFolder()));
 	}
 
 	private static class MergeCache {
@@ -164,18 +153,18 @@ class Builder {
 		private final MergeNode merge;
 
 		// will be null until update was called
-		private List<Envelope<?>> leftInput;
-		private List<Envelope<?>> rightInput;
+		private List<Document> leftInput;
+		private List<Document> rightInput;
 
 		private MergeCache(MergeNode merge) {
 			this.merge = merge;
 		}
 
-		public MergeCache update(Node previous, List<Envelope<?>> envelopes) {
-			if (merge.left() == previous)
-				leftInput = List.copyOf(envelopes);
-			else if (merge.right() == previous)
-				rightInput = List.copyOf(envelopes);
+		MergeCache setInput(Node previous, List<Document> documents) {
+			if (merge.leftNode() == previous)
+				leftInput = List.copyOf(documents);
+			else if (merge.rightNode() == previous)
+				rightInput = List.copyOf(documents);
 			else
 				throw new IllegalArgumentException("Unexpected merge parent node: " + previous);
 
@@ -183,20 +172,24 @@ class Builder {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public Optional<List<Envelope<?>>> merge() {
+		public Optional<List<Document>> merge() {
 			if (leftInput == null || rightInput == null)
 				return Optional.empty();
 
-			List<Envelope<?>> mergedEnvelopes = crossProduct(leftInput, rightInput)
-					.flatMap(pair -> {
-						var mergedId = pair.left().id().mergedWith(pair.right().id());
+			var mergedDocuments = crossProduct(leftInput, rightInput)
+					.<Document> flatMap(pair -> {
 						var merger = (Merger) merge.merger();
-						var mergedDocuments = (List<Record>) merger.merge(pair.left().document(), pair.right().document());
-						return mergedDocuments.stream().<Envelope<?>>map(mergedDoc -> new SimpleEnvelope(mergedId, mergedDoc));
+						var left = (Record & Document) pair.left();
+						var right = (Record & Document) pair.right();
+						return merger.merge(left, right).stream();
 					})
 					.toList();
 
-			return Optional.of(mergedEnvelopes);
+			// get rid of the inputs - they won't be needed again
+			leftInput = null;
+			rightInput = null;
+
+			return Optional.of(mergedDocuments);
 		}
 
 	}

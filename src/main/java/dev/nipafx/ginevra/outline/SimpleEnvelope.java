@@ -1,12 +1,13 @@
 package dev.nipafx.ginevra.outline;
 
+import java.util.List;
 import java.util.Objects;
 
-public record SimpleEnvelope<DOCUMENT extends Record & Document>(DocumentId id, DOCUMENT document) implements Envelope<DOCUMENT> {
+public record SimpleEnvelope<DOCUMENT extends Record & Document>(SenderId sender, List<DOCUMENT> documents) implements Envelope<DOCUMENT> {
 
 	public SimpleEnvelope {
-		Objects.requireNonNull(id);
-		Objects.requireNonNull(document);
+		Objects.requireNonNull(sender);
+		Objects.requireNonNull(documents);
 	}
 
 }

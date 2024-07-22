@@ -153,8 +153,8 @@ public class NodeOutliner implements Outliner {
 	}
 
 	@Override
-	public void generateStaticResources(Path folder, String... resources) {
-		createNewNode(() -> new GenerateResourcesNode(folder, List.of(resources)));
+	public void generateStaticResources(Path targetFolder, String... resources) {
+		createNewNode(() -> new GenerateResourcesNode(targetFolder, List.of(resources)));
 	}
 
 	// misc

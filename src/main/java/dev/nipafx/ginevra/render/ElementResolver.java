@@ -44,13 +44,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.html.HtmlElement.body;
 import static dev.nipafx.ginevra.html.HtmlElement.code;
 import static dev.nipafx.ginevra.html.HtmlElement.document;
 import static dev.nipafx.ginevra.html.HtmlElement.pre;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 class ElementResolver {
 
@@ -72,7 +72,7 @@ class ElementResolver {
 		var htmlDocument = (elementResolution.size() == 1 && elementResolution.getFirst() instanceof HtmlDocument htmlDoc)
 				? htmlDoc.head(mergeLinksIntoHead(htmlDoc.head(), resources.cssHeadLinks().toList()))
 				: document.body(body.children(elementResolution));
-		return new HtmlDocumentWithResources(htmlDocument, resources.resources().collect(Collectors.toSet()));
+		return new HtmlDocumentWithResources(htmlDocument, resources.resources().collect(toUnmodifiableSet()));
 	}
 
 	private Head mergeLinksIntoHead(Head head, List<Link> styles) {

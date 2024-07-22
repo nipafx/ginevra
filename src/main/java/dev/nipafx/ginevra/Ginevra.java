@@ -5,15 +5,12 @@ import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.args.Parsed2;
 import dev.nipafx.args.Parsed3;
 import dev.nipafx.ginevra.execution.Executor;
-import dev.nipafx.ginevra.execution.FileSystem;
 import dev.nipafx.ginevra.execution.NodeOutliner;
 import dev.nipafx.ginevra.execution.Paths;
-import dev.nipafx.ginevra.execution.Store;
 import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
-import dev.nipafx.ginevra.render.Renderer;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
 
@@ -97,11 +94,8 @@ public class Ginevra {
 	}
 
 	private static Ginevra createGinevra(Paths paths) {
-		var store = new Store();
 		var outliner = new NodeOutliner(locateMarkdownParser());
-		var renderer = new Renderer(store, paths.resourcesFolder(), paths.cssFolder());
-		var fileSystem = FileSystem.create(paths);
-		var executor = new Executor(store, renderer, fileSystem);
+		var executor = new Executor(paths);
 		return new Ginevra(outliner, executor);
 	}
 

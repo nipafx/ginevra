@@ -9,7 +9,7 @@ import java.util.function.Consumer;
  */
 public interface Source<DOCUMENT_OUT extends Record & Document> {
 
-	void onChange(Consumer<SourceEvent<DOCUMENT_OUT>> listener);
+	void onChange(Consumer<SourceEvent> listener);
 
 	List<Envelope<DOCUMENT_OUT>> loadAll();
 

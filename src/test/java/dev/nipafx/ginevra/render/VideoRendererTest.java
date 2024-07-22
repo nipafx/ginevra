@@ -1,7 +1,6 @@
 package dev.nipafx.ginevra.render;
 
 import dev.nipafx.ginevra.html.Classes;
-import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
 import dev.nipafx.ginevra.html.Src;
@@ -10,7 +9,6 @@ import dev.nipafx.ginevra.html.Video.Preload;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static dev.nipafx.ginevra.html.HtmlElement.div;
 import static dev.nipafx.ginevra.html.HtmlElement.video;
 import static org.assertj.core.api.Assertions.assertThat;
 

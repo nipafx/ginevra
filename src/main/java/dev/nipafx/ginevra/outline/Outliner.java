@@ -66,7 +66,7 @@ public interface Outliner {
 	<DOCUMENT extends Record & Document>
 	void generate(Template<DOCUMENT> template);
 
-	void generateStaticResources(Path folder, String... resources);
+	void generateStaticResources(Path targetFolder, String... resources);
 
 	// build
 

@@ -5,21 +5,22 @@ import dev.nipafx.ginevra.render.Renderer;
 
 public class Executor {
 
-	private final Store store;
-	private final Renderer renderer;
-	private final FileSystem fileSystem;
+	private final SiteBuilder siteBuilder;
 
-	public Executor(Store store, Renderer renderer, FileSystem fileSystem) {
-		this.store = store;
-		this.renderer = renderer;
-		this.fileSystem = fileSystem;
+	public Executor(Paths paths) {
+		var store = new OneTimeStore();
+		var renderer = new Renderer(store, paths.resourcesFolder(), paths.cssFolder());
+		var fileSystem = FileSystem.create(paths);
+
+		this.siteBuilder = new OneTimeSiteBuilder(store, renderer, fileSystem);
+//		this.siteBuilder = new LiveSiteBuilder(new LiveStore(), renderer, new LiveServer());
 	}
 
 	public void build(Outline outline) {
 		if (!(outline instanceof NodeOutline nodeOutline))
 			throw new IllegalArgumentException("Unexpected outline type: " + outline.getClass().getSimpleName());
 
-		new Builder(nodeOutline, store, renderer, fileSystem).build();
+		siteBuilder.build(nodeOutline);
 	}
 
 }

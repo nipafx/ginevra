@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
@@ -52,11 +53,19 @@ public class Renderer {
 		this.resolver = new ElementResolver(store, resourceFolder, cssFolder);
 	}
 
-	public HtmlWithResources renderAsDocument(Element element, Template<?> maybeStyledTemplate) {
-		var resolvedDocument = resolver.resolveToDocument(element, Optional.of(maybeStyledTemplate));
+	public HtmlWithResources renderAsHtml(Element element, Template<?> maybeStyledTemplate) {
+		var resolvedDocument = resolveToDocument(element, maybeStyledTemplate);
+		return renderAsHtml(resolvedDocument.document(), resolvedDocument.referencedResources());
+	}
+
+	public HtmlDocumentWithResources resolveToDocument(Element element, Template<?> maybeStyledTemplate) {
+		return resolver.resolveToDocument(element, Optional.of(maybeStyledTemplate));
+	}
+
+	public HtmlWithResources renderAsHtml(HtmlDocument document, Set<ResourceFile> referencedResources) {
 		var html = new HtmlRenderer();
-		writeToRenderer(resolvedDocument.document(), html);
-		return new HtmlWithResources(html.render(), resolvedDocument.referencedResources());
+		writeToRenderer(document, html);
+		return new HtmlWithResources(html.render(), referencedResources);
 	}
 
 	// package visible for tests

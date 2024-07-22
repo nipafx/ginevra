@@ -8,8 +8,6 @@ import dev.nipafx.ginevra.html.CustomSingleElement;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Head;
 import dev.nipafx.ginevra.html.HtmlElement;
-import dev.nipafx.ginevra.html.Id;
-import dev.nipafx.ginevra.outline.Resources;
 import dev.nipafx.ginevra.site.components.Layout.Style;
 
 import java.nio.charset.StandardCharsets;

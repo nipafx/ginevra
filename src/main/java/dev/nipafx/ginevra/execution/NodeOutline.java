@@ -24,14 +24,15 @@ class NodeOutline implements Outline {
 		this.nodes = nodes;
 	}
 
-	<NODE extends Node> Stream<NODE> streamNodes(Class<NODE> type) {
+	@SafeVarargs
+	final <NODE extends Node> Stream<NODE> streamNodes(Class<? extends NODE>... types) {
 		return nodes
 				.keySet().stream()
-				.mapMulti(keepOnly(type));
+				.mapMulti(keepOnly(types));
 	}
 
-	List<Node> getChildrenOf(Node node) {
-		return nodes.get(node);
+	Stream<Node> getChildrenOf(Node node) {
+		return nodes.get(node).stream();
 	}
 
 	sealed interface Node {
@@ -39,11 +40,11 @@ class NodeOutline implements Outline {
 		record SourceNode(Source<?> source) implements Node { }
 		record FilterNode(Predicate<Document> filter) implements Node { }
 		record TransformNode(String transformerName, Function<Document, List<Document>> transformer) implements Node { }
-		record MergeNode(Node left, Node right, Merger<?, ?, ?> merger) implements Node { }
+		record MergeNode(Node leftNode, Node rightNode, Merger<?, ?, ?> merger) implements Node { }
 		record StoreDocumentNode(Optional<String> collection) implements Node { }
 		record StoreResourceNode(Function<Document, String> naming) implements Node { }
 		record GenerateTemplateNode(Template<?> template) implements Node { }
-		record GenerateResourcesNode(Path folder, List<String> resourceNames) implements Node { }
+		record GenerateResourcesNode(Path targetFolder, List<String> resourceNames) implements Node { }
 
 	}
 

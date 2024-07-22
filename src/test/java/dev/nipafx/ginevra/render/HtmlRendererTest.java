@@ -4,7 +4,6 @@ import dev.nipafx.ginevra.execution.StoreFront;
 import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Id;
-import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;

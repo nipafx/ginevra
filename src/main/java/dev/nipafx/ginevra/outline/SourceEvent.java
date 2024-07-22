@@ -1,11 +1,11 @@
 package dev.nipafx.ginevra.outline;
 
-public sealed interface SourceEvent<DOCUMENT extends Record & Document> {
+public sealed interface SourceEvent {
 
-	record NewDocument<DOCUMENT extends Record & Document>(Envelope<DOCUMENT> envelope) implements SourceEvent<DOCUMENT> { }
+	record Added(Envelope<?> envelope) implements SourceEvent { }
 
-	record DocumentChanged<DOCUMENT extends Record & Document>(Envelope<DOCUMENT> envelope) implements SourceEvent<DOCUMENT> { }
+	record Changed(Envelope<?> envelope) implements SourceEvent { }
 
-	record DocumentDeleted<DOCUMENT extends Record & Document>(DocumentId id) implements SourceEvent<DOCUMENT> { }
+	record Removed(SenderId id) implements SourceEvent { }
 
 }

@@ -8,10 +8,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
-public interface FileSystem {
+interface FileSystem {
 
 	static FileSystem create(Paths paths) {
 		return new ActualFileSystem(paths);
@@ -21,7 +20,7 @@ public interface FileSystem {
 
 	void writeTemplatedFile(TemplatedFile file);
 
-	void copyStaticFiles(Path folder, List<Path> resources);
+	void copyStaticFile(Path file, Path targetFolder);
 
 	record TemplatedFile(Path slug, String content, Set<ResourceFile> referencedResources) { }
 
@@ -93,17 +92,15 @@ public interface FileSystem {
 		}
 
 		@Override
-		public void copyStaticFiles(Path folder, List<Path> resources) {
+		public void copyStaticFile(Path file, Path targetFolder) {
 			try {
-				var folderPath = paths.siteFolder().resolve(folder).toAbsolutePath();
-				Files.createDirectories(folderPath);
-				for (var resource : resources) {
-					var target = folderPath.resolve(resource);
-					// these files can change without Ginevra noticing,
-					// so they need to be deleted and recreated
-					Files.deleteIfExists(target);
-					Files.copy(resource, target);
-				}
+				var fullTargetFolder = paths.siteFolder().resolve(targetFolder).toAbsolutePath();
+				Files.createDirectories(fullTargetFolder);
+				var targetFile = fullTargetFolder.resolve(file.getFileName());
+				// these files can change without Ginevra noticing,
+				// so they need to be deleted and recreated
+				Files.deleteIfExists(targetFile);
+				Files.copy(file, targetFile);
 			} catch (IOException ex) {
 				// TODO: handle error
 				ex.printStackTrace();

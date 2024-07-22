@@ -15,7 +15,7 @@ class MarkupParsingTransformer<DOCUMENT_IN extends Record & StringDocument, DOCU
 	private final MarkupParser parser;
 	private final Class<DOCUMENT_OUT> frontMatterType;
 
-	public MarkupParsingTransformer(MarkupParser parser, Class<DOCUMENT_OUT> frontMatterType) {
+	MarkupParsingTransformer(MarkupParser parser, Class<DOCUMENT_OUT> frontMatterType) {
 		this.parser = parser;
 		this.frontMatterType = frontMatterType;
 	}
