@@ -14,8 +14,8 @@ import java.util.Optional;
 
 public class Site implements SiteConfiguration {
 
-	private static final Path STATIC_FOLDER = Path.of(Site.class.getClassLoader().getResource("static").getPath());
-	private static final Path LANDING_FOLDER = Path.of(Site.class.getClassLoader().getResource("landing").getPath());
+	private static final Path LANDING_FOLDER = Path.of("src/site/resources/landing");
+	private static final Path STATIC_FOLDER = Path.of("src/site/resources/static");
 
 	private static final Path SITE_FOLDER = Path.of("target/site");
 
