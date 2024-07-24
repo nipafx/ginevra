@@ -10,10 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
-interface FileSystem {
+interface SiteFileSystem {
 
-	static FileSystem create(Paths paths) {
-		return new ActualFileSystem(paths);
+	static SiteFileSystem create(SitePaths sitePaths) {
+		return new ActualFileSystem(sitePaths);
 	}
 
 	void initialize();
@@ -24,18 +24,18 @@ interface FileSystem {
 
 	record TemplatedFile(Path slug, String content, Set<ResourceFile> referencedResources) { }
 
-	class ActualFileSystem implements FileSystem {
+	class ActualFileSystem implements SiteFileSystem {
 
-		private final Paths paths;
+		private final SitePaths sitePaths;
 
-		public ActualFileSystem(Paths paths) {
-			this.paths = paths;
+		public ActualFileSystem(SitePaths sitePaths) {
+			this.sitePaths = sitePaths;
 		}
 
 		@Override
 		public void initialize() {
 			try {
-				paths.createFolders();
+				sitePaths.createFolders();
 			} catch (IOException ex) {
 				// TODO: handle error
 				throw new UncheckedIOException(ex);
@@ -44,7 +44,7 @@ interface FileSystem {
 
 		@Override
 		public void writeTemplatedFile(TemplatedFile file) {
-			var filePath = paths.siteFolder().resolve(file.slug()).resolve("index.html").toAbsolutePath();
+			var filePath = sitePaths.siteFolder().resolve(file.slug()).resolve("index.html").toAbsolutePath();
 
 			writeToFile(filePath, file.content());
 			file
@@ -58,7 +58,7 @@ interface FileSystem {
 		}
 
 		private void copyFile(CopiedFile copiedFile) {
-			var target = paths.siteFolder().resolve(copiedFile.target());
+			var target = sitePaths.siteFolder().resolve(copiedFile.target());
 			try {
 				// copied files have a hashed name, so if a target file of that name already exists
 				// it can be assumed to be up-to-date and nothing needs to be done
@@ -71,7 +71,7 @@ interface FileSystem {
 		}
 
 		private void writeCssFile(CssFile cssFile) {
-			var targetFile = paths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
+			var targetFile = sitePaths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
 			// CSS files have a hashed name, so if a target file of that name already exists
 			// it can be assumed to be up-to-date and nothing needs to be done
 			if (!Files.exists(targetFile))
@@ -94,7 +94,7 @@ interface FileSystem {
 		@Override
 		public void copyStaticFile(Path file, Path targetFolder) {
 			try {
-				var fullTargetFolder = paths.siteFolder().resolve(targetFolder).toAbsolutePath();
+				var fullTargetFolder = sitePaths.siteFolder().resolve(targetFolder).toAbsolutePath();
 				Files.createDirectories(fullTargetFolder);
 				var targetFile = fullTargetFolder.resolve(file.getFileName());
 				// these files can change without Ginevra noticing,

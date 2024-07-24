@@ -34,7 +34,8 @@ public class LandingPage implements Template<LandingPageData> {
 						div.children(page
 								.landingPageTexts().stream()
 								.map(text -> div.children(text.text()))
-								.toList()));
+								.toList())
+				);
 	}
 
 }

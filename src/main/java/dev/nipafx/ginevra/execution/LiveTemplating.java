@@ -10,7 +10,6 @@ import dev.nipafx.ginevra.render.Renderer;
 import dev.nipafx.ginevra.render.ResourceFile;
 import dev.nipafx.ginevra.render.ResourceFile.CopiedFile;
 import dev.nipafx.ginevra.render.ResourceFile.CssFile;
-import dev.nipafx.ginevra.util.CollectionUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -97,7 +96,9 @@ class LiveTemplating {
 			};
 		}
 
-		Optional<byte[]> tryToServe(Path slug, StoreFront store, Renderer renderer) {
+		// this method changes internal state but may be called from multiple threads
+		// (if there are multiple clients observing the site) ~> synchronize to prevent races
+		synchronized Optional<byte[]> tryToServe(Path slug, StoreFront store, Renderer renderer) {
 			if (state instanceof Reset)
 				state = applyTemplate(template, store, renderer);
 			if (state instanceof Templated(var content) && content.containsKey(slug))

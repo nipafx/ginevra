@@ -93,8 +93,12 @@ sealed interface LiveNode {
 		List<Envelope<?>> loadAllAndObserve(Consumer<SourceEvent> listener) {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			var envelopes = (List<Envelope<?>>) (List) source.loadAll();
-			source.onChange(listener);
+			source.observeChanges(listener);
 			return envelopes;
+		}
+
+		void stopObservation() {
+			source.stopObservation();
 		}
 
 	}

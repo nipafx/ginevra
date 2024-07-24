@@ -22,7 +22,12 @@ class RecordSource<DOCUMENT extends Record & Document> implements Source<DOCUMEN
 	}
 
 	@Override
-	public void onChange(Consumer<SourceEvent> listener) {
+	public void observeChanges(Consumer<SourceEvent> listener) {
+		// this source is immutable and thus no changes can be observed
+	}
+
+	@Override
+	public void stopObservation() {
 		// this source is immutable and thus no changes can be observed
 	}
 

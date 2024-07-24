@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public record Paths(Path siteFolder, Path resourcesFolder, Path cssFolder) {
+public record SitePaths(Path siteFolder, Path resourcesFolder, Path cssFolder) {
 
-	public Paths(Path siteFolder) {
+	public SitePaths(Path siteFolder) {
 		this(siteFolder, Path.of("resources"), Path.of("styles"));
 	}
 

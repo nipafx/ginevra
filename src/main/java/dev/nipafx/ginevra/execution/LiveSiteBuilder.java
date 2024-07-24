@@ -11,53 +11,71 @@ import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.SourceEvent;
 import dev.nipafx.ginevra.render.Renderer;
+import dev.nipafx.ginevra.util.MultiplexingQueue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
-import static dev.nipafx.ginevra.util.StreamUtils.keepOnly;
+import static dev.nipafx.ginevra.util.StreamUtils.only;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
-class LiveSiteBuilder implements SiteBuilder {
+class LiveSiteBuilder {
 
 	private final LiveStore store;
 	private final Renderer renderer;
 	private final LiveServer server;
-	private final BlockingQueue<SourcedEvent> sourceEvents;
+	private final MultiplexingQueue<SourcedEvent> sourceEvents;
+
+	private Optional<BuildState> buildState;
 
 	LiveSiteBuilder(LiveStore store, Renderer renderer, LiveServer server) {
 		this.store = store;
 		this.renderer = renderer;
 		this.server = server;
-		this.sourceEvents = new ArrayBlockingQueue<>(1024);
+		this.sourceEvents = new MultiplexingQueue<>(this::handleSourceEvent, "source-event-watcher");
+		this.buildState = Optional.empty();
 	}
 
 	// build
 
-	@Override
-	public void build(NodeOutline outline) {
+	public void build(NodeOutline outline, int port) {
+		if (buildState.isPresent())
+			throw new IllegalStateException("Can't build after a past build - trigger a rebuild instead");
+		buildState = Optional.of(buildSite(outline));
+
+		server.launch(port, this::serve);
+	}
+
+	private BuildState buildSite(NodeOutline outline) {
 		var liveNodes = createLiveNodesAndFillStore(outline);
 		var templating = LiveTemplating.initializeTemplates(outline, store, renderer);
 		var staticResources = createResourceMap(outline);
+		return new BuildState(liveNodes, templating, staticResources);
+	}
 
-		server.launch(8080, slug -> serve(slug, templating, staticResources));
-		observe(liveNodes, templating);
-		sleepForever();
+	public void rebuild(NodeOutline outline) {
+		buildState
+				.orElseThrow(() -> new IllegalStateException("Can't rebuild before a build"))
+				.liveNodes
+				.keySet().stream()
+				.gather(only(SourceLiveNode.class))
+				.forEach(SourceLiveNode::stopObservation);
+		store.removeAll();
+
+		buildState = Optional.of(buildSite(outline));
+		server.refresh();
 	}
 
 	private Map<LiveNode, List<LiveNode>> createLiveNodesAndFillStore(NodeOutline outline) {
 		var liveNodes = LiveNode.buildToStore(outline);
 		liveNodes
 				.keySet().stream()
-				.mapMulti(keepOnly(SourceLiveNode.class))
+				.gather(only(SourceLiveNode.class))
 				.forEach(sourceNode -> processEnvelopesRecursively(liveNodes, Optional.empty(), sourceNode, List.of()));
 		return liveNodes;
 	}
@@ -108,32 +126,17 @@ class LiveSiteBuilder implements SiteBuilder {
 
 	// observe
 
-	private void observe(Map<LiveNode, List<LiveNode>> liveNodes, LiveTemplating templating) {
-		Thread
-				.ofVirtual()
-				.name("live-updater")
-				.start(() -> {
-					while (true) {
-						try {
-							handleNextSourceEvent(liveNodes, templating);
-						} catch (InterruptedException ex) {
-							// if the thread is interrupted, exit the loop (and let the thread die)
-							break;
-						}
-					}
-				});
-	}
-
-	private void handleNextSourceEvent(Map<LiveNode, List<LiveNode>> liveNodes, LiveTemplating templating) throws InterruptedException {
-		var event = sourceEvents.take();
-		processEventsRecursively(liveNodes, Optional.empty(), event.sourceNode(), List.of(event.event()));
-		templating.queryDataChanged();
+	private void handleSourceEvent(SourcedEvent event) {
+		processEventsRecursively(Optional.empty(), event.sourceNode(), List.of(event.event()));
+		buildState
+				.orElseThrow(IllegalStateException::new)
+				.liveTemplating()
+				.queryDataChanged();
 		if (sourceEvents.isEmpty())
 			server.refresh();
 	}
 
-	private void processEventsRecursively(
-			Map<LiveNode, List<LiveNode>> liveNodes, Optional<LiveNode> parent, LiveNode node, List<SourceEvent> events) {
+	private void processEventsRecursively(Optional<LiveNode> parent, LiveNode node, List<SourceEvent> events) {
 		List<SourceEvent> nextEvents = switch (node) {
 			// the source node already did its job by creating the event in the first place
 			case SourceLiveNode _ -> events;
@@ -150,7 +153,7 @@ class LiveSiteBuilder implements SiteBuilder {
 					.flatMap(List::stream)
 					.toList();
 			case StoreDocumentLiveNode(var collection) -> {
-				events.forEach(event -> store.updateDocument(collection, event));
+				events.forEach(event -> store.updateEnvelope(collection, event));
 				yield List.of();
 			}
 			case StoreResourceLiveNode(var naming) -> {
@@ -160,22 +163,26 @@ class LiveSiteBuilder implements SiteBuilder {
 		};
 
 		if (!events.isEmpty())
-			liveNodes
+			buildState
+					.orElseThrow(IllegalStateException::new)
+					.liveNodes()
 					.get(node)
-					.forEach(nextNode -> processEventsRecursively(liveNodes, Optional.of(node), nextNode, nextEvents));
+					.forEach(nextNode -> processEventsRecursively(Optional.of(node), nextNode, nextEvents));
 	}
 
 	private record SourcedEvent(SourceLiveNode sourceNode, SourceEvent event) { }
 
 	// serve
 
-	private byte[] serve(Path path, LiveTemplating templating, Map<Path, String> staticResources) {
+	private byte[] serve(Path path) {
+		var state = buildState.orElseThrow(IllegalStateException::new);
+
 		// slugs have no leading slash but paths do, so remove it
 		var slug = Path.of("/").relativize(path);
-		if (staticResources.containsKey(slug))
-			return serveStaticResource(staticResources.get(slug));
+		if (state.staticResources().containsKey(slug))
+			return serveStaticResource(state.staticResources().get(slug));
 		else
-			return templating.serve(slug);
+			return state.liveTemplating().serve(slug);
 	}
 
 	private byte[] serveStaticResource(String resourceName) {
@@ -195,12 +202,6 @@ class LiveSiteBuilder implements SiteBuilder {
 
 	// misc
 
-	private static void sleepForever() {
-		try {
-			Thread.sleep(Duration.ofDays(1));
-		} catch (InterruptedException ex) {
-			// do nothing, i.e. let the method complete
-		}
-	}
+	private record BuildState(Map<LiveNode, List<LiveNode>> liveNodes, LiveTemplating liveTemplating, Map<Path, String> staticResources) { }
 
 }

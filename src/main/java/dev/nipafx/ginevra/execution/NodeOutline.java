@@ -14,7 +14,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static dev.nipafx.ginevra.util.StreamUtils.keepOnly;
+import static dev.nipafx.ginevra.util.StreamUtils.only;
 
 class NodeOutline implements Outline {
 
@@ -28,7 +28,7 @@ class NodeOutline implements Outline {
 	final <NODE extends Node> Stream<NODE> streamNodes(Class<? extends NODE>... types) {
 		return nodes
 				.keySet().stream()
-				.mapMulti(keepOnly(types));
+				.gather(only(types));
 	}
 
 	Stream<Node> getChildrenOf(Node node) {

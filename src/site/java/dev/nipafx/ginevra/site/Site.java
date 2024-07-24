@@ -1,7 +1,10 @@
 package dev.nipafx.ginevra.site;
 
 import dev.nipafx.ginevra.Ginevra;
-import dev.nipafx.ginevra.Ginevra.Configuration;
+import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
+import dev.nipafx.ginevra.config.SiteConfiguration;
+import dev.nipafx.ginevra.outline.Outline;
+import dev.nipafx.ginevra.outline.Outliner;
 import dev.nipafx.ginevra.site.data.LandingPageText;
 import dev.nipafx.ginevra.site.data.SiteData;
 import dev.nipafx.ginevra.site.templates.LandingPage;
@@ -9,20 +12,27 @@ import dev.nipafx.ginevra.site.templates.LandingPage;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class Main {
+public class Site implements SiteConfiguration {
 
-	private static final Path STATIC_FOLDER = Path.of(Main.class.getClassLoader().getResource("static").getPath());
-	private static final Path LANDING_FOLDER = Path.of(Main.class.getClassLoader().getResource("landing").getPath());
+	private static final Path STATIC_FOLDER = Path.of(Site.class.getClassLoader().getResource("static").getPath());
+	private static final Path LANDING_FOLDER = Path.of(Site.class.getClassLoader().getResource("landing").getPath());
 
 	private static final Path SITE_FOLDER = Path.of("target/site");
 
 	public static void main(String[] args) {
-		var ginevra = Ginevra.initialize(args, cfg -> new Configuration(
-				cfg.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
-				cfg.resourcesFolder(),
-				cfg.cssFolder()));
-		var outliner = ginevra.outliner();
+		Ginevra.build(Site.class, args);
+	}
 
+	@Override
+	public BuildArgs updateBuildArguments(BuildArgs arguments) {
+		return new BuildArgs(
+				arguments.siteFolder().or(() -> Optional.of(SITE_FOLDER)),
+				arguments.resourcesFolder(),
+				arguments.cssFolder());
+	}
+
+	@Override
+	public Outline createOutline(Outliner outliner) {
 		outliner
 				.source(new SiteData("Ginevra"))
 				.store();
@@ -39,8 +49,7 @@ public class Main {
 		outliner.generate(new LandingPage());
 		outliner.generateStaticResources(Path.of(""), "favicon.ico");
 
-		var outline = outliner.build();
-		ginevra.build(outline);
+		return outliner.build();
 	}
 
 }

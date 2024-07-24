@@ -1,6 +1,5 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.execution.FileSystem.TemplatedFile;
 import dev.nipafx.ginevra.execution.NodeOutline.Node;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.FilterNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.GenerateResourcesNode;
@@ -10,6 +9,7 @@ import dev.nipafx.ginevra.execution.NodeOutline.Node.SourceNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreDocumentNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreResourceNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.TransformNode;
+import dev.nipafx.ginevra.execution.SiteFileSystem.TemplatedFile;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Merger;
@@ -27,22 +27,21 @@ import static dev.nipafx.ginevra.util.StreamUtils.crossProduct;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
-class OneTimeSiteBuilder implements SiteBuilder {
+class OneTimeSiteBuilder {
 
 	private final OneTimeStore store;
 	private final Renderer renderer;
-	private final FileSystem fileSystem;
+	private final SiteFileSystem siteFileSystem;
 
 	private NodeOutline outline;
 	private Map<MergeNode, MergeCache> mergeCaches;
 
-	OneTimeSiteBuilder(OneTimeStore store, Renderer renderer, FileSystem fileSystem) {
+	OneTimeSiteBuilder(OneTimeStore store, Renderer renderer, SiteFileSystem siteFileSystem) {
 		this.store = store;
 		this.renderer = renderer;
-		this.fileSystem = fileSystem;
+		this.siteFileSystem = siteFileSystem;
 	}
 
-	@Override
 	public void build(NodeOutline outline) {
 		this.outline = outline;
 		this.mergeCaches = outline
@@ -51,7 +50,7 @@ class OneTimeSiteBuilder implements SiteBuilder {
 
 		fillStore();
 
-		fileSystem.initialize();
+		siteFileSystem.initialize();
 		renderTemplates();
 		generateResources();
 	}
@@ -110,7 +109,7 @@ class OneTimeSiteBuilder implements SiteBuilder {
 		outline
 				.streamNodes(GenerateTemplateNode.class)
 				.flatMap(this::generateFromTemplate)
-				.forEach(fileSystem::writeTemplatedFile);
+				.forEach(siteFileSystem::writeTemplatedFile);
 	}
 
 	private <DOCUMENT extends Record & Document> Stream<TemplatedFile> generateFromTemplate(GenerateTemplateNode templateNode) {
@@ -145,7 +144,7 @@ class OneTimeSiteBuilder implements SiteBuilder {
 						.getResource(resourceName)
 						.orElseThrow(() -> new IllegalArgumentException("No resource with name '%s'.".formatted(resourceName))))
 				.map(FileDocument::file)
-				.forEach(resource -> fileSystem.copyStaticFile(resource, node.targetFolder()));
+				.forEach(resource -> siteFileSystem.copyStaticFile(resource, node.targetFolder()));
 	}
 
 	private static class MergeCache {

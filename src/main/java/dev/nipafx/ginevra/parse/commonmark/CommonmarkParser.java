@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static dev.nipafx.ginevra.util.StreamUtils.keepOnly;
+import static dev.nipafx.ginevra.util.StreamUtils.only;
 import static java.util.stream.Collectors.joining;
 
 public class CommonmarkParser implements MarkdownParser {
@@ -81,7 +81,7 @@ public class CommonmarkParser implements MarkdownParser {
 			case org.commonmark.node.HtmlInline html -> JmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.Image img -> {
 				var alt = streamChildren(img)
-						.mapMulti(keepOnly(org.commonmark.node.Text.class))
+						.gather(only(org.commonmark.node.Text.class))
 						.map(child -> child instanceof org.commonmark.node.Text t
 								? t.getLiteral()
 								: " ")

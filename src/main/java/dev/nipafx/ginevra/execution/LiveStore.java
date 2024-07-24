@@ -21,7 +21,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
-public class LiveStore implements StoreFront {
+class LiveStore implements StoreFront {
 
 	private final Map<SenderId, Envelope<?>> root;
 	private final Map<String, Map<SenderId, Envelope<?>>> collections;
@@ -49,24 +49,24 @@ public class LiveStore implements StoreFront {
 		root.put(envelope.sender(), envelope);
 	}
 
-	void updateDocument(Optional<String> collection, SourceEvent event) {
+	void updateEnvelope(Optional<String> collection, SourceEvent event) {
 		collection.ifPresentOrElse(
-				col -> updateDocument(col, event),
-				() -> updateDocument(event));
+				col -> updateEnvelope(col, event),
+				() -> updateEnvelope(event));
 	}
 
-	private void updateDocument(String collection, SourceEvent event) {
+	private void updateEnvelope(String collection, SourceEvent event) {
 		switch (event) {
 			case Added(var added) -> storeEnvelope(collection, added);
 			case Changed(var changed) -> {
-				collections.values().forEach(col -> col.remove(changed.sender()));
+				removeEnvelope(changed.sender());
 				storeEnvelope(collection, changed);
 			}
-			case Removed(var removedId) -> collections.values().forEach(col -> col.remove(removedId));
+			case Removed(var removedId) -> removeEnvelope(removedId);
 		}
 	}
 
-	private void updateDocument(SourceEvent event) {
+	private void updateEnvelope(SourceEvent event) {
 		switch (event) {
 			case Added(var added) -> storeEnvelope(added);
 			case Changed(var changed) -> {
@@ -75,6 +75,10 @@ public class LiveStore implements StoreFront {
 			}
 			case Removed(var removedId) -> root.remove(removedId);
 		}
+	}
+
+	private void removeEnvelope(SenderId id) {
+		collections.values().forEach(col -> col.remove(id));
 	}
 
 	void storeResource(Function<Document, String> naming, Envelope<?> envelope) {
@@ -143,6 +147,12 @@ public class LiveStore implements StoreFront {
 		return Optional
 				.ofNullable(resources.get(name))
 				.map(DocumentWithId::document);
+	}
+
+	public void removeAll() {
+		root.clear();
+		collections.clear();
+		resources.clear();
 	}
 
 	@Override

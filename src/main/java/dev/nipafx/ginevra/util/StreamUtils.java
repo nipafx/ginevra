@@ -3,17 +3,21 @@ package dev.nipafx.ginevra.util;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Gatherer;
 import java.util.stream.Stream;
 
 public class StreamUtils {
 
 	@SafeVarargs
-	public static <IN, OUT> BiConsumer<IN, Consumer<OUT>> keepOnly(Class<? extends OUT>... types) {
-		return (in, consumer) -> {
+	public static <IN, OUT> Gatherer<IN, ?, OUT> only(Class<? extends OUT>... types) {
+		return Gatherer.of((_, element, downstream) -> {
 			for (var type : types)
-				if (type.isInstance(in))
-					consumer.accept(type.cast(in));
-		};
+				if (type.isInstance(element)) {
+					downstream.push(type.cast(element));
+					break;
+				}
+			return !downstream.isRejecting();
+		});
 	}
 
 	public static <LEFT, RIGHT> Stream<Pair<LEFT, RIGHT>> crossProduct(Collection<LEFT> left, Collection<RIGHT> right) {
