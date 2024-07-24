@@ -22,7 +22,7 @@ class MarkupParsingTransformer<DOCUMENT_IN extends Record & StringDocument, DOCU
 
 	@Override
 	public DOCUMENT_OUT apply(DOCUMENT_IN document) {
-		var markupDocument = parser.parse(document.dataAsString());
+		var markupDocument = parser.parse(document.documentAsString());
 		return extractData(document, markupDocument);
 	}
 

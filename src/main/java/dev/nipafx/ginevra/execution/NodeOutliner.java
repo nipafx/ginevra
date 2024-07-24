@@ -9,9 +9,9 @@ import dev.nipafx.ginevra.execution.NodeOutline.Node.SourceNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreDocumentNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreResourceNode;
 import dev.nipafx.ginevra.execution.NodeOutline.Node.TransformNode;
-import dev.nipafx.ginevra.outline.BinaryFileData;
+import dev.nipafx.ginevra.outline.BinaryFileDocument;
 import dev.nipafx.ginevra.outline.Document;
-import dev.nipafx.ginevra.outline.FileDataStep;
+import dev.nipafx.ginevra.outline.FileStep;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Merger;
 import dev.nipafx.ginevra.outline.Outline;
@@ -20,8 +20,8 @@ import dev.nipafx.ginevra.outline.Source;
 import dev.nipafx.ginevra.outline.Step;
 import dev.nipafx.ginevra.outline.StringDocument;
 import dev.nipafx.ginevra.outline.Template;
-import dev.nipafx.ginevra.outline.TextFileData;
-import dev.nipafx.ginevra.outline.TextFileDataStep;
+import dev.nipafx.ginevra.outline.TextFileDocument;
+import dev.nipafx.ginevra.outline.TextFileStep;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 
 import java.nio.file.Path;
@@ -59,13 +59,13 @@ public class NodeOutliner implements Outliner {
 	}
 
 	@Override
-	public TextFileDataStep<TextFileData> sourceTextFiles(String name, Path path) {
+	public TextFileStep<TextFileDocument> sourceTextFiles(String name, Path path) {
 		var node = createNewNode(() -> new SourceNode(FileSource.forTextFiles(name, path)));
 		return new TextFileNodeStep<>(this, node);
 	}
 
 	@Override
-	public FileDataStep<BinaryFileData> sourceBinaryFiles(String name, Path path) {
+	public FileStep<BinaryFileDocument> sourceBinaryFiles(String name, Path path) {
 		var node = createNewNode(() -> new SourceNode(FileSource.forBinaryFiles(name, path)));
 		return new FileNodeStep<>(this, node);
 	}
@@ -134,7 +134,7 @@ public class NodeOutliner implements Outliner {
 
 	@Override
 	public <DOCUMENT_IN extends Record & FileDocument> void storeResource(Step<DOCUMENT_IN> previous) {
-		storeResource(previous, fileData -> fileData.file().getFileName().toString());
+		storeResource(previous, fileDoc -> fileDoc.file().getFileName().toString());
 	}
 
 	// build
@@ -234,7 +234,7 @@ public class NodeOutliner implements Outliner {
 
 	}
 
-	private static class FileNodeStep<DOCUMENT extends Record & FileDocument> extends NodeStep<DOCUMENT> implements FileDataStep<DOCUMENT> {
+	private static class FileNodeStep<DOCUMENT extends Record & FileDocument> extends NodeStep<DOCUMENT> implements FileStep<DOCUMENT> {
 
 		private FileNodeStep(NodeOutliner outliner, Node node) {
 			super(outliner, node);
@@ -247,7 +247,7 @@ public class NodeOutliner implements Outliner {
 
 	}
 
-	private static class TextFileNodeStep<DOCUMENT extends Record & FileDocument & StringDocument> extends FileNodeStep<DOCUMENT> implements TextFileDataStep<DOCUMENT> {
+	private static class TextFileNodeStep<DOCUMENT extends Record & FileDocument & StringDocument> extends FileNodeStep<DOCUMENT> implements TextFileStep<DOCUMENT> {
 
 		private TextFileNodeStep(NodeOutliner outliner, Node node) {
 			super(outliner, node);

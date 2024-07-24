@@ -7,10 +7,10 @@ import java.util.List;
 public interface CustomSingleQueryElement<DOCUMENT extends Record & Document> extends CustomQueryElement<DOCUMENT> {
 
 	@Override
-	default List<Element> compose(DOCUMENT data) {
-		return List.of(composeSingle(data));
+	default List<Element> compose(DOCUMENT document) {
+		return List.of(composeSingle(document));
 	}
 
-	Element composeSingle(DOCUMENT data);
+	Element composeSingle(DOCUMENT document);
 
 }

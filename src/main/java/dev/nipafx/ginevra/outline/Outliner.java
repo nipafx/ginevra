@@ -18,9 +18,9 @@ public interface Outliner {
 	<DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> source(DOCUMENT_OUT source);
 
-	TextFileDataStep<TextFileData> sourceTextFiles(String name, Path path);
+	TextFileStep<TextFileDocument> sourceTextFiles(String name, Path path);
 
-	FileDataStep<BinaryFileData> sourceBinaryFiles(String name, Path path);
+	FileStep<BinaryFileDocument> sourceBinaryFiles(String name, Path path);
 
 	// transformers
 

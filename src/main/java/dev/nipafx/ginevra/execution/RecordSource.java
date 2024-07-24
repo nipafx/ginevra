@@ -13,12 +13,12 @@ import java.util.function.Consumer;
 
 class RecordSource<DOCUMENT extends Record & Document> implements Source<DOCUMENT> {
 
-	private final Envelope<DOCUMENT> data;
+	private final Envelope<DOCUMENT> envelope;
 
-	RecordSource(DOCUMENT data) {
-		this.data = new SimpleEnvelope<>(
-				SenderId.source("record-instance", URI.create(data.getClass().getName())),
-				List.of(data));
+	RecordSource(DOCUMENT document) {
+		this.envelope = new SimpleEnvelope<>(
+				SenderId.source("record-instance", URI.create(document.getClass().getName())),
+				List.of(document));
 	}
 
 	@Override
@@ -33,7 +33,7 @@ class RecordSource<DOCUMENT extends Record & Document> implements Source<DOCUMEN
 
 	@Override
 	public List<Envelope<DOCUMENT>> loadAll() {
-		return List.of(data);
+		return List.of(envelope);
 	}
 
 }

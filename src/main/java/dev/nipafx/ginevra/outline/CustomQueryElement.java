@@ -14,6 +14,6 @@ public interface CustomQueryElement<DOCUMENT extends Record & Document> extends 
 
 	Query<DOCUMENT> query();
 
-	List<Element> compose(DOCUMENT data);
+	List<Element> compose(DOCUMENT document);
 
 }

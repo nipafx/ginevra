@@ -4,6 +4,6 @@ public interface Template<DOCUMENT extends Record & Document> {
 
 	Query<DOCUMENT> query();
 
-	HtmlPage compose(DOCUMENT data);
+	HtmlPage compose(DOCUMENT document);
 
 }

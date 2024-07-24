@@ -1,6 +1,6 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.outline.BinaryFileData;
+import dev.nipafx.ginevra.outline.BinaryFileDocument;
 import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.SenderId;
@@ -10,7 +10,7 @@ import dev.nipafx.ginevra.outline.SourceEvent;
 import dev.nipafx.ginevra.outline.SourceEvent.Added;
 import dev.nipafx.ginevra.outline.SourceEvent.Changed;
 import dev.nipafx.ginevra.outline.SourceEvent.Removed;
-import dev.nipafx.ginevra.outline.TextFileData;
+import dev.nipafx.ginevra.outline.TextFileDocument;
 import dev.nipafx.ginevra.util.FileSystemUtils;
 import dev.nipafx.ginevra.util.FileWatchEvent;
 import dev.nipafx.ginevra.util.FileWatch;
@@ -42,12 +42,12 @@ class FileSource<DOCUMENT extends Record & FileDocument> implements Source<DOCUM
 		this.currentWatch = Optional.empty();
 	}
 
-	static FileSource<TextFileData> forTextFiles(String name, Path path) {
-		return new FileSource<>(name, path, file -> new TextFileData(file, Files.readString(file)));
+	static FileSource<TextFileDocument> forTextFiles(String name, Path path) {
+		return new FileSource<>(name, path, file -> new TextFileDocument(file, Files.readString(file)));
 	}
 
-	static FileSource<BinaryFileData> forBinaryFiles(String name, Path path) {
-		return new FileSource<>(name, path, file -> new BinaryFileData(file, Files.readAllBytes(file)));
+	static FileSource<BinaryFileDocument> forBinaryFiles(String name, Path path) {
+		return new FileSource<>(name, path, file -> new BinaryFileDocument(file, Files.readAllBytes(file)));
 	}
 
 	@Override
@@ -75,8 +75,8 @@ class FileSource<DOCUMENT extends Record & FileDocument> implements Source<DOCUM
 	private Optional<Envelope<DOCUMENT>> loadFile(Path file) {
 		var id = createIdFor(file);
 		try {
-			var data = loader.load(file);
-			return Optional.of(new SimpleEnvelope<>(id, List.of(data)));
+			var document = loader.load(file);
+			return Optional.of(new SimpleEnvelope<>(id, List.of(document)));
 		} catch (IOException ex) {
 			// TODO: handle error
 			ex.printStackTrace();

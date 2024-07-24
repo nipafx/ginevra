@@ -5,8 +5,8 @@ import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
 import dev.nipafx.ginevra.config.SiteConfiguration;
 import dev.nipafx.ginevra.outline.Outline;
 import dev.nipafx.ginevra.outline.Outliner;
-import dev.nipafx.ginevra.site.data.LandingPageText;
-import dev.nipafx.ginevra.site.data.SiteData;
+import dev.nipafx.ginevra.site.documents.LandingPageText;
+import dev.nipafx.ginevra.site.documents.SiteDoc;
 import dev.nipafx.ginevra.site.templates.LandingPage;
 
 import java.nio.file.Path;
@@ -34,7 +34,7 @@ public class Site implements SiteConfiguration {
 	@Override
 	public Outline createOutline(Outliner outliner) {
 		outliner
-				.source(new SiteData("Ginevra"))
+				.source(new SiteDoc("Ginevra"))
 				.store();
 		outliner
 				.sourceBinaryFiles("static", STATIC_FOLDER)

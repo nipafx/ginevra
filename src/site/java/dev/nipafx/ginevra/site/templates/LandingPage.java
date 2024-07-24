@@ -5,7 +5,7 @@ import dev.nipafx.ginevra.outline.HtmlPage;
 import dev.nipafx.ginevra.outline.Query;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.outline.Template;
-import dev.nipafx.ginevra.site.data.LandingPageData;
+import dev.nipafx.ginevra.site.documents.LandingPageDoc;
 
 import java.nio.file.Path;
 
@@ -14,19 +14,19 @@ import static dev.nipafx.ginevra.html.HtmlElement.h1;
 import static dev.nipafx.ginevra.html.HtmlElement.head;
 import static dev.nipafx.ginevra.site.components.Components.layout;
 
-public class LandingPage implements Template<LandingPageData> {
+public class LandingPage implements Template<LandingPageDoc> {
 
 	@Override
-	public Query<LandingPageData> query() {
-		return new RootQuery<>(LandingPageData.class);
+	public Query<LandingPageDoc> query() {
+		return new RootQuery<>(LandingPageDoc.class);
 	}
 
 	@Override
-	public HtmlPage compose(LandingPageData page) {
-		return new HtmlPage(Path.of(""), composePage(page));
+	public HtmlPage compose(LandingPageDoc document) {
+		return new HtmlPage(Path.of(""), composePage(document));
 	}
 
-	private Element composePage(LandingPageData page) {
+	private Element composePage(LandingPageDoc page) {
 		return layout
 				.head(head.title(page.title()))
 				.children(
