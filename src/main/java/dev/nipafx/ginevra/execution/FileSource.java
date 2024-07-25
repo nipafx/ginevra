@@ -12,8 +12,8 @@ import dev.nipafx.ginevra.outline.SourceEvent.Changed;
 import dev.nipafx.ginevra.outline.SourceEvent.Removed;
 import dev.nipafx.ginevra.outline.TextFileDocument;
 import dev.nipafx.ginevra.util.FileSystemUtils;
-import dev.nipafx.ginevra.util.FileWatchEvent;
 import dev.nipafx.ginevra.util.FileWatch;
+import dev.nipafx.ginevra.util.FileWatchEvent;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -4,12 +4,14 @@ import dev.nipafx.ginevra.execution.NodeOutline.Node.GenerateTemplateNode;
 import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.outline.Document;
+import dev.nipafx.ginevra.outline.HtmlPage;
 import dev.nipafx.ginevra.outline.Query;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.render.Renderer;
 import dev.nipafx.ginevra.render.ResourceFile;
 import dev.nipafx.ginevra.render.ResourceFile.CopiedFile;
 import dev.nipafx.ginevra.render.ResourceFile.CssFile;
+import dev.nipafx.ginevra.util.FileSystemUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -20,11 +22,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.util.CollectionUtils.add;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.toConcurrentMap;
 
 class LiveTemplating {
 
@@ -119,64 +121,47 @@ class LiveTemplating {
 
 			var resolved = queryResults
 					.map(template::compose)
-					.flatMap(htmlPage -> {
-						var htmlDoc = renderer.resolveToDocument(htmlPage.html(), template);
-						// The `AtomicReference` is not used for thread safety but as a simple mutable container.
-						// The page path as well as all its resource paths (see below) will map to the content.
-						// These mappings are easiest to update if they map to a mutable container that can update
-						//  internally. To ensure that works, all mappings must map to the same `AtomicReference`.
-						var content = new AtomicReference<Content>(
-								new Resolved(htmlDoc.document(), htmlPage.slug(), htmlDoc.referencedResources()));
-
-						var pagePathToDoc = Stream.of(Map.entry(htmlPage.slug(), content));
-						var resourcePathsToDoc = htmlDoc
-								.referencedResources().stream()
-								// extract the paths under which these resources will be served
-								.map(resourceFile -> switch (resourceFile) {
-									case CopiedFile(_, var target) -> target;
-									case CssFile(var file, _) -> file;
-								})
-								.map(path -> Map.entry(path, content));
-						return Stream.concat(pagePathToDoc, resourcePathsToDoc);
-					})
-					.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
+					.flatMap(htmlPage -> createContent(htmlPage, template, renderer))
+					.collect(toConcurrentMap(Entry::getKey, Entry::getValue, (content, _) -> content));
 			return new Templated(resolved);
+		}
+
+		private static <DOCUMENT extends Record & Document> Stream<Entry<Path, Content>> createContent(
+				HtmlPage htmlPage, Template<DOCUMENT> template, Renderer renderer) {
+			var htmlDoc = renderer.resolveToDocument(htmlPage.html(), template);
+			return Stream.concat(
+					Stream.of(Map.entry(
+							htmlPage.slug(),
+							new ResolvedDoc(htmlDoc.document(), htmlPage.slug(), htmlDoc.referencedResources()))),
+					htmlDoc
+							.referencedResources().stream()
+							.map(resourceFile -> switch (resourceFile) {
+								case CopiedFile(var source, var target) -> Map.entry(target, new ResolvedFile(source));
+								case CssFile(var file, var css) -> Map.entry(file, new Rendered(css.getBytes()));
+							}));
 		}
 
 		private byte[] renderContent(Path slug, Renderer renderer) {
 			if (!(state instanceof Templated(var templated)))
 				throw new IllegalStateException("Rendering can only be called in a templated state");
 
-			if (templated.get(slug).get() instanceof Resolved resolved)
-				templated.get(slug).set(render(resolved, renderer));
-			if (templated.get(slug).get() instanceof Rendered(var rendered))
-				return rendered.get(slug);
+			templated.computeIfPresent(slug, (_, content) -> switch (content) {
+				case ResolvedDoc(var doc, _, var resources) -> renderDocument(renderer, doc, resources);
+				case ResolvedFile(var file) -> new Rendered(FileSystemUtils.readAllBytes(file));
+				case Rendered rd -> rd;
+			});
 
-			throw new IllegalStateException("Rendering can only be called when it is confirmed that the path belongs to the correct document");
+			return switch (templated.get(slug)) {
+				case Rendered(var bytes) -> bytes;
+				case ResolvedDoc _, ResolvedFile _ -> throw new IllegalStateException("Content should've just been rendered");
+				case null -> throw new IllegalStateException("Rendering can only be called when it is confirmed that the path belongs to the correct document");
+			};
 		}
 
-		private Rendered render(Resolved resolved, Renderer renderer) {
-			var injectedDocument = injectSseRequest(resolved.document());
-			var page = renderer.renderAsHtml(injectedDocument, resolved.referencedResources());
-
-			var pageEntry = Stream.of(Map.entry(resolved.documentSlug, page.html().getBytes()));
-			var resourceEntries = page
-					.referencedResources().stream()
-					.map(resourceFile -> switch (resourceFile) {
-						case CopiedFile(var source, var target) -> {
-							try {
-								yield Map.entry(target, Files.readAllBytes(source));
-							} catch (IOException ex) {
-								// TODO: handle error
-								throw new UncheckedIOException(ex);
-							}
-						}
-						case CssFile(var file, var content) -> Map.entry(file, content.getBytes());
-					});
-			var rendered = Stream
-					.concat(pageEntry, resourceEntries)
-					.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
-			return new Rendered(rendered);
+		private Rendered renderDocument(Renderer renderer, HtmlDocument document, Set<ResourceFile> referencedResources) {
+			var injectedDocument = injectSseRequest(document);
+			var page = renderer.renderAsHtml(injectedDocument, referencedResources);
+			return new Rendered(page.html().getBytes());
 		}
 
 		private static HtmlDocument injectSseRequest(HtmlDocument document) {
@@ -190,10 +175,11 @@ class LiveTemplating {
 
 	private sealed interface TemplateState { }
 	private record Reset(Set<Path> paths) implements TemplateState { }
-	private record Templated(Map<Path, AtomicReference<Content>> templated) implements TemplateState { }
+	private record Templated(ConcurrentMap<Path, Content> templated) implements TemplateState { }
 
 	private sealed interface Content { }
-	private record Resolved(HtmlDocument document, Path documentSlug, Set<ResourceFile> referencedResources) implements Content { }
-	private record Rendered(Map<Path, byte[]> rendered) implements Content { }
+	private record ResolvedDoc(HtmlDocument document, Path documentSlug, Set<ResourceFile> referencedResources) implements Content { }
+	private record ResolvedFile(Path file) implements Content { }
+	private record Rendered(byte[] bytes) implements Content { }
 
 }

@@ -18,9 +18,16 @@ import java.util.function.Consumer;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.util.Objects.requireNonNull;
 
 public class FileSystemUtils {
+
+	public static byte[] readAllBytes(Path path) {
+		try {
+			return Files.readAllBytes(path);
+		} catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
+	}
 
 	public static FileWatch watchFolder(Path root, Consumer<FileWatchEvent> eventHandler) throws IOException {
 		var watcher = FileSystems.getDefault().newWatchService();
