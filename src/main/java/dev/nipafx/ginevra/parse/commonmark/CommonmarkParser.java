@@ -1,9 +1,9 @@
 package dev.nipafx.ginevra.parse.commonmark;
 
 import dev.nipafx.ginevra.html.Element;
+import dev.nipafx.ginevra.html.GmlElement;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HtmlElement;
-import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Src;
@@ -70,15 +70,15 @@ public class CommonmarkParser implements MarkdownParser {
 			}
 			case org.commonmark.node.Code code -> HtmlElement.code.text(code.getLiteral()).children(children);
 			case org.commonmark.node.Emphasis _ -> HtmlElement.em.children(children);
-			case org.commonmark.node.FencedCodeBlock cb -> JmlElement
+			case org.commonmark.node.FencedCodeBlock cb -> GmlElement
 					.codeBlock
 					.language(nullIfBlank(cb.getInfo()))
 					.text(nullIfBlank(cb.getLiteral()))
 					.children(children);
 			case org.commonmark.node.HardLineBreak _ -> HtmlElement.br;
 			case org.commonmark.node.Heading h -> new Heading(h.getLevel()).children(children);
-			case org.commonmark.node.HtmlBlock html -> JmlElement.html.literal(html.getLiteral());
-			case org.commonmark.node.HtmlInline html -> JmlElement.html.literal(html.getLiteral());
+			case org.commonmark.node.HtmlBlock html -> GmlElement.html.literal(html.getLiteral());
+			case org.commonmark.node.HtmlInline html -> GmlElement.html.literal(html.getLiteral());
 			case org.commonmark.node.Image img -> {
 				var alt = streamChildren(img)
 						.gather(only(org.commonmark.node.Text.class))
@@ -91,7 +91,7 @@ public class CommonmarkParser implements MarkdownParser {
 						.title(nullIfBlank(img.getTitle()))
 						.alt(alt);
 			}
-			case org.commonmark.node.IndentedCodeBlock cb -> JmlElement
+			case org.commonmark.node.IndentedCodeBlock cb -> GmlElement
 					.codeBlock
 					.text(nullIfBlank(cb.getLiteral()))
 					.children(children);
@@ -100,7 +100,7 @@ public class CommonmarkParser implements MarkdownParser {
 					.href(nullIfBlank(a.getDestination()))
 					.title(nullIfBlank(a.getTitle()))
 					.children(children);
-			case org.commonmark.node.LinkReferenceDefinition _ -> JmlElement.nothing;
+			case org.commonmark.node.LinkReferenceDefinition _ -> GmlElement.nothing;
 			case org.commonmark.node.ListItem _ -> HtmlElement.li.children(children);
 			case org.commonmark.node.OrderedList ol -> {
 				var start = ol.getMarkerStartNumber();
@@ -111,12 +111,12 @@ public class CommonmarkParser implements MarkdownParser {
 				yield HtmlElement.ol.start(start == 1 ? null : start).children(listItems);
 			}
 			case org.commonmark.node.Paragraph _ -> HtmlElement.p.children(children);
-			case org.commonmark.node.SoftLineBreak _ -> JmlElement.text.text(" ");
+			case org.commonmark.node.SoftLineBreak _ -> GmlElement.text.text(" ");
 			case org.commonmark.node.StrongEmphasis _ -> HtmlElement.strong.children(children);
-			case org.commonmark.node.Text t -> JmlElement.text.text(nullIfBlank(t.getLiteral()));
+			case org.commonmark.node.Text t -> GmlElement.text.text(nullIfBlank(t.getLiteral()));
 			case org.commonmark.node.ThematicBreak _ -> HtmlElement.hr;
-			case org.commonmark.ext.front.matter.YamlFrontMatterBlock _ -> JmlElement.nothing;
-			case org.commonmark.ext.front.matter.YamlFrontMatterNode _ -> JmlElement.nothing;
+			case org.commonmark.ext.front.matter.YamlFrontMatterBlock _ -> GmlElement.nothing;
+			case org.commonmark.ext.front.matter.YamlFrontMatterNode _ -> GmlElement.nothing;
 			default -> throw new IllegalArgumentException("The node type '%s' is unsupported".formatted(node.getClass().getSimpleName()));
 		};
 	}

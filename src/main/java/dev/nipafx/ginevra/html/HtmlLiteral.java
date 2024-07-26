@@ -1,6 +1,6 @@
 package dev.nipafx.ginevra.html;
 
-public record HtmlLiteral(String literal) implements JmlElement {
+public record HtmlLiteral(String literal) implements GmlElement {
 
 	public HtmlLiteral() {
 		this(null);

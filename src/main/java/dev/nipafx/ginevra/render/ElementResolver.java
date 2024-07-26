@@ -11,6 +11,7 @@ import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Emphasis;
+import dev.nipafx.ginevra.html.GmlElement;
 import dev.nipafx.ginevra.html.Head;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
@@ -18,7 +19,6 @@ import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.HtmlLiteral;
 import dev.nipafx.ginevra.html.Image;
-import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.KnownElement;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.Link;
@@ -144,7 +144,7 @@ class ElementResolver {
 				};
 				yield List.of(resolvedElement);
 			}
-			case JmlElement jmlElement -> switch (jmlElement) {
+			case GmlElement gmlElement -> switch (gmlElement) {
 				case CodeBlock codeBlock -> List.of(express(codeBlock));
 				case HtmlLiteral(var literal) when literal == null || literal.isBlank() -> List.of();
 				case HtmlLiteral el -> List.of(el);

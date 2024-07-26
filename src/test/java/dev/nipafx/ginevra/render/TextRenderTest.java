@@ -1,6 +1,6 @@
 package dev.nipafx.ginevra.render;
 
-import dev.nipafx.ginevra.html.JmlElement;
+import dev.nipafx.ginevra.html.GmlElement;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
@@ -10,7 +10,7 @@ class TextRenderTest {
 
 	@Test
 	void nullText() {
-		var text = JmlElement.text;
+		var text = GmlElement.text;
 		var rendered = RENDERER.render(text);
 
 		assertThat(rendered).isEqualTo("");
@@ -18,7 +18,7 @@ class TextRenderTest {
 
 	@Test
 	void emptyText() {
-		var text = JmlElement.text.text("");
+		var text = GmlElement.text.text("");
 		var rendered = RENDERER.render(text);
 
 		assertThat(rendered).isEqualTo("");
@@ -26,7 +26,7 @@ class TextRenderTest {
 
 	@Test
 	void nonEmptyText() {
-		var text = JmlElement.text.text("This text is not empty");
+		var text = GmlElement.text.text("This text is not empty");
 		var rendered = RENDERER.render(text);
 
 		assertThat(rendered).isEqualTo("This text is not empty");

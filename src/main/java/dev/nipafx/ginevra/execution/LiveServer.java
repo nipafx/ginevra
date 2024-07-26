@@ -74,6 +74,8 @@ class LiveServer {
 			while (connections.hasNext()) {
 				var connection = connections.next();
 				try {
+					// server-sent events apparently need a data field or browsers
+					// (at least Firefox and Chrome) don't process the event
 					connection.getResponseBody().write("""
 							event: refresh
 							data:

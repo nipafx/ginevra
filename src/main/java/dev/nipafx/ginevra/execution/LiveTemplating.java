@@ -1,8 +1,8 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.execution.NodeOutline.Node.GenerateTemplateNode;
+import dev.nipafx.ginevra.html.GmlElement;
 import dev.nipafx.ginevra.html.HtmlDocument;
-import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.HtmlPage;
 import dev.nipafx.ginevra.outline.Query;
@@ -164,7 +164,7 @@ class LiveTemplating {
 		private static HtmlDocument injectSseRequest(HtmlDocument document) {
 			var headChildren = add(
 					document.head().children(),
-					JmlElement.html.literal("<script>%s</script>".formatted(LiveServer.REFRESH_JS_CODE)));
+					GmlElement.html.literal("<script>%s</script>".formatted(LiveServer.REFRESH_JS_CODE)));
 			return document.head(document.head().children(headChildren));
 		}
 

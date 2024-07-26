@@ -10,6 +10,7 @@ import dev.nipafx.ginevra.html.CustomElement;
 import dev.nipafx.ginevra.html.Div;
 import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.html.Emphasis;
+import dev.nipafx.ginevra.html.GmlElement;
 import dev.nipafx.ginevra.html.Head;
 import dev.nipafx.ginevra.html.Heading;
 import dev.nipafx.ginevra.html.HorizontalRule;
@@ -17,7 +18,6 @@ import dev.nipafx.ginevra.html.HtmlDocument;
 import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.HtmlLiteral;
 import dev.nipafx.ginevra.html.Image;
-import dev.nipafx.ginevra.html.JmlElement;
 import dev.nipafx.ginevra.html.LineBreak;
 import dev.nipafx.ginevra.html.Link;
 import dev.nipafx.ginevra.html.ListItem;
@@ -199,8 +199,8 @@ public class Renderer {
 					}
 				}
 			}
-			case JmlElement jmlElement -> {
-				switch (jmlElement) {
+			case GmlElement gmlElement -> {
+				switch (gmlElement) {
 					case CodeBlock _ ->
 							throw new IllegalArgumentException("CodeBlock elements should've been resolved");
 					case HtmlLiteral(var literal) -> html.insertText(literal);

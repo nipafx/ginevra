@@ -1,6 +1,6 @@
 package dev.nipafx.ginevra.html;
 
-public sealed interface JmlElement extends KnownElement permits
+public sealed interface GmlElement extends KnownElement permits
 		CodeBlock,
 		HtmlLiteral,
 		Nothing,

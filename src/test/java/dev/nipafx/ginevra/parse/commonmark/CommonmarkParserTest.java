@@ -27,9 +27,9 @@ import static dev.nipafx.ginevra.html.HtmlElement.ol;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
-import static dev.nipafx.ginevra.html.JmlElement.codeBlock;
-import static dev.nipafx.ginevra.html.JmlElement.html;
-import static dev.nipafx.ginevra.html.JmlElement.text;
+import static dev.nipafx.ginevra.html.GmlElement.codeBlock;
+import static dev.nipafx.ginevra.html.GmlElement.html;
+import static dev.nipafx.ginevra.html.GmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {

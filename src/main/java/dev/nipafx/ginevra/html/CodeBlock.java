@@ -2,7 +2,7 @@ package dev.nipafx.ginevra.html;
 
 import java.util.List;
 
-public record CodeBlock(Id id, Classes classes, String language, String text, List<? extends Element> children) implements JmlElement {
+public record CodeBlock(Id id, Classes classes, String language, String text, List<? extends Element> children) implements GmlElement {
 
 	public CodeBlock {
 		var textChildren = new TextChildren(text, children);
