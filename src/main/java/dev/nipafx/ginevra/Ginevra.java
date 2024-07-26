@@ -16,7 +16,7 @@ public class Ginevra {
 
 	public static void build(Class<? extends SiteConfiguration> configType, String[] args) {
 		try {
-			switch (Args.parse(args, ActionArgs.class)) {
+			switch (Args.parseLeniently(args, ActionArgs.class)) {
 				case BuildArgs buildArgs -> Executor.buildSite(configType, buildArgs, args);
 				case DevelopArgs developArgs -> Executor.developSite(configType, developArgs, args);
 			}

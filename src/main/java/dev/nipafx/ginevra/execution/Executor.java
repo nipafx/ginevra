@@ -1,5 +1,7 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.args.Args;
+import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
 import dev.nipafx.ginevra.config.GinevraArgs.DevelopArgs;
@@ -10,10 +12,13 @@ import dev.nipafx.ginevra.render.Renderer;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
 
+import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Executor {
 
@@ -66,6 +71,43 @@ public class Executor {
 
 	// misc
 	private static <TYPE> TYPE createConfiguration(Class<TYPE> type, String[] args) {
+		@SuppressWarnings("unchecked")
+		var constructors = (Constructor<TYPE>[]) type.getConstructors();
+		var siteConfiguration = Stream
+				.of(constructors)
+				.filter(constructor -> 0 < constructor.getParameterCount() && constructor.getParameterCount() <= 3)
+				.filter(constructor -> Stream
+						.of(constructor.getParameterTypes())
+						.allMatch(Class::isRecord))
+				.findFirst()
+				.map(constructor -> {
+					try {
+						var argsWithoutAction = Arrays.copyOfRange(args, 1, args.length);
+						var paramTypes = constructor.getParameterTypes();
+						var argsRecords = switch (constructor.getParameterCount()) {
+							case 1 -> new Object[] { Args.parseLeniently(argsWithoutAction, paramTypes[0]) };
+							case 2 -> {
+								var parsed = Args.parseLeniently(argsWithoutAction, paramTypes[0], paramTypes[1]);
+								yield new Object[]{ parsed.first(), parsed.second() };
+							}
+							case 3 -> {
+								var parsed = Args.parseLeniently(argsWithoutAction, paramTypes[0], paramTypes[1], paramTypes[2]);
+								yield new Object[]{ parsed.first(), parsed.second(), parsed.third() };
+							}
+							default -> throw new IllegalStateException("Unexpected number of constructor arguments");
+						};
+						return constructor.newInstance(argsRecords);
+					} catch (ArgsParseException ex) {
+						// TODO: handle error
+						throw new IllegalArgumentException("The site configuration arguments contained errors", ex);
+					} catch (ReflectiveOperationException ex) {
+						throw new IllegalArgumentException("The site configuration could not be instantiated", ex);
+					}
+				});
+		if (siteConfiguration.isPresent())
+			return siteConfiguration.get();
+
+
 		try {
 			return type
 					.getConstructor(String[].class)
@@ -73,6 +115,7 @@ public class Executor {
 		} catch (NoSuchMethodException ex) {
 			/* do nothing */
 		} catch (ReflectiveOperationException ex) {
+			// TODO: handle error
 			throw new IllegalArgumentException("The site configuration could not be instantiated", ex);
 		}
 
@@ -83,13 +126,14 @@ public class Executor {
 		} catch (NoSuchMethodException ex) {
 			/* do nothing */
 		} catch (ReflectiveOperationException ex) {
+			// TODO: handle error
 			throw new IllegalArgumentException("The site configuration could not be instantiated", ex);
 		}
 
 		var message = """
-				The site configuration type needs to have parameterless constructor \
-				or a constructor that accepts a `String[]` \
-				but `%s` has neither""".formatted(type.getName());
+				The site configuration type needs to have a public constructor with the following parameters: \
+				either one to three record types, or a `String[]`, or no parameters. \
+				`%s` has neither of those.""".formatted(type.getName());
 		throw new IllegalArgumentException(message);
 	}
 

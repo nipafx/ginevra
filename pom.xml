@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>dev.nipafx.args</groupId>
 			<artifactId>record-args</artifactId>
-			<version>0.8.1</version>
+			<version>0.9.0</version>
 		</dependency>
 
 		<dependency>
