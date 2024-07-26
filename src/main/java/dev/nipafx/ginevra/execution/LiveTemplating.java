@@ -120,7 +120,7 @@ class LiveTemplating {
 			};
 
 			var resolved = queryResults
-					.map(template::compose)
+					.flatMap(template::composeMany)
 					.flatMap(htmlPage -> createContent(htmlPage, template, renderer))
 					.collect(toConcurrentMap(Entry::getKey, Entry::getValue, (content, _) -> content));
 			return new Templated(resolved);

@@ -122,13 +122,16 @@ class OneTimeSiteBuilder {
 			case RootQuery<DOCUMENT> rootQuery -> Stream.of(store.query(rootQuery));
 		};
 		return results
-				.map(document -> generateFromTemplate(template, document));
+				.flatMap(document -> generateFromTemplate(template, document));
 	}
 
-	private <DOCUMENT extends Record & Document> TemplatedFile generateFromTemplate(Template<DOCUMENT> template, DOCUMENT document) {
-		var page = template.compose(document);
-		var rendered = renderer.renderAsHtml(page.html(), template);
-		return new TemplatedFile(page.slug(), rendered.html(), rendered.referencedResources());
+	private <DOCUMENT extends Record & Document> Stream<TemplatedFile> generateFromTemplate(Template<DOCUMENT> template, DOCUMENT document) {
+		return template
+				.composeMany(document)
+				.map(page -> {
+					var rendered = renderer.renderAsHtml(page.html(), template);
+					return new TemplatedFile(page.slug(), rendered.html(), rendered.referencedResources());
+				});
 	}
 
 	private void generateResources() {
