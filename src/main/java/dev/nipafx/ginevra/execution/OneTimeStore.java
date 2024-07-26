@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 class OneTimeStore implements StoreFront {
 
@@ -72,14 +74,14 @@ class OneTimeStore implements StoreFront {
 	}
 
 	@Override
-	public <RESULT extends Record & Document> List<RESULT> query(CollectionQuery<RESULT> query) {
+	public <RESULT extends Record & Document> Set<RESULT> query(CollectionQuery<RESULT> query) {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
 		return collections
 				.get(query.collection()).stream()
 				.map(document -> RecordMapper.createRecordFromRecord(query.resultType(), (Record) document))
-				.toList();
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 	@Override

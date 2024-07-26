@@ -17,6 +17,12 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 public class RecordMapper {
 
 	public static <TYPE extends Record> TYPE createRecordFromRecord(Class<TYPE> type, Record instance) {
+		if (type.isInstance(instance)) {
+			@SuppressWarnings("unchecked")
+			var typedInstance = (TYPE) instance;
+			return typedInstance;
+		}
+
 		return createRecordFromValueMap(type, createValueMapFromRecord(instance));
 	}
 

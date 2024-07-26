@@ -13,11 +13,12 @@ import dev.nipafx.ginevra.outline.SourceEvent.Removed;
 import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
@@ -130,7 +131,7 @@ class LiveStore implements StoreFront {
 	}
 
 	@Override
-	public <RESULT extends Record & Document> List<RESULT> query(CollectionQuery<RESULT> query) {
+	public <RESULT extends Record & Document> Set<RESULT> query(CollectionQuery<RESULT> query) {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
@@ -139,7 +140,7 @@ class LiveStore implements StoreFront {
 				.values().stream()
 				.flatMap(envelope -> envelope.documents().stream())
 				.map(document -> RecordMapper.createRecordFromRecord(query.resultType(), document))
-				.toList();
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 	@Override

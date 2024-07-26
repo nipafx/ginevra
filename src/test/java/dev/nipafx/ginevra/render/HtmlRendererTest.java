@@ -11,8 +11,8 @@ import dev.nipafx.ginevra.outline.Query.RootQuery;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static dev.nipafx.ginevra.html.HtmlElement.br;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
@@ -471,7 +471,7 @@ class HtmlRendererTest {
 		}
 
 		@Override
-		public <RESULT extends Record & Document> List<RESULT> query(CollectionQuery<RESULT> query) {
+		public <RESULT extends Record & Document> Set<RESULT> query(CollectionQuery<RESULT> query) {
 			throw new IllegalStateException("The empty store can't answer queries");
 		}
 
