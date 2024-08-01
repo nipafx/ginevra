@@ -9,13 +9,13 @@ import dev.nipafx.ginevra.util.RecordMapper;
 import java.util.HashMap;
 import java.util.function.Function;
 
-class MarkupParsingTransformer<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+class MarkupTransformer<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
 		implements Function<DOCUMENT_IN, DOCUMENT_OUT> {
 
 	private final MarkupParser parser;
 	private final Class<DOCUMENT_OUT> frontMatterType;
 
-	MarkupParsingTransformer(MarkupParser parser, Class<DOCUMENT_OUT> frontMatterType) {
+	MarkupTransformer(MarkupParser parser, Class<DOCUMENT_OUT> frontMatterType) {
 		this.parser = parser;
 		this.frontMatterType = frontMatterType;
 	}

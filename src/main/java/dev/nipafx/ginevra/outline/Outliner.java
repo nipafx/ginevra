@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.outline;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -41,6 +42,18 @@ public interface Outliner {
 
 	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> transformMarkdown(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> frontMatterType);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlValue(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> frontMatterType);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlList(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> yamlType);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlMap(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> yamlType);
+
+	<DOCUMENT_IN extends Record & StringDocument, VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlMap(Step<DOCUMENT_IN> previous, Class<VALUE> yamlType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper);
 
 	<DOCUMENT_IN_1 extends Record & Document, DOCUMENT_IN_2 extends Record & Document, DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> merge(

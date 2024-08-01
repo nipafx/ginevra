@@ -23,6 +23,7 @@ import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.TextFileDocument;
 import dev.nipafx.ginevra.outline.TextFileStep;
 import dev.nipafx.ginevra.parse.MarkdownParser;
+import dev.nipafx.ginevra.parse.YamlParser;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -37,10 +39,12 @@ import java.util.function.Supplier;
 public class NodeOutliner implements Outliner {
 
 	private final Optional<MarkdownParser> markdownParser;
+	private final Optional<YamlParser> yamlParser;
 	private final Map<Node, List<Node>> nodes;
 
-	public NodeOutliner(Optional<MarkdownParser> markdownParser) {
+	public NodeOutliner(Optional<MarkdownParser> markdownParser, Optional<YamlParser> yamlParser) {
 		this.markdownParser = markdownParser;
+		this.yamlParser = yamlParser;
 		this.nodes = new HashMap<>();
 	}
 
@@ -99,8 +103,50 @@ public class NodeOutliner implements Outliner {
 		if (markdownParser.isEmpty())
 			throw new IllegalStateException("Can't transform Markdown: No Markdown parser was created");
 
-		var markupTransformer = new MarkupParsingTransformer<DOCUMENT_IN, DOCUMENT_OUT>(markdownParser.get(), frontMatterType);
-		return transform(previous, "markdown", markupTransformer);
+		var markupTransformer = new MarkupTransformer<DOCUMENT_IN, DOCUMENT_OUT>(markdownParser.get(), frontMatterType);
+		return transform(previous, markdownParser.get().name(), markupTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlValue(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> yamlType) {
+		if (yamlParser.isEmpty())
+			throw new IllegalStateException("Can't transform YAML: No YAML parser was created");
+
+		var yamlTransformer = new DataFormatValueTransformer<DOCUMENT_IN, DOCUMENT_OUT>(yamlParser.get(), yamlType);
+		return transform(previous, yamlParser.get().name(), yamlTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlList(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> yamlType) {
+		if (yamlParser.isEmpty())
+			throw new IllegalStateException("Can't transform YAML: No YAML parser was created");
+
+		var yamlTransformer = new DataFormatListTransformer<DOCUMENT_IN, DOCUMENT_OUT>(yamlParser.get(), yamlType);
+		return transformToMany(previous, yamlParser.get().name(), yamlTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlMap(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> yamlType) {
+		if (yamlParser.isEmpty())
+			throw new IllegalStateException("Can't transform YAML: No YAML parser was created");
+
+		var yamlTransformer = new DataFormatMapTransformer<DOCUMENT_IN, DOCUMENT_OUT, DOCUMENT_OUT>(
+				yamlParser.get(), yamlType, (_, doc) -> doc);
+		return transformToMany(previous, yamlParser.get().name(), yamlTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformYamlMap(Step<DOCUMENT_IN> previous, Class<VALUE> yamlType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper) {
+		if (yamlParser.isEmpty())
+			throw new IllegalStateException("Can't transform YAML: No YAML parser was created");
+
+		var yamlTransformer = new DataFormatMapTransformer<DOCUMENT_IN, VALUE, DOCUMENT_OUT>(
+				yamlParser.get(), yamlType, entryMapper);
+		return transformToMany(previous, yamlParser.get().name(), yamlTransformer);
 	}
 
 	@Override
@@ -256,6 +302,27 @@ public class NodeOutliner implements Outliner {
 		@Override
 		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformMarkdown(Class<DOCUMENT_OUT> frontMatterType) {
 			return outliner.transformMarkdown(this, frontMatterType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformYamlValue(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformYamlValue(this, yamlType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformYamlList(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformYamlList(this, yamlType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformYamlMap(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformYamlMap(this, yamlType);
+		}
+
+		@Override
+		public <VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT>
+		transformYamlMap(Class<VALUE> yamlType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper) {
+			return outliner.transformYamlMap(this, yamlType, entryMapper);
 		}
 
 		@Override

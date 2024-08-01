@@ -41,6 +41,7 @@
 		     which, e.g., SNAPSHOT or ${sha1} don't -->
 		<revision>0</revision>
 		<commonmark.version>0.22.0</commonmark.version>
+		<jackson.version>2.17.2</jackson.version>
 		<!-- Maven should deploy files to this directory, so JReleaser can pick them up here -->
 		<stagingRepository>target/staging-deploy</stagingRepository>
 		<altDeploymentRepository>local::file:./${stagingRepository}</altDeploymentRepository>
@@ -65,6 +66,16 @@
 				<groupId>org.commonmark</groupId>
 				<artifactId>commonmark-ext-yaml-front-matter</artifactId>
 				<version>${commonmark.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.dataformat</groupId>
+				<artifactId>jackson-dataformat-yaml</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-jdk8</artifactId>
+				<version>${jackson.version}</version>
 			</dependency>
 
 			<!-- test -->
@@ -102,6 +113,16 @@
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark-ext-yaml-front-matter</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jdk8</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
@@ -317,6 +338,14 @@
 				<dependency>
 					<groupId>org.commonmark</groupId>
 					<artifactId>commonmark-ext-yaml-front-matter</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>com.fasterxml.jackson.dataformat</groupId>
+					<artifactId>jackson-dataformat-yaml</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>com.fasterxml.jackson.datatype</groupId>
+					<artifactId>jackson-datatype-jdk8</artifactId>
 				</dependency>
 			</dependencies>
 		</profile>

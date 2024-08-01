@@ -1,5 +1,6 @@
 package dev.nipafx.ginevra.execution;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.nipafx.args.Args;
 import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.ginevra.Ginevra;
@@ -7,7 +8,9 @@ import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
 import dev.nipafx.ginevra.config.GinevraArgs.DevelopArgs;
 import dev.nipafx.ginevra.config.SiteConfiguration;
 import dev.nipafx.ginevra.parse.MarkdownParser;
+import dev.nipafx.ginevra.parse.YamlParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
+import dev.nipafx.ginevra.parse.jacksonyaml.JacksonYamlParser;
 import dev.nipafx.ginevra.render.Renderer;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
@@ -138,7 +141,7 @@ public class Executor {
 	}
 
 	private static NodeOutline createOutline(SiteConfiguration configuration) {
-		var outline = configuration.createOutline(new NodeOutliner(locateMarkdownParser()));
+		var outline = configuration.createOutline(new NodeOutliner(locateMarkdownParser(), locateYamlParser()));
 		if (!(outline instanceof NodeOutline nodeOutline))
 			throw new UnsupportedOperationException("""
 					Can't build from unexpected outline type '%s'. \
@@ -171,6 +174,24 @@ public class Executor {
 			} catch (ClassNotFoundException ex) {
 				return false;
 			}
+		}
+	}
+
+	private static Optional<YamlParser> locateYamlParser() {
+		if (!isJacksonYamlPresent())
+			return Optional.empty();
+
+		var yamlMapper = new YAMLMapper();
+		var parser = new JacksonYamlParser(yamlMapper);
+		return Optional.of(parser);
+	}
+
+	private static boolean isJacksonYamlPresent() {
+		try {
+			Class.forName("com.fasterxml.jackson.dataformat.yaml.YAMLMapper");
+			return true;
+		} catch (ClassNotFoundException ex) {
+			return false;
 		}
 	}
 
