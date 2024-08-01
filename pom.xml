@@ -40,6 +40,7 @@
 		<!-- the revision needs to be a value that works for `––module-version`,
 		     which, e.g., SNAPSHOT or ${sha1} don't -->
 		<revision>0</revision>
+		<commonmark.version>0.22.0</commonmark.version>
 		<!-- Maven should deploy files to this directory, so JReleaser can pick them up here -->
 		<stagingRepository>target/staging-deploy</stagingRepository>
 		<altDeploymentRepository>local::file:./${stagingRepository}</altDeploymentRepository>
@@ -47,12 +48,42 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- required -->
+			<dependency>
+				<groupId>dev.nipafx.args</groupId>
+				<artifactId>record-args</artifactId>
+				<version>0.9.0</version>
+			</dependency>
+
+			<!-- optional -->
+			<dependency>
+				<groupId>org.commonmark</groupId>
+				<artifactId>commonmark</artifactId>
+				<version>${commonmark.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.commonmark</groupId>
+				<artifactId>commonmark-ext-yaml-front-matter</artifactId>
+				<version>${commonmark.version}</version>
+			</dependency>
+
+			<!-- test -->
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
 				<version>5.10.2</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit-pioneer</groupId>
+				<artifactId>junit-pioneer</artifactId>
+				<version>2.2.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>3.26.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -61,19 +92,16 @@
 		<dependency>
 			<groupId>dev.nipafx.args</groupId>
 			<artifactId>record-args</artifactId>
-			<version>0.9.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark</artifactId>
-			<version>0.22.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark-ext-yaml-front-matter</artifactId>
-			<version>0.22.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -85,13 +113,11 @@
 		<dependency>
 			<groupId>org.junit-pioneer</groupId>
 			<artifactId>junit-pioneer</artifactId>
-			<version>2.2.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.26.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -287,12 +313,10 @@
 				<dependency>
 					<groupId>org.commonmark</groupId>
 					<artifactId>commonmark</artifactId>
-					<version>0.22.0</version>
 				</dependency>
 				<dependency>
 					<groupId>org.commonmark</groupId>
 					<artifactId>commonmark-ext-yaml-front-matter</artifactId>
-					<version>0.22.0</version>
 				</dependency>
 			</dependencies>
 		</profile>
