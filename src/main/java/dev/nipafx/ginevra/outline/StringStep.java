@@ -7,6 +7,15 @@ public interface StringStep<DOCUMENT extends Record & StringDocument> extends St
 	<DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> transformMarkdown(Class<DOCUMENT_OUT> frontMatterType);
 
+	<DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonValue(Class<DOCUMENT_OUT> yamlType);
+
+	<DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonList(Class<DOCUMENT_OUT> yamlType);
+
+	<DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonMap(Class<DOCUMENT_OUT> yamlType);
+
+	<VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT>
+	transformJsonMap(Class<VALUE> yamlType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper);
+
 	<DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> transformYamlValue(Class<DOCUMENT_OUT> frontMatterType);
 

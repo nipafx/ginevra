@@ -1,16 +1,19 @@
 package dev.nipafx.ginevra.execution;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import dev.nipafx.args.Args;
 import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
 import dev.nipafx.ginevra.config.GinevraArgs.DevelopArgs;
 import dev.nipafx.ginevra.config.SiteConfiguration;
+import dev.nipafx.ginevra.parse.JsonParser;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.YamlParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
-import dev.nipafx.ginevra.parse.jacksonyaml.JacksonYamlParser;
+import dev.nipafx.ginevra.parse.jackson.JacksonParser;
 import dev.nipafx.ginevra.render.Renderer;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
@@ -141,7 +144,8 @@ public class Executor {
 	}
 
 	private static NodeOutline createOutline(SiteConfiguration configuration) {
-		var outline = configuration.createOutline(new NodeOutliner(locateMarkdownParser(), locateYamlParser()));
+		var outline = configuration.createOutline(
+				new NodeOutliner(locateMarkdownParser(), locateJsonParser(), locateYamlParser()));
 		if (!(outline instanceof NodeOutline nodeOutline))
 			throw new UnsupportedOperationException("""
 					Can't build from unexpected outline type '%s'. \
@@ -177,12 +181,31 @@ public class Executor {
 		}
 	}
 
+	private static Optional<JsonParser> locateJsonParser() {
+		if (!isJacksonJsonPresent())
+			return Optional.empty();
+
+		var mapper = new ObjectMapper().registerModule(new Jdk8Module());
+		var parser = JacksonParser.forJson(mapper);
+		return Optional.of(parser);
+	}
+
+	private static boolean isJacksonJsonPresent() {
+		try {
+			Class.forName("com.fasterxml.jackson.databind.ObjectMapper");
+			return true;
+		} catch (ClassNotFoundException ex) {
+			return false;
+		}
+	}
+
 	private static Optional<YamlParser> locateYamlParser() {
 		if (!isJacksonYamlPresent())
 			return Optional.empty();
 
 		var yamlMapper = new YAMLMapper();
-		var parser = new JacksonYamlParser(yamlMapper);
+		yamlMapper.registerModule(new Jdk8Module());
+		var parser = JacksonParser.forYaml(yamlMapper);
 		return Optional.of(parser);
 	}
 

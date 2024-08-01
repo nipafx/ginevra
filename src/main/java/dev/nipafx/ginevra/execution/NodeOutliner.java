@@ -22,6 +22,7 @@ import dev.nipafx.ginevra.outline.StringDocument;
 import dev.nipafx.ginevra.outline.Template;
 import dev.nipafx.ginevra.outline.TextFileDocument;
 import dev.nipafx.ginevra.outline.TextFileStep;
+import dev.nipafx.ginevra.parse.JsonParser;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.YamlParser;
 
@@ -39,11 +40,13 @@ import java.util.function.Supplier;
 public class NodeOutliner implements Outliner {
 
 	private final Optional<MarkdownParser> markdownParser;
+	private final Optional<JsonParser> jsonParser;
 	private final Optional<YamlParser> yamlParser;
 	private final Map<Node, List<Node>> nodes;
 
-	public NodeOutliner(Optional<MarkdownParser> markdownParser, Optional<YamlParser> yamlParser) {
+	public NodeOutliner(Optional<MarkdownParser> markdownParser, Optional<JsonParser> jsonParser, Optional<YamlParser> yamlParser) {
 		this.markdownParser = markdownParser;
+		this.jsonParser = jsonParser;
 		this.yamlParser = yamlParser;
 		this.nodes = new HashMap<>();
 	}
@@ -105,6 +108,48 @@ public class NodeOutliner implements Outliner {
 
 		var markupTransformer = new MarkupTransformer<DOCUMENT_IN, DOCUMENT_OUT>(markdownParser.get(), frontMatterType);
 		return transform(previous, markdownParser.get().name(), markupTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonValue(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType) {
+		if (jsonParser.isEmpty())
+			throw new IllegalStateException("Can't transform JSON: No JSON parser was created");
+
+		var jsonTransformer = new DataFormatValueTransformer<DOCUMENT_IN, DOCUMENT_OUT>(jsonParser.get(), jsonType);
+		return transform(previous, jsonParser.get().name(), jsonTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonList(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType) {
+		if (jsonParser.isEmpty())
+			throw new IllegalStateException("Can't transform JSON: No JSON parser was created");
+
+		var jsonTransformer = new DataFormatListTransformer<DOCUMENT_IN, DOCUMENT_OUT>(jsonParser.get(), jsonType);
+		return transformToMany(previous, jsonParser.get().name(), jsonTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonMap(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType) {
+		if (jsonParser.isEmpty())
+			throw new IllegalStateException("Can't transform JSON: No JSON parser was created");
+
+		var jsonTransformer = new DataFormatMapTransformer<DOCUMENT_IN, DOCUMENT_OUT, DOCUMENT_OUT>(
+				jsonParser.get(), jsonType, (_, doc) -> doc);
+		return transformToMany(previous, jsonParser.get().name(), jsonTransformer);
+	}
+
+	@Override
+	public <DOCUMENT_IN extends Record & StringDocument, VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonMap(Step<DOCUMENT_IN> previous, Class<VALUE> jsonType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper) {
+		if (jsonParser.isEmpty())
+			throw new IllegalStateException("Can't transform JSON: No JSON parser was created");
+
+		var jsonTransformer = new DataFormatMapTransformer<DOCUMENT_IN, VALUE, DOCUMENT_OUT>(
+				jsonParser.get(), jsonType, entryMapper);
+		return transformToMany(previous, jsonParser.get().name(), jsonTransformer);
 	}
 
 	@Override
@@ -302,6 +347,27 @@ public class NodeOutliner implements Outliner {
 		@Override
 		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformMarkdown(Class<DOCUMENT_OUT> frontMatterType) {
 			return outliner.transformMarkdown(this, frontMatterType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonValue(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformJsonValue(this, yamlType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonList(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformJsonList(this, yamlType);
+		}
+
+		@Override
+		public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> transformJsonMap(Class<DOCUMENT_OUT> yamlType) {
+			return outliner.transformJsonMap(this, yamlType);
+		}
+
+		@Override
+		public <VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT>
+		transformJsonMap(Class<VALUE> yamlType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper) {
+			return outliner.transformJsonMap(this, yamlType, entryMapper);
 		}
 
 		@Override

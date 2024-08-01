@@ -44,6 +44,18 @@ public interface Outliner {
 	Step<DOCUMENT_OUT> transformMarkdown(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> frontMatterType);
 
 	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonValue(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonList(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonMap(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> jsonType);
+
+	<DOCUMENT_IN extends Record & StringDocument, VALUE extends Record & Document, DOCUMENT_OUT extends Record & Document>
+	Step<DOCUMENT_OUT> transformJsonMap(Step<DOCUMENT_IN> previous, Class<VALUE> jsonType, BiFunction<String, VALUE, DOCUMENT_OUT> entryMapper);
+
+	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> transformYamlValue(Step<DOCUMENT_IN> previous, Class<DOCUMENT_OUT> frontMatterType);
 
 	<DOCUMENT_IN extends Record & StringDocument, DOCUMENT_OUT extends Record & Document>

@@ -1,6 +1,6 @@
-package dev.nipafx.ginevra.parse.jacksonyaml;
+package dev.nipafx.ginevra.parse.jackson;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.Test;
 
@@ -8,21 +8,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class JacksonYamlParserTests {
+class JacksonJsonParserTests {
 
-	private final JacksonYamlParser parser;
+	private final JacksonParser parser;
 
-	JacksonYamlParserTests() {
-		YAMLMapper mapper = new YAMLMapper();
+	JacksonJsonParserTests() {
+		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerModule(new Jdk8Module());
-		this.parser = new JacksonYamlParser(mapper);
+		this.parser = JacksonParser.forJson(mapper);
 	}
 
 	@Test
 	void parseValue() {
 		var author = parser.parseValue("""
-						name: Jane Doe
-						website: jane.doe
+						{
+							"name": "Jane Doe",
+							"website": "jane.doe"
+						}
 						""",
 				Author.class);
 
@@ -32,10 +34,16 @@ class JacksonYamlParserTests {
 	@Test
 	void parseList() {
 		var authors = parser.parseList("""
-						- name: Jane Doe
-						  website: jane.doe
-						- name: John Doe
-						  website: john.doe
+						[
+							{
+								"name": "Jane Doe",
+								"website": "jane.doe"
+							},
+							{
+								"name": "John Doe",
+								"website": "john.doe"
+							}
+						]
 						""",
 				Author.class);
 
@@ -48,12 +56,16 @@ class JacksonYamlParserTests {
 	@Test
 	void parseMap() {
 		var authors = parser.parseMap("""
-						jane:
-						  name: Jane Doe
-						  website: jane.doe
-						john:
-						  name: John Doe
-						  website: john.doe
+						{
+							"jane": {
+								"name": "Jane Doe",
+								"website": "jane.doe"
+							},
+							"john": {
+								"name": "John Doe",
+								"website": "john.doe"
+							}
+						}
 						""",
 				Author.class,
 				(id, author) -> new Author(author.name(), author.website(), id));

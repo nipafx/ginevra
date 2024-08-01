@@ -3,7 +3,7 @@ package dev.nipafx.ginevra.parse;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public sealed interface DataFormatParser permits YamlParser {
+public sealed interface DataFormatParser permits JsonParser, YamlParser {
 
 	String name();
 
