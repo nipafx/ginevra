@@ -53,7 +53,7 @@
 			<dependency>
 				<groupId>dev.nipafx.args</groupId>
 				<artifactId>record-args</artifactId>
-				<version>0.9.0</version>
+				<version>0.9.1</version>
 			</dependency>
 
 			<!-- optional -->
@@ -150,6 +150,11 @@
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>build-helper-maven-plugin</artifactId>
 					<version>3.6.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>3.7.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>

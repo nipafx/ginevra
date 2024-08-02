@@ -47,12 +47,18 @@ class LiveServer {
 	}
 
 	private void handlePageRequest(HttpExchange exchange, Function<Path, byte[]> fetchResponse) throws IOException {
-		var path = Path.of(exchange.getRequestURI().toString());
-		var response = fetchResponse.apply(path);
+		try {
+			var path = Path.of(exchange.getRequestURI().toString());
+			var response = fetchResponse.apply(path);
 
-		exchange.sendResponseHeaders(200, response.length);
-		try (var out = exchange.getResponseBody()) {
-			out.write(response);
+			exchange.sendResponseHeaders(200, response.length);
+			try (var out = exchange.getResponseBody()) {
+				out.write(response);
+			}
+		} catch (Exception ex) {
+			// TODO: handle error
+			ex.printStackTrace();
+			exchange.sendResponseHeaders(500, 0);
 		}
 	}
 

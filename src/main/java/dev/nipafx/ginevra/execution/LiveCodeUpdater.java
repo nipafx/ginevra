@@ -4,7 +4,6 @@ import dev.nipafx.ginevra.config.SiteConfiguration;
 import dev.nipafx.ginevra.util.FileSystemUtils;
 import dev.nipafx.ginevra.util.FileWatchEvent;
 import dev.nipafx.ginevra.util.InMemoryCompiler;
-import dev.nipafx.ginevra.util.InMemoryCompiler.Compilation;
 import dev.nipafx.ginevra.util.InMemoryCompiler.FailedCompilation;
 import dev.nipafx.ginevra.util.InMemoryCompiler.SuccessfulCompilation;
 import dev.nipafx.ginevra.util.MultiplexingQueue;
@@ -18,9 +17,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 class LiveCodeUpdater {
+
+	static final AtomicReference<Optional<ClassLoader>> SITE_CLASS_LOADER = new AtomicReference<>(Optional.empty());
 
 	private final Path sourceRoot;
 	private final String configClassName;
@@ -55,18 +57,14 @@ class LiveCodeUpdater {
 	}
 
 	Optional<Class<? extends SiteConfiguration>> compileAndLoadConfigType() {
-		return switch (recompileSources()) {
+		var compiler = new InMemoryCompiler(sourceRoot);
+		return switch (compiler.compileSources()) {
 			case FailedCompilation failed -> {
 				reportFailedCompilation(failed);
 				yield Optional.empty();
 			}
 			case SuccessfulCompilation successful -> loadConfigurationClass(successful);
 		};
-	}
-
-	private Compilation recompileSources() {
-		var compiler = new InMemoryCompiler(sourceRoot);
-		return compiler.compileSources();
 	}
 
 	private void reportFailedCompilation(FailedCompilation compilation) {
@@ -91,7 +89,7 @@ class LiveCodeUpdater {
 	private Optional<Class<? extends SiteConfiguration>> loadConfigurationClass(SuccessfulCompilation compilation) {
 		System.out.printf("SUCCESSFUL compilation of sources in %s%n", sourceRoot);
 		var classLoader = new ByteArrayClassLoader(getClass().getClassLoader(), compilation.classes());
-		StoreUtils.SITE_CLASS_LOADER.set(Optional.of(classLoader));
+		SITE_CLASS_LOADER.set(Optional.of(classLoader));
 		try {
 			var configType = classLoader.loadClass(configClassName);
 			if (SiteConfiguration.class.isAssignableFrom(configType)) {

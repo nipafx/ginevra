@@ -86,10 +86,10 @@ class LiveSiteBuilder {
 			case SourceLiveNode source -> source
 					.loadAllAndObserve(event -> sourceEvents.add(new SourcedEvent(source, event)));
 			case FilterLiveNode filter -> envelopes.stream()
-					.<Envelope<?>>map(filter::filter)
+					.<Envelope<?>> map(filter::filter)
 					.toList();
 			case TransformLiveNode transform -> envelopes.stream()
-					.<Envelope<?>>map(transform::transform)
+					.<Envelope<?>> map(transform::transform)
 					.toList();
 			case MergeLiveNode merge -> merge
 					.setInput(parent.orElseThrow(IllegalStateException::new), envelopes)

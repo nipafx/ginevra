@@ -8,15 +8,12 @@ import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 class StoreUtils {
-
-	static final AtomicReference<Optional<ClassLoader>> SITE_CLASS_LOADER = new AtomicReference<>(Optional.empty());
 
 	static <RESULT extends Record & Document> RESULT queryRoot(
 			Class<RESULT> type,
@@ -55,7 +52,7 @@ class StoreUtils {
 							.formatted(collectionName, genericType.getTypeName()));
 
 		try {
-			var classLoader = SITE_CLASS_LOADER.get().orElse(StoreUtils.class.getClassLoader());
+			var classLoader = LiveCodeUpdater.SITE_CLASS_LOADER.get().orElse(StoreUtils.class.getClassLoader());
 			@SuppressWarnings("unchecked")
 			var type = (Class<Record>) classLoader.loadClass(parameterizedType.getActualTypeArguments()[0].getTypeName());
 			if (!type.isRecord())
