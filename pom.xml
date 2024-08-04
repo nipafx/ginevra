@@ -344,14 +344,6 @@
 					<groupId>org.commonmark</groupId>
 					<artifactId>commonmark-ext-yaml-front-matter</artifactId>
 				</dependency>
-				<dependency>
-					<groupId>com.fasterxml.jackson.dataformat</groupId>
-					<artifactId>jackson-dataformat-yaml</artifactId>
-				</dependency>
-				<dependency>
-					<groupId>com.fasterxml.jackson.datatype</groupId>
-					<artifactId>jackson-datatype-jdk8</artifactId>
-				</dependency>
 			</dependencies>
 		</profile>
 		<profile>

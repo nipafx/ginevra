@@ -157,13 +157,7 @@ public class Executor {
 	private static Optional<MarkdownParser> locateMarkdownParser() {
 		if (!isCommonMarkPresent())
 			return Optional.empty();
-
-		var commonmarkParser = Parser
-				.builder()
-				.extensions(List.of(YamlFrontMatterExtension.create()))
-				.build();
-		var parser = new CommonmarkParser(commonmarkParser);
-		return Optional.of(parser);
+		return Optional.of(CommonmarkMarkdownParser.create());
 	}
 
 	private static boolean isCommonMarkPresent() {
@@ -184,10 +178,7 @@ public class Executor {
 	private static Optional<JsonParser> locateJsonParser() {
 		if (!isJacksonJsonPresent())
 			return Optional.empty();
-
-		var mapper = new ObjectMapper().registerModule(new Jdk8Module());
-		var parser = JacksonParser.forJson(mapper);
-		return Optional.of(parser);
+		return Optional.of(JacksonJsonParser.create());
 	}
 
 	private static boolean isJacksonJsonPresent() {
@@ -202,11 +193,7 @@ public class Executor {
 	private static Optional<YamlParser> locateYamlParser() {
 		if (!isJacksonYamlPresent())
 			return Optional.empty();
-
-		var yamlMapper = new YAMLMapper();
-		yamlMapper.registerModule(new Jdk8Module());
-		var parser = JacksonParser.forYaml(yamlMapper);
-		return Optional.of(parser);
+		return Optional.of(JacksonYamlParser.create());
 	}
 
 	private static boolean isJacksonYamlPresent() {
@@ -224,6 +211,41 @@ public class Executor {
 		} catch (InterruptedException ex) {
 			// let the thread die when it is interrupted
 		}
+	}
+
+	// INNER CLASSES
+	// (to allow the absence of optional dependencies, the classes "touching" them must not be loaded before
+	//  their presence is confirmed; hence the indirection with these otherwise pointless inner classes)
+
+	private static class CommonmarkMarkdownParser {
+
+		private static MarkdownParser create() {
+			var commonmarkParser = Parser
+					.builder()
+					.extensions(List.of(YamlFrontMatterExtension.create()))
+					.build();
+			return new CommonmarkParser(commonmarkParser);
+		}
+
+	}
+
+	private static class JacksonJsonParser {
+
+		private static JsonParser create() {
+			var mapper = new ObjectMapper().registerModule(new Jdk8Module());
+			return JacksonParser.forJson(mapper);
+		}
+
+	}
+
+	private static class JacksonYamlParser {
+
+		private static YamlParser create() {
+			var yamlMapper = new YAMLMapper();
+			yamlMapper.registerModule(new Jdk8Module());
+			return JacksonParser.forYaml(yamlMapper);
+		}
+
 	}
 
 }
