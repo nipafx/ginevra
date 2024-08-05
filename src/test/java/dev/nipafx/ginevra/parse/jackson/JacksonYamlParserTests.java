@@ -1,8 +1,8 @@
 package dev.nipafx.ginevra.parse.jackson;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -15,8 +15,10 @@ class JacksonYamlParserTests {
 
 	JacksonYamlParserTests() {
 		YAMLMapper mapper = new YAMLMapper();
-		mapper.registerModule(new Jdk8Module());
-		this.parser = JacksonParser.forYaml(mapper);
+		mapper
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule());
+		this.parser = JacksonYamlParserFactory.forYaml(mapper);
 	}
 
 	@Test

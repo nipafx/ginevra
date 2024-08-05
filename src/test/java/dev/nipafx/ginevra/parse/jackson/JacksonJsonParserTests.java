@@ -2,6 +2,7 @@ package dev.nipafx.ginevra.parse.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -13,9 +14,10 @@ class JacksonJsonParserTests {
 	private final JacksonParser parser;
 
 	JacksonJsonParserTests() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new Jdk8Module());
-		this.parser = JacksonParser.forJson(mapper);
+		ObjectMapper mapper = new ObjectMapper()
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule());
+		this.parser = JacksonJsonParserFactory.forJson(mapper);
 	}
 
 	@Test

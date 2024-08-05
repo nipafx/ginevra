@@ -3,6 +3,7 @@ package dev.nipafx.ginevra.execution;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dev.nipafx.args.Args;
 import dev.nipafx.args.ArgsParseException;
 import dev.nipafx.ginevra.Ginevra;
@@ -13,7 +14,8 @@ import dev.nipafx.ginevra.parse.JsonParser;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.YamlParser;
 import dev.nipafx.ginevra.parse.commonmark.CommonmarkParser;
-import dev.nipafx.ginevra.parse.jackson.JacksonParser;
+import dev.nipafx.ginevra.parse.jackson.JacksonJsonParserFactory;
+import dev.nipafx.ginevra.parse.jackson.JacksonYamlParserFactory;
 import dev.nipafx.ginevra.render.Renderer;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.parser.Parser;
@@ -232,8 +234,10 @@ public class Executor {
 	private static class JacksonJsonParser {
 
 		private static JsonParser create() {
-			var mapper = new ObjectMapper().registerModule(new Jdk8Module());
-			return JacksonParser.forJson(mapper);
+			var mapper = new ObjectMapper()
+					.registerModule(new Jdk8Module())
+					.registerModule(new JavaTimeModule());
+			return JacksonJsonParserFactory.forJson(mapper);
 		}
 
 	}
@@ -242,8 +246,10 @@ public class Executor {
 
 		private static YamlParser create() {
 			var yamlMapper = new YAMLMapper();
-			yamlMapper.registerModule(new Jdk8Module());
-			return JacksonParser.forYaml(yamlMapper);
+			yamlMapper
+					.registerModule(new Jdk8Module())
+					.registerModule(new JavaTimeModule());
+			return JacksonYamlParserFactory.forYaml(yamlMapper);
 		}
 
 	}

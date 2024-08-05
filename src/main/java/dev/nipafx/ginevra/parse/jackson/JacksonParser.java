@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.nipafx.ginevra.parse.JsonParser;
 import dev.nipafx.ginevra.parse.YamlParser;
 
@@ -17,17 +16,9 @@ public class JacksonParser implements JsonParser, YamlParser {
 	private final ObjectMapper mapper;
 	private final String name;
 
-	private JacksonParser(String name, ObjectMapper mapper) {
+	JacksonParser(String name, ObjectMapper mapper) {
 		this.mapper = mapper;
 		this.name = name;
-	}
-
-	public static JacksonParser forJson(ObjectMapper mapper) {
-		return new JacksonParser("Jackson Dataformat JSON", mapper);
-	}
-
-	public static JacksonParser forYaml(YAMLMapper mapper) {
-		return new JacksonParser("Jackson Dataformat YAML", mapper);
 	}
 
 	@Override
