@@ -1,8 +1,21 @@
 package dev.nipafx.ginevra.outline;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import java.io.IOException;
 import java.net.URI;
 import java.util.Objects;
 
+@JsonSerialize(using = SenderId.Serializer.class)
+@JsonDeserialize(using = SenderId.Deserializer.class)
 public final class SenderId {
 
 	private final String id;
@@ -49,5 +62,31 @@ public final class SenderId {
 		return "SenderId[id=" + id + ']';
 	}
 
+	static class Serializer extends StdSerializer<SenderId> {
+
+		public Serializer() {
+			super(SenderId.class);
+		}
+
+		@Override
+		public void serialize(SenderId sender, JsonGenerator json, SerializerProvider provider) throws IOException {
+			json.writeString(sender.id());
+		}
+
+	}
+
+	static class Deserializer extends StdDeserializer<SenderId> {
+
+		public Deserializer() {
+			super(SenderId.class);
+		}
+
+		@Override
+		public SenderId deserialize(JsonParser json, DeserializationContext context) throws IOException {
+			JsonNode node = json.getCodec().readTree(json);
+			return new SenderId(node.asText());
+		}
+
+	}
 
 }

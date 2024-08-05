@@ -1,5 +1,10 @@
 package dev.nipafx.ginevra.execution;
 
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Components;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Full;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.None;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Templates;
 import dev.nipafx.ginevra.execution.LiveNode.FilterLiveNode;
 import dev.nipafx.ginevra.execution.LiveNode.MergeLiveNode;
 import dev.nipafx.ginevra.execution.LiveNode.SourceLiveNode;
@@ -21,7 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import static dev.nipafx.ginevra.util.StreamUtils.only;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 class LiveSiteBuilder {
@@ -52,44 +57,32 @@ class LiveSiteBuilder {
 	}
 
 	private BuildState buildSite(NodeOutline outline) {
-		var liveNodes = createLiveNodesAndFillStore(outline);
+		var liveGraph = createLiveGraphAndFillStore(outline);
 		var templating = LiveTemplating.initializeTemplates(outline, store, renderer);
 		var staticResources = createResourceMap(outline);
-		return new BuildState(liveNodes, templating, staticResources);
+		return new BuildState(liveGraph, templating, staticResources);
 	}
 
-	public void rebuild(NodeOutline outline) {
-		buildState
-				.orElseThrow(() -> new IllegalStateException("Can't rebuild before a build"))
-				.liveNodes
-				.keySet().stream()
-				.gather(only(SourceLiveNode.class))
-				.forEach(SourceLiveNode::stopObservation);
-		store.removeAll();
-
-		buildState = Optional.of(buildSite(outline));
-		server.refresh();
-	}
-
-	private Map<LiveNode, List<LiveNode>> createLiveNodesAndFillStore(NodeOutline outline) {
-		var liveNodes = LiveNode.buildToStore(outline);
-		liveNodes
-				.keySet().stream()
-				.gather(only(SourceLiveNode.class))
-				.forEach(sourceNode -> processEnvelopesRecursively(liveNodes, Optional.empty(), sourceNode, List.of()));
-		return liveNodes;
+	private LiveGraph createLiveGraphAndFillStore(NodeOutline outline) {
+		var graph = LiveGraph.buildToStore(outline);
+		graph
+				.nodes(SourceLiveNode.class)
+				.forEach(sourceNode -> processEnvelopesRecursively(graph, Optional.empty(), sourceNode, List.of()));
+		return graph;
 	}
 
 	private void processEnvelopesRecursively(
-			Map<LiveNode, List<LiveNode>> liveNodes, Optional<LiveNode> parent, LiveNode node, List<Envelope<?>> envelopes) {
+			LiveGraph graph, Optional<LiveNode> parent, LiveNode node, List<Envelope<?>> envelopes) {
 		List<Envelope<?>> nextDocuments = switch (node) {
 			case SourceLiveNode source -> source
 					.loadAllAndObserve(event -> sourceEvents.add(new SourcedEvent(source, event)));
 			case FilterLiveNode filter -> envelopes.stream()
 					.<Envelope<?>> map(filter::filter)
+					.filter(envelope -> !envelope.documents().isEmpty())
 					.toList();
 			case TransformLiveNode transform -> envelopes.stream()
 					.<Envelope<?>> map(transform::transform)
+					.filter(envelope -> !envelope.documents().isEmpty())
 					.toList();
 			case MergeLiveNode merge -> merge
 					.setInput(parent.orElseThrow(IllegalStateException::new), envelopes)
@@ -99,21 +92,21 @@ class LiveSiteBuilder {
 				envelopes.forEach(envelope -> store.storeEnvelope(collection, envelope));
 				yield List.of();
 			}
-			case StoreResourceLiveNode(var naming) -> {
-				envelopes.forEach(envelope -> store.storeResource(naming, envelope));
+			case StoreResourceLiveNode resource -> {
+				envelopes.forEach(envelope -> store.storeResource(resource.naming(), envelope));
 				yield List.of();
 			}
 		};
 
 		if (!nextDocuments.isEmpty())
-			liveNodes
-					.get(node)
-					.forEach(nextNode -> processEnvelopesRecursively(liveNodes, Optional.of(node), nextNode, nextDocuments));
+			graph
+					.getChildrenOf(node)
+					.forEach(nextNode -> processEnvelopesRecursively(graph, Optional.of(node), nextNode, nextDocuments));
 	}
 
 	private Map<Path, String> createResourceMap(NodeOutline outline) {
 		return outline
-				.streamNodes(GenerateResourcesNode.class)
+				.nodes(GenerateResourcesNode.class)
 				.flatMap(node -> node
 						.resourceNames().stream()
 						.map(resourceName -> {
@@ -124,13 +117,49 @@ class LiveSiteBuilder {
 				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
 	}
 
+	public void rebuild(NodeOutline outline, Rebuild rebuild) {
+		var state = buildState.orElseThrow(() -> new IllegalStateException("Can't rebuild before a build"));
+
+		switch (rebuild) {
+			case None _ -> System.out.println("REBUILD NOTHING");
+			case Components _ -> {
+				System.out.println("REBUILD COMPONENTS");
+
+				state.graph().updateToNewClassLoader(outline);
+				store.updateToNewClassLoader();
+				state.templating().updateToNewClassLoader(outline);
+			}
+			case Templates(var templates) -> {
+				System.out.printf(
+						"REBUILD TEMPLATES (%s)%n",
+						templates.stream()
+								.map(Class::getSimpleName)
+								.collect(joining(", ")));
+
+				state.graph().updateToNewClassLoader(outline);
+				store.updateToNewClassLoader();
+				state.templating().updateToNewClassLoaderWithChangedTemplates(outline, templates);
+			}
+			case Full _ -> {
+				System.out.println("REBUILD ALL");
+
+				state.stopObservation();
+				store.removeAll();
+				var buildState = buildSite(outline);
+				this.buildState = Optional.of(buildState);
+			}
+		}
+
+		server.refresh();
+	}
+
 	// observe
 
 	private void handleSourceEvent(SourcedEvent event) {
 		processEventsRecursively(Optional.empty(), event.sourceNode(), List.of(event.event()));
 		buildState
 				.orElseThrow(IllegalStateException::new)
-				.liveTemplating()
+				.templating()
 				.queryDataChanged();
 		if (sourceEvents.isEmpty())
 			server.refresh();
@@ -156,8 +185,8 @@ class LiveSiteBuilder {
 				events.forEach(event -> store.updateEnvelope(collection, event));
 				yield List.of();
 			}
-			case StoreResourceLiveNode(var naming) -> {
-				events.forEach(event -> store.updateResource(naming, event));
+			case StoreResourceLiveNode storeResource -> {
+				events.forEach(event -> store.updateResource(storeResource.naming(), event));
 				yield List.of();
 			}
 		};
@@ -165,8 +194,8 @@ class LiveSiteBuilder {
 		if (!events.isEmpty())
 			buildState
 					.orElseThrow(IllegalStateException::new)
-					.liveNodes()
-					.get(node)
+					.graph()
+					.getChildrenOf(node)
 					.forEach(nextNode -> processEventsRecursively(Optional.of(node), nextNode, nextEvents));
 	}
 
@@ -182,7 +211,7 @@ class LiveSiteBuilder {
 		if (state.staticResources().containsKey(slug))
 			return serveStaticResource(state.staticResources().get(slug));
 		else
-			return state.liveTemplating().serve(slug);
+			return state.templating().serve(slug);
 	}
 
 	private byte[] serveStaticResource(String resourceName) {
@@ -202,6 +231,12 @@ class LiveSiteBuilder {
 
 	// misc
 
-	private record BuildState(Map<LiveNode, List<LiveNode>> liveNodes, LiveTemplating liveTemplating, Map<Path, String> staticResources) { }
+	private record BuildState(LiveGraph graph, LiveTemplating templating, Map<Path, String> staticResources) {
+
+		void stopObservation() {
+			graph.nodes(SourceLiveNode.class).forEach(SourceLiveNode::stopObservation);
+		}
+
+	}
 
 }

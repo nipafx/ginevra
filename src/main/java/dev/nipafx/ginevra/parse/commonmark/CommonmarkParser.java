@@ -7,6 +7,7 @@ import dev.nipafx.ginevra.html.HtmlElement;
 import dev.nipafx.ginevra.html.ListItem;
 import dev.nipafx.ginevra.html.Nothing;
 import dev.nipafx.ginevra.html.Src;
+import dev.nipafx.ginevra.outline.HtmlContent;
 import dev.nipafx.ginevra.outline.Resources;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.MarkupDocument;
@@ -47,11 +48,11 @@ public class CommonmarkParser implements MarkdownParser {
 		document.accept(frontMatterVisitor);
 		var frontMatter = frontMatterVisitor.getData();
 
-		var content = streamChildren(document)
+		var elements = streamChildren(document)
 				.map(this::parse)
 				.filter(element -> !(element instanceof Nothing))
 				.toList();
-		return new CommonmarkDocument(new CommonmarkFrontMatter(frontMatter), content);
+		return new CommonmarkDocument(new CommonmarkFrontMatter(frontMatter), new HtmlContent(elements));
 	}
 
 	private Element parse(Node node) {
@@ -139,7 +140,7 @@ public class CommonmarkParser implements MarkdownParser {
 		return value == null || value.isBlank() ? null : value;
 	}
 
-	private record CommonmarkDocument(FrontMatter frontMatter, List<Element> content) implements MarkupDocument { }
+	private record CommonmarkDocument(FrontMatter frontMatter, HtmlContent content) implements MarkupDocument { }
 
 	private record CommonmarkFrontMatter(Map<String, List<String>> asMap) implements FrontMatter { }
 

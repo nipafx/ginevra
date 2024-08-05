@@ -24,8 +24,12 @@ class NodeOutline implements Outline {
 		this.nodes = nodes;
 	}
 
+	Stream<Node> allNodes() {
+		return nodes.keySet().stream();
+	}
+
 	@SafeVarargs
-	final <NODE extends Node> Stream<NODE> streamNodes(Class<? extends NODE>... types) {
+	final <NODE extends Node> Stream<NODE> nodes(Class<? extends NODE>... types) {
 		return nodes
 				.keySet().stream()
 				.gather(only(types));
@@ -37,14 +41,16 @@ class NodeOutline implements Outline {
 
 	sealed interface Node {
 
-		record SourceNode(Source<?> source) implements Node { }
-		record FilterNode(Predicate<Document> filter) implements Node { }
-		record TransformNode(String transformerName, Function<Document, List<Document>> transformer) implements Node { }
-		record MergeNode(Node leftNode, Node rightNode, Merger<?, ?, ?> merger) implements Node { }
-		record StoreDocumentNode(Optional<String> collection) implements Node { }
-		record StoreResourceNode(Function<Document, String> naming) implements Node { }
-		record GenerateTemplateNode(Template<?> template) implements Node { }
-		record GenerateResourcesNode(Path targetFolder, List<String> resourceNames) implements Node { }
+		String id();
+		
+		record SourceNode(String id, Source<?> source) implements Node { }
+		record FilterNode(String id, Predicate<Document> filter) implements Node { }
+		record TransformNode(String id, String transformerName, Function<Document, List<Document>> transformer) implements Node { }
+		record MergeNode(String id, Node leftNode, Node rightNode, Merger<?, ?, ?> merger) implements Node { }
+		record StoreDocumentNode(String id, Optional<String> collection) implements Node { }
+		record StoreResourceNode(String id, Function<Document, String> naming) implements Node { }
+		record GenerateTemplateNode(String id, Template<?> template) implements Node { }
+		record GenerateResourcesNode(String id, Path targetFolder, List<String> resourceNames) implements Node { }
 
 	}
 

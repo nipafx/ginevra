@@ -24,14 +24,15 @@ import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.util.CollectionUtils.add;
 import static java.util.stream.Collectors.toConcurrentMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 class LiveTemplating {
 
-	private final List<TemplateCache> cache;
+	private final Map<String, TemplateCache> cache;
 	private final LiveStore store;
 	private final Renderer renderer;
 
-	private LiveTemplating(List<TemplateCache> cache, LiveStore store, Renderer renderer) {
+	private LiveTemplating(Map<String, TemplateCache> cache, LiveStore store, Renderer renderer) {
 		this.store = store;
 		this.renderer = renderer;
 		this.cache = cache;
@@ -39,27 +40,50 @@ class LiveTemplating {
 
 	static LiveTemplating initializeTemplates(NodeOutline outline, LiveStore store, Renderer renderer) {
 		var cache = outline
-				.streamNodes(GenerateTemplateNode.class)
-				.map(GenerateTemplateNode::template)
-				.map(template -> TemplateCache.createFor(template, store, renderer))
-				.toList();
+				.nodes(GenerateTemplateNode.class)
+				.map(node -> Map.entry(
+						node.id(),
+						TemplateCache.createFor(node.template(), store, renderer))
+				)
+				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
 		return new LiveTemplating(cache, store, renderer);
 	}
 
 	void queryDataChanged() {
-		cache.forEach(TemplateCache::reset);
+		cache.values().forEach(TemplateCache::reset);
+	}
+
+	void updateToNewClassLoader(NodeOutline outline) {
+		updateToNewClassLoaderWithChangedTemplates(outline, List.of());
+	}
+
+	public void updateToNewClassLoaderWithChangedTemplates(NodeOutline outline, List<Class<?>> templates) {
+		outline
+				.nodes(GenerateTemplateNode.class)
+				.forEach(node -> {
+					var templateChanged = templates.stream().anyMatch(type -> type.isAssignableFrom(node.getClass()));
+					if (templateChanged)
+						cache.put(node.id(), TemplateCache.createFor(node.template(), store, renderer));
+					else {
+						var templateCache = cache.get(node.id());
+						templateCache.updateTemplate(node.template());
+						templateCache.reset();
+					}
+				});
 	}
 
 	byte[] serve(Path slug) {
 		// try the most likely candidates first
-		var content = cache.stream()
+		var content = cache
+				.values().stream()
 				.filter(templateCache -> templateCache.mayServe(slug))
 				.flatMap(templateCache -> templateCache.tryToServe(slug, store, renderer).stream())
 				.findFirst();
 		if (content.isPresent())
 			return content.get();
 
-		return cache.stream()
+		return cache
+				.values().stream()
 				.flatMap(templateCache -> templateCache.tryToServe(slug, store, renderer).stream())
 				.findFirst()
 				// TODO: better handling of missing content
@@ -68,7 +92,7 @@ class LiveTemplating {
 
 	private static class TemplateCache {
 
-		private final Template<?> template;
+		private Template<?> template;
 		private TemplateState state;
 
 		private TemplateCache(Template<?> template, TemplateState state) {
@@ -166,6 +190,10 @@ class LiveTemplating {
 					document.head().children(),
 					GmlElement.html.literal("<script>%s</script>".formatted(LiveServer.REFRESH_JS_CODE)));
 			return document.head(document.head().children(headChildren));
+		}
+
+		public void updateTemplate(Template<?> template) {
+			this.template = template;
 		}
 
 	}

@@ -52,9 +52,10 @@ class StoreUtils {
 							.formatted(collectionName, genericType.getTypeName()));
 
 		try {
-			var classLoader = LiveCodeUpdater.SITE_CLASS_LOADER.get().orElse(StoreUtils.class.getClassLoader());
 			@SuppressWarnings("unchecked")
-			var type = (Class<Record>) classLoader.loadClass(parameterizedType.getActualTypeArguments()[0].getTypeName());
+			var type = (Class<Record>) ByteArrayClassLoader
+					.currentOrApp()
+					.loadClass(parameterizedType.getActualTypeArguments()[0].getTypeName());
 			if (!type.isRecord())
 				throw new IllegalArgumentException(
 						"A root query's component that queries a collection needs to be a list of some record type but '%s' is a list of '%s'."

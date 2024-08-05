@@ -45,7 +45,7 @@ class OneTimeSiteBuilder {
 	public void build(NodeOutline outline) {
 		this.outline = outline;
 		this.mergeCaches = outline
-				.streamNodes(MergeNode.class)
+				.nodes(MergeNode.class)
 				.collect(toUnmodifiableMap(identity(), MergeCache::new));
 
 		fillStore();
@@ -57,7 +57,7 @@ class OneTimeSiteBuilder {
 
 	private void fillStore() {
 		outline
-				.streamNodes(SourceNode.class)
+				.nodes(SourceNode.class)
 				.forEach(this::runFromSource);
 	}
 
@@ -97,8 +97,8 @@ class OneTimeSiteBuilder {
 						.setInput(previous, documents)
 						.merge()
 						.ifPresent(mergedDocuments -> processRecursively(nextMerge, mergedDocuments));
-				case StoreDocumentNode(var collection) -> documents.forEach(doc -> store.storeDocument(collection, doc));
-				case StoreResourceNode(var naming) -> documents.forEach(doc -> store.storeResource(naming.apply(doc), (FileDocument) doc));
+				case StoreDocumentNode(_, var collection) -> documents.forEach(doc -> store.storeDocument(collection, doc));
+				case StoreResourceNode(_, var naming) -> documents.forEach(doc -> store.storeResource(naming.apply(doc), (FileDocument) doc));
 				case GenerateTemplateNode _ -> throw new IllegalStateException("No step should map to a template");
 				case GenerateResourcesNode _ -> throw new IllegalStateException("No step should map to resource generation");
 			}
@@ -107,7 +107,7 @@ class OneTimeSiteBuilder {
 
 	private void renderTemplates() {
 		outline
-				.streamNodes(GenerateTemplateNode.class)
+				.nodes(GenerateTemplateNode.class)
 				.flatMap(this::generateFromTemplate)
 				.forEach(siteFileSystem::writeTemplatedFile);
 	}
@@ -136,7 +136,7 @@ class OneTimeSiteBuilder {
 
 	private void generateResources() {
 		outline
-				.streamNodes(GenerateResourcesNode.class)
+				.nodes(GenerateResourcesNode.class)
 				.forEach(this::generateResources);
 	}
 

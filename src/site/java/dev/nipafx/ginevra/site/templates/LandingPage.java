@@ -33,7 +33,7 @@ public class LandingPage implements Template<LandingPageDoc> {
 						h1.text(page.title()),
 						div.children(page
 								.landingPageTexts().stream()
-								.map(text -> div.children(text.text()))
+								.map(text -> div.children(text.text().elements()))
 								.toList())
 				);
 	}

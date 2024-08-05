@@ -14,11 +14,11 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
+import static dev.nipafx.ginevra.html.GmlElement.text;
 import static dev.nipafx.ginevra.html.HtmlElement.br;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.span;
 import static dev.nipafx.ginevra.html.HtmlElement.strong;
-import static dev.nipafx.ginevra.html.GmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

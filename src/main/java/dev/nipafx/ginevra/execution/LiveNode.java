@@ -1,12 +1,5 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.execution.NodeOutline.Node;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.FilterNode;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.MergeNode;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.SourceNode;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreDocumentNode;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.StoreResourceNode;
-import dev.nipafx.ginevra.execution.NodeOutline.Node.TransformNode;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.Envelope;
 import dev.nipafx.ginevra.outline.Merger;
@@ -22,7 +15,6 @@ import dev.nipafx.ginevra.util.StreamUtils.Pair;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -30,61 +22,12 @@ import java.util.function.Predicate;
 
 import static dev.nipafx.ginevra.util.CollectionUtils.add;
 import static dev.nipafx.ginevra.util.StreamUtils.crossProduct;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toUnmodifiableMap;
 
 sealed interface LiveNode {
 
-	static Map<LiveNode, List<LiveNode>> buildToStore(NodeOutline outline) {
-		var liveNodes = new HashMap<Node, LiveNode>();
-		outline
-				.streamNodes(SourceNode.class)
-				.forEach(node -> liveNodes.put(node, new SourceLiveNode(node.source())));
-		outline
-				.streamNodes(FilterNode.class)
-				.forEach(node -> liveNodes.put(node, new FilterLiveNode(node.filter())));
-		outline
-				.streamNodes(TransformNode.class)
-				.forEach(node -> liveNodes.put(node, new TransformLiveNode(node.transformerName(), node.transformer())));
-		// the creation of live nodes has to be done in steps, so by the time we get to merge nodes,
-		// there is at least one merge node whose input nodes are non-merge nodes
-		// and the respective live nodes have already been created
-		var mutableMergeNodes = outline.streamNodes(MergeNode.class).collect(toList());
-		while (!mutableMergeNodes.isEmpty()) {
-			var completed = mutableMergeNodes.stream()
-					.filter(node -> liveNodes.containsKey(node.leftNode()) && liveNodes.containsKey(node.rightNode()))
-					.peek(node -> liveNodes.put(node, new MergeLiveNode(liveNodes.get(node.leftNode()), liveNodes.get(node.rightNode()), node.merger())))
-					.toList();
-			if (completed.isEmpty())
-				throw new IllegalStateException("Huh?!");
-			mutableMergeNodes.removeAll(completed);
-		}
-		outline
-				.streamNodes(StoreDocumentNode.class)
-				.forEach(node -> liveNodes.put(node, new StoreDocumentLiveNode(node.collection())));
-		outline
-				.streamNodes(StoreResourceNode.class)
-				.forEach(node -> liveNodes.put(node, new StoreResourceLiveNode(node.naming())));
-
-		return outline
-				.streamNodes(
-						SourceNode.class, FilterNode.class, TransformNode.class, MergeNode.class,
-						StoreDocumentNode.class, StoreResourceNode.class)
-				.map(node -> {
-					var liveNode = liveNodes.get(node);
-					var children = outline
-							.getChildrenOf(node)
-							.filter(liveNodes::containsKey)
-							.map(liveNodes::get)
-							.toList();
-					return Map.entry(liveNode, children);
-				})
-				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
-	}
-
 	final class SourceLiveNode implements LiveNode {
 
-		private final Source<?> source;
+		private Source<?> source;
 
 		SourceLiveNode(Source<?> source) {
 			this.source = source;
@@ -101,11 +44,15 @@ sealed interface LiveNode {
 			source.stopObservation();
 		}
 
+		public void updateSource(Source<?> source) {
+			this.source = source;
+		}
+
 	}
 
 	final class FilterLiveNode implements LiveNode {
 
-		private final Predicate<Document> filter;
+		private Predicate<Document> filter;
 
 		// indicates whether any documents from the sender passed the filter
 		private final Map<SenderId, Boolean> ledger;
@@ -171,12 +118,16 @@ sealed interface LiveNode {
 			return new SimpleEnvelope<>(envelope.sender().filter(), filteredDocuments);
 		}
 
+		public void updateFilter(Predicate<Document> filter) {
+			this.filter = filter;
+		}
+
 	}
 
 	final class TransformLiveNode implements LiveNode {
 
 		private final String transformerName;
-		private final Function<Document, List<Document>> transformer;
+		private Function<Document, List<Document>> transformer;
 
 		// indicates whether transforming the sender's documents lead to a non-empty result
 		private final Map<SenderId, Boolean> ledger;
@@ -245,13 +196,17 @@ sealed interface LiveNode {
 			return new SimpleEnvelope(newId, transformedDocuments);
 		}
 
+		public void updateTransformer(Function<Document, List<Document>> transformer) {
+			this.transformer = transformer;
+		}
+
 	}
 
 	final class MergeLiveNode implements LiveNode {
 
 		private final LiveNode leftNode;
 		private final LiveNode rightNode;
-		private final Merger<?, ?, ?> merger;
+		private Merger<?, ?, ?> merger;
 
 		// indicates whether merging the senders' documents lead to a non-empty result
 		private final Map<Pair<SenderId, SenderId>, Boolean> ledger;
@@ -282,7 +237,7 @@ sealed interface LiveNode {
 				return Optional.empty();
 
 			var merged = crossProduct(leftInput, rightInput)
-					.<Envelope<?>>map(pair -> {
+					.<Envelope<?>> map(pair -> {
 						Envelope<?> mergedEnvelope = applyMerge(pair.left(), pair.right());
 						ledger.put(
 								new Pair<>(pair.left().sender(), pair.right().sender()),
@@ -308,7 +263,7 @@ sealed interface LiveNode {
 									return addedEnvelope;
 								})
 								.filter(envelope -> !envelope.documents().isEmpty())
-								.<SourceEvent>map(Added::new)
+								.<SourceEvent> map(Added::new)
 								.toList();
 					} else if (rightNode == previous) {
 						rightInput = add(rightInput, added);
@@ -321,7 +276,7 @@ sealed interface LiveNode {
 									return addedEnvelope;
 								})
 								.filter(envelope -> !envelope.documents().isEmpty())
-								.<SourceEvent>map(Added::new)
+								.<SourceEvent> map(Added::new)
 								.toList();
 					} else
 						throw new IllegalArgumentException("Unexpected merge parent node: " + previous);
@@ -329,7 +284,7 @@ sealed interface LiveNode {
 				case Changed(var changed) -> {
 					if (leftNode == previous) {
 						yield rightInput.stream()
-								.<Optional<SourceEvent>>map(right -> {
+								.<Optional<SourceEvent>> map(right -> {
 									var merged = applyMerge(changed, right);
 									var anyMerge = !merged.documents().isEmpty();
 									var anyMerged = ledger.put(new Pair<>(changed.sender(), right.sender()), anyMerge);
@@ -352,7 +307,7 @@ sealed interface LiveNode {
 								.toList();
 					} else if (rightNode == previous) {
 						yield leftInput.stream()
-								.<Optional<SourceEvent>>map(left -> {
+								.<Optional<SourceEvent>> map(left -> {
 									var merged = applyMerge(left, changed);
 									var anyMerge = !merged.documents().isEmpty();
 									var anyMerged = ledger.put(new Pair<>(left.sender(), changed.sender()), anyMerge);
@@ -382,7 +337,7 @@ sealed interface LiveNode {
 								.keySet().stream()
 								.filter(pair -> pair.left().equals(removed))
 								.map(pair -> pair.left().mergeFrom(pair.right()))
-								.<SourceEvent>map(Removed::new)
+								.<SourceEvent> map(Removed::new)
 								.toList();
 						ledger.entrySet().removeIf(entry -> entry.getKey().left().equals(removed));
 						yield removals;
@@ -391,7 +346,7 @@ sealed interface LiveNode {
 								.keySet().stream()
 								.filter(pair -> pair.right().equals(removed))
 								.map(pair -> pair.left().mergeFrom(pair.right()))
-								.<SourceEvent>map(Removed::new)
+								.<SourceEvent> map(Removed::new)
 								.toList();
 						ledger.entrySet().removeIf(entry -> entry.getKey().right().equals(removed));
 						yield removals;
@@ -410,10 +365,28 @@ sealed interface LiveNode {
 			return new SimpleEnvelope(mergedId, mergedDocuments);
 		}
 
+		public void updateMerger(Merger<?, ?, ?> merger) {
+			this.merger = merger;
+		}
+
 	}
 
 	record StoreDocumentLiveNode(Optional<String> collection) implements LiveNode { }
 
-	record StoreResourceLiveNode(Function<Document, String> naming) implements LiveNode { }
+	final class StoreResourceLiveNode implements LiveNode {
+
+		private Function<Document, String> naming;
+
+		public StoreResourceLiveNode(Function<Document, String> naming) { this.naming = naming; }
+
+		public Function<Document, String> naming() {
+			return naming;
+		}
+
+		public void updateNaming(Function<Document, String> naming) {
+			this.naming = naming;
+		}
+
+	}
 
 }

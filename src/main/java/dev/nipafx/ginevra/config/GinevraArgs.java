@@ -21,10 +21,14 @@ public interface GinevraArgs {
 
 	}
 
-	record DevelopArgs(Path sources, Optional<Integer> port) implements ActionArgs {
+	record DevelopArgs(Path sources, Optional<Integer> port, Optional<Boolean> pureTemplates) implements ActionArgs {
 
 		public int portOrDefault() {
 			return port.orElse(8000);
+		}
+
+		public boolean pureTemplatesOrDefault() {
+			return pureTemplates.orElse(false);
 		}
 
 	}

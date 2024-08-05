@@ -4,10 +4,10 @@ import dev.nipafx.ginevra.html.Classes;
 import dev.nipafx.ginevra.html.Id;
 import org.junit.jupiter.api.Test;
 
-import static dev.nipafx.ginevra.html.HtmlElement.code;
-import static dev.nipafx.ginevra.html.HtmlElement.pre;
 import static dev.nipafx.ginevra.html.GmlElement.codeBlock;
 import static dev.nipafx.ginevra.html.GmlElement.text;
+import static dev.nipafx.ginevra.html.HtmlElement.code;
+import static dev.nipafx.ginevra.html.HtmlElement.pre;
 import static dev.nipafx.ginevra.render.HtmlRendererTest.RESOLVER;
 import static org.assertj.core.api.Assertions.assertThat;
 

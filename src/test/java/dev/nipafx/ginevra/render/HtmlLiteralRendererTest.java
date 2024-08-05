@@ -2,9 +2,9 @@ package dev.nipafx.ginevra.render;
 
 import org.junit.jupiter.api.Test;
 
-import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.GmlElement.html;
 import static dev.nipafx.ginevra.html.GmlElement.text;
+import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.render.HtmlRendererTest.RENDERER;
 import static org.assertj.core.api.Assertions.assertThat;
 

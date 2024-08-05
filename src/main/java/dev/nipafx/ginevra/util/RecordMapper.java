@@ -61,6 +61,9 @@ public class RecordMapper {
 		if (component.getType().isRecord()) {
 			@SuppressWarnings("unchecked")
 			var nestedRecordType = (Class<? extends Record>) component.getType();
+			if (nestedRecordType.isInstance(value))
+				return value;
+
 			if (!(guaranteeNotNull(value, component) instanceof Map)) {
 				var message = "The component '%s' is of type '%s' but the associated map value '%s' is no 'Map'".formatted(component.getName(), component.getType(), value);
 				throw new IllegalArgumentException(message);

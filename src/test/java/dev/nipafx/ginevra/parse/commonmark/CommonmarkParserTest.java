@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static dev.nipafx.ginevra.html.GmlElement.codeBlock;
+import static dev.nipafx.ginevra.html.GmlElement.html;
+import static dev.nipafx.ginevra.html.GmlElement.text;
 import static dev.nipafx.ginevra.html.HtmlElement.a;
 import static dev.nipafx.ginevra.html.HtmlElement.blockquote;
 import static dev.nipafx.ginevra.html.HtmlElement.br;
@@ -27,9 +30,6 @@ import static dev.nipafx.ginevra.html.HtmlElement.ol;
 import static dev.nipafx.ginevra.html.HtmlElement.p;
 import static dev.nipafx.ginevra.html.HtmlElement.strong;
 import static dev.nipafx.ginevra.html.HtmlElement.ul;
-import static dev.nipafx.ginevra.html.GmlElement.codeBlock;
-import static dev.nipafx.ginevra.html.GmlElement.html;
-import static dev.nipafx.ginevra.html.GmlElement.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommonmarkParserTest {
@@ -41,7 +41,7 @@ class CommonmarkParserTest {
 
 	private void parseAndAssert(String markdown, Element... elements) {
 		var parsed = parser.parse(markdown);
-		assertThat(parsed.content()).containsExactly(elements);
+		assertThat(parsed.content().elements()).containsExactly(elements);
 	}
 
 	/*
@@ -399,7 +399,7 @@ class CommonmarkParserTest {
 				description: "A description of the post."
 				---
 				""");
-		assertThat(parsed.content()).isEmpty();
+		assertThat(parsed.content().elements()).isEmpty();
 		assertThat(parsed.frontMatter().asMap()).containsExactlyInAnyOrderEntriesOf(Map.of(
 				"title", List.of("The Title"),
 				"description", List.of("A description of the post.")

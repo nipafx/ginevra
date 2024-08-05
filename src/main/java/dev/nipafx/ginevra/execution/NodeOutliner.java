@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -44,6 +45,8 @@ public class NodeOutliner implements Outliner {
 	private final Optional<YamlParser> yamlParser;
 	private final Map<Node, List<Node>> nodes;
 
+	private final AtomicInteger nextNodeId = new AtomicInteger();
+
 	public NodeOutliner(Optional<MarkdownParser> markdownParser, Optional<JsonParser> jsonParser, Optional<YamlParser> yamlParser) {
 		this.markdownParser = markdownParser;
 		this.jsonParser = jsonParser;
@@ -51,29 +54,33 @@ public class NodeOutliner implements Outliner {
 		this.nodes = new HashMap<>();
 	}
 
+	private String nextId() {
+		return String.valueOf(nextNodeId.getAndIncrement());
+	}
+
 	// sources
 
 	@Override
 	public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> source(Source<DOCUMENT_OUT> source) {
-		var node = createNewNode(() -> new SourceNode(source));
+		var node = createNewNode(() -> new SourceNode(nextId(), source));
 		return new NodeStep<>(this, node);
 	}
 
 	@Override
 	public <DOCUMENT_OUT extends Record & Document> Step<DOCUMENT_OUT> source(DOCUMENT_OUT source) {
-		var node = createNewNode(() -> new SourceNode(new RecordSource<>(source)));
+		var node = createNewNode(() -> new SourceNode(nextId(), new RecordSource<>(source)));
 		return new NodeStep<>(this, node);
 	}
 
 	@Override
 	public TextFileStep<TextFileDocument> sourceTextFiles(String name, Path path) {
-		var node = createNewNode(() -> new SourceNode(FileSource.forTextFiles(name, path)));
+		var node = createNewNode(() -> new SourceNode(nextId(), FileSource.forTextFiles(name, path)));
 		return new TextFileNodeStep<>(this, node);
 	}
 
 	@Override
 	public FileStep<BinaryFileDocument> sourceBinaryFiles(String name, Path path) {
-		var node = createNewNode(() -> new SourceNode(FileSource.forBinaryFiles(name, path)));
+		var node = createNewNode(() -> new SourceNode(nextId(), FileSource.forBinaryFiles(name, path)));
 		return new FileNodeStep<>(this, node);
 	}
 
@@ -82,7 +89,7 @@ public class NodeOutliner implements Outliner {
 	@Override
 	public <DOCUMENT extends Record & Document> Step<DOCUMENT> filter(Step<DOCUMENT> previous, Predicate<DOCUMENT> filter) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var node = appendNewNode(previous, () -> new FilterNode((Predicate) filter));
+		var node = appendNewNode(previous, () -> new FilterNode(nextId(), (Predicate) filter));
 		return new NodeStep<>(this, node);
 	}
 
@@ -96,7 +103,7 @@ public class NodeOutliner implements Outliner {
 	public <DOCUMENT_IN extends Record & Document, DOCUMENT_OUT extends Record & Document>
 	Step<DOCUMENT_OUT> transformToMany(Step<DOCUMENT_IN> previous, String transformerName, Function<DOCUMENT_IN, List<DOCUMENT_OUT>> transformer) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var node = appendNewNode(previous, () -> new TransformNode(transformerName, (Function) transformer));
+		var node = appendNewNode(previous, () -> new TransformNode(nextId(), transformerName, (Function) transformer));
 		return new NodeStep<>(this, node);
 	}
 
@@ -199,7 +206,7 @@ public class NodeOutliner implements Outliner {
 	Step<DOCUMENT_OUT> merge(Step<DOCUMENT_IN_1> left, Step<DOCUMENT_IN_2> right, Merger<DOCUMENT_IN_1, DOCUMENT_IN_2, DOCUMENT_OUT> merger) {
 		var leftNode = getNodeFromStep(left);
 		var rightNode = getNodeFromStep(right);
-		var mergeNode = new MergeNode(leftNode, rightNode, merger);
+		var mergeNode = new MergeNode(nextId(), leftNode, rightNode, merger);
 		appendNode(leftNode, mergeNode);
 		appendNode(rightNode, mergeNode);
 		return new NodeStep<>(this, mergeNode);
@@ -209,18 +216,18 @@ public class NodeOutliner implements Outliner {
 
 	@Override
 	public <DOCUMENT_IN extends Record & Document> void store(Step<DOCUMENT_IN> previous, String collection) {
-		appendNewNode(previous, () -> new StoreDocumentNode(Optional.of(collection)));
+		appendNewNode(previous, () -> new StoreDocumentNode(nextId(), Optional.of(collection)));
 	}
 
 	@Override
 	public <DOCUMENT_IN extends Record & Document> void store(Step<DOCUMENT_IN> previous) {
-		appendNewNode(previous, () -> new StoreDocumentNode(Optional.empty()));
+		appendNewNode(previous, () -> new StoreDocumentNode(nextId(), Optional.empty()));
 	}
 
 	@Override
 	public <DOCUMENT_IN extends Record & FileDocument> void storeResource(Step<DOCUMENT_IN> previous, Function<DOCUMENT_IN, String> naming) {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		var _ = appendNewNode(previous, () -> new StoreResourceNode((Function) naming));
+		var _ = appendNewNode(previous, () -> new StoreResourceNode(nextId(), (Function) naming));
 	}
 
 	@Override
@@ -240,12 +247,12 @@ public class NodeOutliner implements Outliner {
 	@Override
 	public <DOCUMENT extends Record & Document>
 	void generate(Template<DOCUMENT> template) {
-		createNewNode(() -> new GenerateTemplateNode(template));
+		createNewNode(() -> new GenerateTemplateNode(nextId(), template));
 	}
 
 	@Override
 	public void generateStaticResources(Path targetFolder, String... resources) {
-		createNewNode(() -> new GenerateResourcesNode(targetFolder, List.of(resources)));
+		createNewNode(() -> new GenerateResourcesNode(nextId(), targetFolder, List.of(resources)));
 	}
 
 	// misc

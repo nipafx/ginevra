@@ -1,16 +1,15 @@
 package dev.nipafx.ginevra.site.documents;
 
-import dev.nipafx.ginevra.html.Element;
 import dev.nipafx.ginevra.outline.Document;
+import dev.nipafx.ginevra.outline.HtmlContent;
 
 import java.nio.file.Path;
-import java.util.List;
 
 public interface LandingPageText {
 
-	record Markdown(Path file, List<Element> contentParsedAsMarkdown) implements Document { }
+	record Markdown(Path file, HtmlContent contentParsedAsMarkdown) implements Document { }
 
-	record Parsed(String id, List<Element> text) implements Document {
+	record Parsed(String id, HtmlContent text) implements Document {
 
 		public static Parsed parse(Markdown md) {
 			var fileName = md.file.getFileName().toString();
