@@ -88,6 +88,8 @@ public class RecordMapper {
 				case "java.util.List" -> {
 					if (value instanceof List)
 						yield guaranteeNotNull(value, component);
+					if (value instanceof Set<?> set)
+						yield List.copyOf(set);
 					if (value == null)
 						yield List.of();
 
@@ -97,6 +99,8 @@ public class RecordMapper {
 				case "java.util.Set" -> {
 					if (value instanceof Set)
 						yield guaranteeNotNull(value, component);
+					if (value instanceof List<?> list)
+						yield Set.copyOf(list);
 					if (value == null)
 						yield Set.of();
 

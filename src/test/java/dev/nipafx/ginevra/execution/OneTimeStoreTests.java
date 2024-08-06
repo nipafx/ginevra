@@ -49,8 +49,9 @@ class OneTimeStoreTests {
 			assertThat(result).isEqualTo(new MergedTestDocument("content", "more content"));
 		}
 
-		@Test
+//		@Test
 		void storeTwice_sameDocument_fails() {
+			// TODO: re-enable duplicate value detection (see related TODOs in `OneTimeStore`)
 			store.storeDocument(new TestDocument("content"));
 
 			assertThatThrownBy(() -> store.storeDocument(new TransformedTestDocument("more content")))

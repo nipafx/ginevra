@@ -126,7 +126,6 @@ class LiveSiteBuilder {
 				System.out.println("REBUILD COMPONENTS");
 
 				state.graph().updateToNewClassLoader(outline);
-				store.updateToNewClassLoader();
 				state.templating().updateToNewClassLoader(outline);
 			}
 			case Templates(var templates) -> {
@@ -137,7 +136,6 @@ class LiveSiteBuilder {
 								.collect(joining(", ")));
 
 				state.graph().updateToNewClassLoader(outline);
-				store.updateToNewClassLoader();
 				state.templating().updateToNewClassLoaderWithChangedTemplates(outline, templates);
 			}
 			case Full _ -> {

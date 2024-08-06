@@ -1,27 +1,30 @@
 package dev.nipafx.ginevra.execution;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
 import dev.nipafx.ginevra.util.RecordMapper;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 class OneTimeStore implements StoreFront {
 
-	private final Map<String, Object> root;
-	private final Map<String, List<Document>> collections;
+	private static final ObjectMapper JSON = Json.ONE_TIME_STORE_MAPPER;
+
+	private final JsonNode root;
+	private final Map<String, ArrayNode> collections;
 	private final Map<String, FileDocument> resources;
 
 	OneTimeStore() {
-		root = new HashMap<>();
+		root = JSON.createObjectNode();
 		collections = new HashMap<>();
 		resources = new HashMap<>();
 	}
@@ -34,27 +37,20 @@ class OneTimeStore implements StoreFront {
 
 	void storeDocument(String collection, Document document) {
 		collections
-				.computeIfAbsent(collection, _ -> new ArrayList<>())
-				.add(document);
+				.computeIfAbsent(collection, _ -> JSON.createArrayNode())
+				.add(JSON.valueToTree(document));
 	}
 
 	void storeDocument(Document document) {
-		var documentData = RecordMapper.createValueMapFromRecord((Record) document);
-		mergeData(root, documentData);
-	}
-
-	@SuppressWarnings("unchecked")
-	private static void mergeData(Map<String, Object> existingData, Map<String, Object> newData) {
-		newData.forEach((newKey, newValue) -> {
-			if (existingData.containsKey(newKey)) {
-				var existingValue = existingData.get(newKey);
-				if (existingValue instanceof Map && newValue instanceof Map)
-					mergeData((Map<String, Object>) existingValue, (Map<String, Object>) newValue);
-				else
-					throw new IllegalArgumentException("Duplicate value");
-			} else
-				existingData.put(newKey, newValue);
-		});
+		try {
+			// TODO: duplicate value detection (only one value should be defined for each key)
+			JSON
+					.readerForUpdating(root)
+					.readValue(JSON.<JsonNode> valueToTree(document));
+		} catch (IOException ex) {
+			// TODO: handle error
+			throw new IllegalStateException(ex);
+		}
 	}
 
 	void storeResource(String name, FileDocument document) {
@@ -67,10 +63,18 @@ class OneTimeStore implements StoreFront {
 
 	@Override
 	public <RESULT extends Record & Document> RESULT query(RootQuery<RESULT> query) {
-		return StoreUtils.queryRoot(
-				query.resultType(),
-				rootKey -> Optional.ofNullable(root.get(rootKey)),
-				collectionKey -> Optional.ofNullable(collections.get(collectionKey)).map(List::stream));
+		var valueMap = StoreUtils.queryRootOrCollection(
+				query.resultType(), collections::containsKey, this::queryRoot, this::queryCollection);
+		return RecordMapper.createRecordFromValueMap(query.resultType(), valueMap);
+	}
+
+	private <RESULT> RESULT queryRoot(String fieldName, Class<RESULT> resultType) {
+		try {
+			return JSON.treeToValue(root.get(fieldName), resultType);
+		} catch (IOException ex) {
+			// TODO: handle error
+			throw new IllegalArgumentException(ex);
+		}
 	}
 
 	@Override
@@ -78,10 +82,17 @@ class OneTimeStore implements StoreFront {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
-		return collections
-				.get(query.collection()).stream()
-				.map(document -> RecordMapper.createRecordFromRecord(query.resultType(), (Record) document))
-				.collect(Collectors.toUnmodifiableSet());
+		return queryCollection(query.collection(), query.resultType());
+	}
+
+	private <TYPE> Set<TYPE> queryCollection(String name, Class<TYPE> type) {
+		try {
+			var setType = JSON.getTypeFactory().constructCollectionType(Set.class, type);
+			return JSON.readerFor(setType).readValue(collections.get(name));
+		} catch (IOException ex) {
+			// TODO: handle error
+			throw new IllegalArgumentException(ex);
+		}
 	}
 
 	@Override
