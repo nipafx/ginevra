@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.util.CollectionUtils.add;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
@@ -73,21 +74,19 @@ class LiveTemplating {
 	}
 
 	byte[] serve(Path slug) {
-		// try the most likely candidates first
-		var content = cache
-				.values().stream()
-				.filter(templateCache -> templateCache.mayServe(slug))
-				.flatMap(templateCache -> templateCache.tryToServe(slug, store, renderer).stream())
-				.findFirst();
-		if (content.isPresent())
-			return content.get();
-
 		return cache
 				.values().stream()
-				.flatMap(templateCache -> templateCache.tryToServe(slug, store, renderer).stream())
-				.findFirst()
+				.map(template -> template.readinessToServe(slug))
+				.filter(template -> template.readiness() != Readiness.NEVER)
+				.max(comparing(TemplateReadiness::readiness))
+				.flatMap(template -> template.cache().tryToServe(slug, store, renderer))
 				// TODO: better handling of missing content
 				.orElse("404".getBytes());
+	}
+
+	private record TemplateReadiness(Readiness readiness, TemplateCache cache) { }
+	private enum Readiness {
+		NEVER, RESET, RESOLVED, RENDERED
 	}
 
 	private static class TemplateCache {
@@ -112,11 +111,16 @@ class LiveTemplating {
 			};
 		}
 
-		boolean mayServe(Path slug) {
-			return switch (state) {
-				case Reset(var paths) -> paths.contains(slug);
-				case Templated(var content) -> content.containsKey(slug);
+		TemplateReadiness readinessToServe(Path slug) {
+			var readiness =  switch (state) {
+				case Reset(var paths) -> paths.contains(slug) ? Readiness.RESET : Readiness.NEVER;
+				case Templated(var content) -> switch (content.get(slug)) {
+					case null -> Readiness.NEVER;
+					case ResolvedDoc _, ResolvedFile _ -> Readiness.RESOLVED;
+					case Rendered _ -> Readiness.RENDERED;
+				};
 			};
+			return new TemplateReadiness(readiness, this);
 		}
 
 		// this method changes internal state but may be called from multiple threads
