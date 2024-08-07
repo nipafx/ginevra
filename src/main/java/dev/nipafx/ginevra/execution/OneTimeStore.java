@@ -7,7 +7,6 @@ import dev.nipafx.ginevra.outline.Document;
 import dev.nipafx.ginevra.outline.FileDocument;
 import dev.nipafx.ginevra.outline.Query.CollectionQuery;
 import dev.nipafx.ginevra.outline.Query.RootQuery;
-import dev.nipafx.ginevra.util.RecordMapper;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,10 +22,13 @@ class OneTimeStore implements StoreFront {
 	private final Map<String, ArrayNode> collections;
 	private final Map<String, FileDocument> resources;
 
+	private final StoreCache cache;
+
 	OneTimeStore() {
 		root = JSON.createObjectNode();
 		collections = new HashMap<>();
 		resources = new HashMap<>();
+		cache = new StoreCache();
 	}
 
 	void storeDocument(Optional<String> collection, Document document) {
@@ -62,10 +64,9 @@ class OneTimeStore implements StoreFront {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <RESULT extends Record & Document> RESULT query(RootQuery<RESULT> query) {
-		var valueMap = StoreUtils.queryRootOrCollection(
-				query.resultType(), collections::containsKey, this::queryRoot, this::queryCollection);
-		return RecordMapper.createRecordFromValueMap(query.resultType(), valueMap);
+		return (RESULT) cache.queryRoot(query.resultType(), collections::containsKey, this::queryRoot, this::queryCollection);
 	}
 
 	private <RESULT> RESULT queryRoot(String fieldName, Class<RESULT> resultType) {
@@ -82,13 +83,13 @@ class OneTimeStore implements StoreFront {
 		if (!collections.containsKey(query.collection()))
 			throw new IllegalArgumentException("Unknown document collection: " + query.collection());
 
-		return queryCollection(query.collection(), query.resultType());
+		return cache.queryCollection(query.collection(), query.resultType(), this::queryCollection);
 	}
 
-	private <TYPE> Set<TYPE> queryCollection(String name, Class<TYPE> type) {
+	private <RESULT> Set<RESULT> queryCollection(String collectionName, Class<RESULT> resultType) {
 		try {
-			var setType = JSON.getTypeFactory().constructCollectionType(Set.class, type);
-			return JSON.readerFor(setType).readValue(collections.get(name));
+			var setType = JSON.getTypeFactory().constructCollectionType(Set.class, resultType);
+			return JSON.readerFor(setType).readValue(collections.get(collectionName));
 		} catch (IOException ex) {
 			// TODO: handle error
 			throw new IllegalArgumentException(ex);

@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import static dev.nipafx.ginevra.util.CollectionUtils.add;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toConcurrentMap;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.toMap;
 
 class LiveTemplating {
 
@@ -46,7 +46,7 @@ class LiveTemplating {
 						node.id(),
 						TemplateCache.createFor(node.template(), store, renderer))
 				)
-				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
+				.collect(toMap(Entry::getKey, Entry::getValue));
 		return new LiveTemplating(cache, store, renderer);
 	}
 
@@ -58,18 +58,17 @@ class LiveTemplating {
 		updateToNewClassLoaderWithChangedTemplates(outline, List.of());
 	}
 
-	public void updateToNewClassLoaderWithChangedTemplates(NodeOutline outline, List<Class<?>> templates) {
+	public void updateToNewClassLoaderWithChangedTemplates(NodeOutline outline, List<Class<? extends Template<?>>> changedTemplates) {
 		outline
 				.nodes(GenerateTemplateNode.class)
 				.forEach(node -> {
-					var templateChanged = templates.stream().anyMatch(type -> type.isAssignableFrom(node.getClass()));
+					var templateChanged = changedTemplates.stream().anyMatch(type -> type.isAssignableFrom(node.template().getClass()));
 					if (templateChanged)
+						// replace the cache for that node with a fresh one (~> content will have to be rendered again)
 						cache.put(node.id(), TemplateCache.createFor(node.template(), store, renderer));
-					else {
-						var templateCache = cache.get(node.id());
-						templateCache.updateTemplate(node.template());
-						templateCache.reset();
-					}
+					else
+						// update the cache to the new but unchanged template instance (~> rendered content remains valid)
+						cache.get(node.id()).updateTemplate(node.template());
 				});
 	}
 

@@ -10,7 +10,7 @@ import dev.nipafx.ginevra.Ginevra;
 import dev.nipafx.ginevra.config.GinevraArgs.BuildArgs;
 import dev.nipafx.ginevra.config.GinevraArgs.DevelopArgs;
 import dev.nipafx.ginevra.config.SiteConfiguration;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Changes;
 import dev.nipafx.ginevra.parse.JsonParser;
 import dev.nipafx.ginevra.parse.MarkdownParser;
 import dev.nipafx.ginevra.parse.YamlParser;
@@ -55,7 +55,7 @@ public class Executor {
 
 	public static void developSite(Class<? extends SiteConfiguration> configType, DevelopArgs developArgs, String[] args) {
 		var pureTemplates = developArgs.pureTemplatesOrDefault();
-		var codeUpdater = new LiveCodeUpdater(developArgs.sources(), configType.getName(), pureTemplates);
+		var codeUpdater = new LiveCodeUpdater(developArgs.sources(), configType.getName());
 		var code = codeUpdater
 				.compileAndUpdateCode()
 				.orElseThrow(() -> new IllegalArgumentException("The site sources must compile when launching Ginevra"));
@@ -65,19 +65,19 @@ public class Executor {
 		var store = new LiveStore();
 		var renderer = new Renderer(store, Path.of("resources"), Path.of("style"));
 		var server = new LiveServer();
-		var siteBuilder = new LiveSiteBuilder(store, renderer, server);
+		var siteBuilder = new LiveSiteBuilder(store, renderer, server, developArgs.pureTemplatesOrDefault());
 
 		siteBuilder.build(outline, developArgs.portOrDefault());
-		codeUpdater.observe(codeUpdate -> rebuild(siteBuilder, codeUpdate.configType(), codeUpdate.rebuild(), args));
+		codeUpdater.observe(codeUpdate -> rebuild(siteBuilder, codeUpdate.configType(), codeUpdate.changes(), args));
 
 		waitForever();
 	}
 
 	private static void rebuild(
-			LiveSiteBuilder siteBuilder, Class<? extends SiteConfiguration> configType, Rebuild rebuild, String[] args) {
+			LiveSiteBuilder siteBuilder, Class<? extends SiteConfiguration> configType, Changes changes, String[] args) {
 		var configuration = createConfiguration(configType, args);
 		var outline = createOutline(configuration);
-		siteBuilder.rebuild(outline, rebuild);
+		siteBuilder.rebuild(outline, changes);
 	}
 
 	// misc

@@ -1,10 +1,6 @@
 package dev.nipafx.ginevra.execution;
 
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Components;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Full;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.None;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Templates;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Changes;
 import dev.nipafx.ginevra.execution.LiveNode.FilterLiveNode;
 import dev.nipafx.ginevra.execution.LiveNode.MergeLiveNode;
 import dev.nipafx.ginevra.execution.LiveNode.SourceLiveNode;
@@ -34,14 +30,16 @@ class LiveSiteBuilder {
 	private final LiveStore store;
 	private final Renderer renderer;
 	private final LiveServer server;
+	private final boolean pureTemplates;
 	private final MultiplexingQueue<SourcedEvent> sourceEvents;
 
 	private Optional<BuildState> buildState;
 
-	LiveSiteBuilder(LiveStore store, Renderer renderer, LiveServer server) {
+	LiveSiteBuilder(LiveStore store, Renderer renderer, LiveServer server, boolean pureTemplates) {
 		this.store = store;
 		this.renderer = renderer;
 		this.server = server;
+		this.pureTemplates = pureTemplates;
 		this.sourceEvents = new MultiplexingQueue<>(this::handleSourceEvent, "source-event-watcher");
 		this.buildState = Optional.empty();
 	}
@@ -117,38 +115,84 @@ class LiveSiteBuilder {
 				.collect(toUnmodifiableMap(Entry::getKey, Entry::getValue));
 	}
 
-	public void rebuild(NodeOutline outline, Rebuild rebuild) {
+	public void rebuild(NodeOutline outline, Changes changes) {
 		var state = buildState.orElseThrow(() -> new IllegalStateException("Can't rebuild before a build"));
 
-		switch (rebuild) {
-			case None _ -> System.out.println("REBUILD NOTHING");
-			case Components _ -> {
-				System.out.println("REBUILD COMPONENTS");
-
-				state.graph().updateToNewClassLoader(outline);
-				state.templating().updateToNewClassLoader(outline);
+		switch (determineRebuild(changes)) {
+			case NOTHING -> System.out.println("REBUILD NOTHING");
+			case COMPONENTS -> rebuildComponents(state, changes, outline);
+			case TEMPLATES -> rebuildTemplates(state, false, changes, outline);
+			case DOCUMENTS -> {
+				// This one is a bit tricky. If only document types that are used for queries (as opposed to
+				// those used in intermediate steps of the outline) change, we only need to rerun templating;
+				// otherwise we need a full rebuild. The store knows which case we're in.
+				var onlyQueriesChanged = !store.updateToNewTypes(changes.documents());
+				if (onlyQueriesChanged)
+					rebuildTemplates(state, true, changes, outline);
+				else
+					rebuildAll(state, outline);
 			}
-			case Templates(var templates) -> {
-				System.out.printf(
-						"REBUILD TEMPLATES (%s)%n",
-						templates.stream()
-								.map(Class::getSimpleName)
-								.collect(joining(", ")));
-
-				state.graph().updateToNewClassLoader(outline);
-				state.templating().updateToNewClassLoaderWithChangedTemplates(outline, templates);
-			}
-			case Full _ -> {
-				System.out.println("REBUILD ALL");
-
-				state.stopObservation();
-				store.removeAll();
-				var buildState = buildSite(outline);
-				this.buildState = Optional.of(buildState);
-			}
+			case FULL -> rebuildAll(state, outline);
 		}
 
 		server.refresh();
+	}
+
+	private void rebuildComponents(BuildState state, Changes changes, NodeOutline outline) {
+		System.out.println("REBUILD COMPONENTS");
+
+		state.graph().updateToNewClassLoader(outline);
+		store.updateToNewTypes(changes.documents());
+		state.templating().updateToNewClassLoader(outline);
+	}
+
+	private void rebuildTemplates(BuildState state, boolean triggeredByQueryChange, Changes changes, NodeOutline outline) {
+		var messageDetail = changes.templates().isEmpty()
+				? ""
+				: changes.templates().stream()
+						.map(Class::getSimpleName)
+						.collect(joining(", ", " (", ")"));
+		System.out.println("REBUILD TEMPLATES" + messageDetail);
+
+		state.graph().updateToNewClassLoader(outline);
+		if (triggeredByQueryChange)
+			state.templating().queryDataChanged();
+		else
+			store.updateToNewTypes(changes.documents());
+		state.templating().updateToNewClassLoaderWithChangedTemplates(outline, changes.templates());
+	}
+
+	private void rebuildAll(BuildState state, NodeOutline outline) {
+		System.out.println("REBUILD ALL");
+
+		state.stopObservation();
+		store.removeAllData();
+		var buildState = buildSite(outline);
+		this.buildState = Optional.of(buildState);
+	}
+
+	private Rebuild determineRebuild(Changes changes) {
+		// A full rebuild is unnecessary when only HTML templating changes but it's difficult to precisely
+		// determine whether that is the case. In order to err on the side of too many full rebuilds, one is
+		// triggered unless very narrow requirements are met:
+		//
+		//  (a) the user guarantees that implementations of `Template`, `CustomElement`, and `CssStyle`
+		//      as well as of `Document` that are involved in querying for templating are "pure"
+		//      (in the sense that they're not involved in anything but templating) and
+		//  (b) only classes that implement those interfaces were modified
+		if (!pureTemplates)
+			return Rebuild.FULL;
+
+		if (!changes.others().isEmpty())
+			return Rebuild.FULL;
+		if (!changes.documents().isEmpty())
+			return Rebuild.DOCUMENTS;
+		if (!changes.templates().isEmpty())
+			return Rebuild.TEMPLATES;
+		if (!changes.components().isEmpty() || !changes.cssStyles().isEmpty())
+			return Rebuild.COMPONENTS;
+
+		return Rebuild.NOTHING;
 	}
 
 	// observe
@@ -197,8 +241,6 @@ class LiveSiteBuilder {
 					.forEach(nextNode -> processEventsRecursively(Optional.of(node), nextNode, nextEvents));
 	}
 
-	private record SourcedEvent(SourceLiveNode sourceNode, SourceEvent event) { }
-
 	// serve
 
 	private byte[] serve(Path path) {
@@ -236,5 +278,11 @@ class LiveSiteBuilder {
 		}
 
 	}
+
+	private enum Rebuild {
+		NOTHING, COMPONENTS, TEMPLATES, DOCUMENTS, FULL
+	}
+
+	private record SourcedEvent(SourceLiveNode sourceNode, SourceEvent event) { }
 
 }

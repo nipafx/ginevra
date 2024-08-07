@@ -5,6 +5,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,37 +77,32 @@ public class RecordMapper {
 		return switch (component.getGenericType()) {
 			case Class<?> classType -> classType.cast(guaranteeNotNull(value, component));
 			case ParameterizedType paramType -> switch (paramType.getRawType().getTypeName()) {
-				case "java.util.Optional" -> {
-					if (value instanceof Optional)
-						yield guaranteeNotNull(value, component);
-					if (value == null)
-						yield Optional.empty();
-
-					var valueType = paramType.getActualTypeArguments()[0];
-					yield Optional.of(guaranteeCorrectType(value, valueType));
-				}
-				case "java.util.List" -> {
-					if (value instanceof List)
-						yield guaranteeNotNull(value, component);
-					if (value instanceof Set<?> set)
-						yield List.copyOf(set);
-					if (value == null)
-						yield List.of();
-
-					var valueType = paramType.getActualTypeArguments()[0];
-					yield List.of(guaranteeCorrectType(value, valueType));
-				}
-				case "java.util.Set" -> {
-					if (value instanceof Set)
-						yield guaranteeNotNull(value, component);
-					if (value instanceof List<?> list)
-						yield Set.copyOf(list);
-					if (value == null)
-						yield Set.of();
-
-					var valueType = paramType.getActualTypeArguments()[0];
-					yield Set.of(guaranteeCorrectType(value, valueType));
-				}
+				case "java.util.Optional" -> switch (value) {
+					case null -> Optional.empty();
+					case Optional<?> optional -> guaranteeNotNull(value, component);
+					default -> {
+						var valueType = paramType.getActualTypeArguments()[0];
+						yield Optional.of(guaranteeCorrectType(value, valueType));
+					}
+				};
+				case "java.util.List" -> switch (value) {
+					case null -> List.of();
+					case List<?> list -> list;
+					case Collection<?> collection -> List.copyOf(collection);
+					default -> {
+						var valueType = paramType.getActualTypeArguments()[0];
+						yield List.of(guaranteeCorrectType(value, valueType));
+					}
+				};
+				case "java.util.Set" -> switch (value) {
+					case null -> Set.of();
+					case Set<?> set -> set;
+					case Collection<?> collection -> Set.copyOf(collection);
+					default -> {
+						var valueType = paramType.getActualTypeArguments()[0];
+						yield Set.of(guaranteeCorrectType(value, valueType));
+					}
+				};
 				default -> guaranteeNotNull(value, component);
 			};
 			case null, default ->

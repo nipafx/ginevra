@@ -1,14 +1,7 @@
 package dev.nipafx.ginevra.execution;
 
 import dev.nipafx.ginevra.config.SiteConfiguration;
-import dev.nipafx.ginevra.css.CssStyle;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Components;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Full;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.None;
-import dev.nipafx.ginevra.execution.LiveCodeUpdate.Rebuild.Templates;
-import dev.nipafx.ginevra.html.CustomElement;
-import dev.nipafx.ginevra.outline.Template;
+import dev.nipafx.ginevra.execution.LiveCodeUpdate.Changes;
 import dev.nipafx.ginevra.util.FileSystemUtils;
 import dev.nipafx.ginevra.util.FileWatchEvent;
 import dev.nipafx.ginevra.util.InMemoryCompiler;
@@ -29,15 +22,13 @@ class LiveCodeUpdater {
 
 	private final Path sourceRoot;
 	private final String configClassName;
-	private final boolean pureTemplates;
 
 	private final MultiplexingQueue<FileWatchEvent> fileEvents;
 	private final List<Consumer<LiveCodeUpdate>> recompileListeners;
 
-	LiveCodeUpdater(Path sourceRoot, String configurationClassName, boolean pureTemplates) {
+	LiveCodeUpdater(Path sourceRoot, String configurationClassName) {
 		this.sourceRoot = sourceRoot;
 		this.configClassName = configurationClassName;
-		this.pureTemplates = pureTemplates;
 		this.fileEvents = new MultiplexingQueue<>(this::processFileWatchEvent, "live-code-updater");
 		this.recompileListeners = new CopyOnWriteArrayList<>();
 	}
@@ -95,16 +86,16 @@ class LiveCodeUpdater {
 	private LiveCodeUpdate updateLiveCode(SuccessfulCompilation compilation) {
 		System.out.printf("SUCCESSFUL compilation of sources in %s%n", sourceRoot);
 		var classLoader = new ByteArrayClassLoader(getClass().getClassLoader(), compilation.classes());
-		var rebuild = ByteArrayClassLoader
+		var changes = ByteArrayClassLoader
 				.swap(classLoader)
-				.map(previousLoader -> determineRebuild(previousLoader, classLoader))
-				.orElse(new Rebuild.Full());
+				.map(previousLoader -> determineChanges(previousLoader, classLoader))
+				.orElseGet(() -> Changes.forChangedTypes(List.of()));
 		try {
 			var configType = classLoader.loadClass(configClassName);
 			if (SiteConfiguration.class.isAssignableFrom(configType)) {
 				@SuppressWarnings("unchecked")
 				var typedConfigClass = (Class<? extends SiteConfiguration>) configType;
-				return new LiveCodeUpdate(typedConfigClass, rebuild);
+				return new LiveCodeUpdate(typedConfigClass, changes);
 			} else {
 				// TODO: handle error
 				throw new IllegalStateException();
@@ -115,28 +106,13 @@ class LiveCodeUpdater {
 		}
 	}
 
-	private Rebuild determineRebuild(ByteArrayClassLoader previousLoader, ByteArrayClassLoader nextLoader) {
-		// A full rebuild is unnecessary when only HTML templating changes but it's difficult to precisely
-		// determine whether that is the case. In order to err on the side of too many rebuilds, one is triggered
-		// unless very narrow requirements are met:
-		//
-		//  (a) the user guarantees that implementations of `Template` (and other such types) are "pure"
-		//      (in the sense that they're not involved in anything but templating) and
-		//  (b) only classes that implement those interfaces were modified
-		//
-		// Added and removed classes can be ignored. If no other class was modified, their addition/removal
-		// can only impact the build when the rest of the code uses advanced dynamic features (like a class path
-		// scan or service loader interaction) that is arguably out of scope of a static site build.
-
-		if (!pureTemplates)
-			return new Rebuild.Full();
-
+	private Changes determineChanges(ByteArrayClassLoader previousLoader, ByteArrayClassLoader nextLoader) {
 		var changedTypes = nextLoader
 				.byteCode()
 				.entrySet().stream()
 				.filter(type -> previousLoader.byteCode().containsKey(type.getKey()))
 				.filter(type -> !Arrays.equals(type.getValue(), previousLoader.byteCode().get(type.getKey())))
-				.map(type -> {
+				.<Class<?>> map(type -> {
 					try {
 						return nextLoader.loadClass(type.getKey());
 					} catch (ClassNotFoundException ex) {
@@ -145,23 +121,7 @@ class LiveCodeUpdater {
 					}
 				})
 				.toList();
-
-		Rebuild rebuild = new None();
-		for (var type : changedTypes) {
-			rebuild = switch (type) {
-				case Class<?> _
-						when CustomElement.class.isAssignableFrom(type) || CssStyle.class.isAssignableFrom(type) ->
-						rebuild instanceof None ? new Components() : rebuild;
-				case Class<?> _ when Template.class.isAssignableFrom(type) -> switch (rebuild) {
-					case None _, Components _ -> new Templates(List.of(type));
-					case Templates templates -> templates.addTemplate(type);
-					case Full full -> full;
-				};
-				default -> new Rebuild.Full();
-			};
-		}
-
-		return rebuild;
+		return Changes.forChangedTypes(changedTypes);
 	}
 
 }
