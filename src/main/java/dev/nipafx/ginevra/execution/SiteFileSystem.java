@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 interface SiteFileSystem {
 
@@ -27,9 +29,11 @@ interface SiteFileSystem {
 	class ActualFileSystem implements SiteFileSystem {
 
 		private final SitePaths sitePaths;
+		private final Set<Path> writtenFiles;
 
 		public ActualFileSystem(SitePaths sitePaths) {
 			this.sitePaths = sitePaths;
+			this.writtenFiles = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		}
 
 		@Override
@@ -58,27 +62,34 @@ interface SiteFileSystem {
 		}
 
 		private void copyFile(CopiedFile copiedFile) {
-			var target = sitePaths.siteFolder().resolve(copiedFile.target());
-			try {
-				// copied files have a hashed name, so if a target file of that name already exists
-				// it can be assumed to be up-to-date and nothing needs to be done
-				if (!Files.exists(target))
-					Files.copy(copiedFile.source(), target);
-			} catch (IOException ex) {
-				// TODO: handle error
-				ex.printStackTrace();
-			}
+			var targetFile = sitePaths.siteFolder().resolve(copiedFile.target());
+			var fileNotWrittenBefore = writtenFiles.add(targetFile);
+			// copied files have a hashed name, so if a target file of that name already exists
+			// it can be assumed to be up-to-date and nothing needs to be done
+			if (fileNotWrittenBefore && !Files.exists(targetFile))
+				try {
+					Files.copy(copiedFile.source(), targetFile);
+				} catch (IOException ex) {
+					writtenFiles.remove(targetFile);
+					// TODO: handle error
+					ex.printStackTrace();
+				}
 		}
 
 		private void writeCssFile(CssFile cssFile) {
 			var targetFile = sitePaths.siteFolder().resolve(cssFile.file()).toAbsolutePath();
+			var fileNotWrittenBefore = writtenFiles.add(targetFile);
 			// CSS files have a hashed name, so if a target file of that name already exists
 			// it can be assumed to be up-to-date and nothing needs to be done
-			if (!Files.exists(targetFile))
+			if (fileNotWrittenBefore && !Files.exists(targetFile))
 				writeToFile(targetFile, cssFile.content());
 		}
 
 		private void writeToFile(Path filePath, String fileContent) {
+			var fileWrittenBefore = !writtenFiles.add(filePath);
+			if (fileWrittenBefore)
+				return;
+
 			try {
 				// some files can change without Ginevra noticing,
 				// so they need to be deleted and recreated
@@ -86,6 +97,7 @@ interface SiteFileSystem {
 				Files.deleteIfExists(filePath);
 				Files.writeString(filePath, fileContent);
 			} catch (IOException ex) {
+				writtenFiles.remove(filePath);
 				// TODO: handle error
 				ex.printStackTrace();
 			}
@@ -93,15 +105,21 @@ interface SiteFileSystem {
 
 		@Override
 		public void copyStaticFile(Path file, Path targetFolder) {
+			var fullTargetFolder = sitePaths.siteFolder().resolve(targetFolder).toAbsolutePath();
+			var targetFile = fullTargetFolder.resolve(file.getFileName());
+
+			var fileWrittenBefore = !writtenFiles.add(targetFile);
+			if (fileWrittenBefore)
+				return;
+
 			try {
-				var fullTargetFolder = sitePaths.siteFolder().resolve(targetFolder).toAbsolutePath();
 				Files.createDirectories(fullTargetFolder);
-				var targetFile = fullTargetFolder.resolve(file.getFileName());
 				// these files can change without Ginevra noticing,
 				// so they need to be deleted and recreated
 				Files.deleteIfExists(targetFile);
 				Files.copy(file, targetFile);
 			} catch (IOException ex) {
+				writtenFiles.remove(targetFile);
 				// TODO: handle error
 				ex.printStackTrace();
 			}
