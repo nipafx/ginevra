@@ -48,7 +48,12 @@ public class Executor {
 		var fileSystem = SiteFileSystem.create(sitePaths);
 		var siteBuilder = new OneTimeSiteBuilder(store, renderer, fileSystem);
 
-		siteBuilder.build(outline);
+		try {
+			siteBuilder.build(outline);
+		} catch (InterruptedException ex) {
+			// do nothing, execution will stop soon after this anyway
+			ex.printStackTrace();
+		}
 	}
 
 	// develop

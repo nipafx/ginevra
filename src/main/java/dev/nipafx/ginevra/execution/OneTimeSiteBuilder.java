@@ -42,7 +42,7 @@ class OneTimeSiteBuilder {
 		this.siteFileSystem = siteFileSystem;
 	}
 
-	public void build(NodeOutline outline) {
+	public void build(NodeOutline outline) throws InterruptedException {
 		this.outline = outline;
 		this.mergeCaches = outline
 				.nodes(MergeNode.class)
@@ -53,6 +53,7 @@ class OneTimeSiteBuilder {
 		siteFileSystem.initialize();
 		renderTemplates();
 		generateResources();
+		siteFileSystem.awaitCompletion();
 	}
 
 	private void fillStore() {
