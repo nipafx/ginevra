@@ -21,6 +21,9 @@ import dev.nipafx.ginevra.render.Renderer;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static dev.nipafx.ginevra.util.StreamUtils.crossProduct;
@@ -106,24 +109,30 @@ class OneTimeSiteBuilder {
 		});
 	}
 
-	private void renderTemplates() {
-		outline
-				.nodes(GenerateTemplateNode.class)
-				.flatMap(this::generateFromTemplate)
-				.forEach(siteFileSystem::writeTemplatedFile);
+	private void renderTemplates() throws InterruptedException {
+		try (var executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
+			outline
+					.nodes(GenerateTemplateNode.class)
+					.forEach(templateNode ->  generateFromTemplate(templateNode, executor));
+			executor.shutdown();
+			executor.awaitTermination(1, TimeUnit.DAYS);
+		}
 	}
 
-	private <DOCUMENT extends Record & Document> Stream<TemplatedFile> generateFromTemplate(GenerateTemplateNode templateNode) {
+	private <DOCUMENT extends Record & Document> void generateFromTemplate(GenerateTemplateNode templateNode, ExecutorService executor) {
 		@SuppressWarnings("unchecked")
 		var template = (Template<DOCUMENT>) templateNode.template();
-		var results = switch (template.query()) {
+		switch (template.query()) {
 			case CollectionQuery<DOCUMENT> collectionQuery -> store
 					.query(collectionQuery).stream()
-					.filter(result -> collectionQuery.filter().test(result));
-			case RootQuery<DOCUMENT> rootQuery -> Stream.of(store.query(rootQuery));
-		};
-		return results
-				.flatMap(document -> generateFromTemplate(template, document));
+					.filter(result -> collectionQuery.filter().test(result))
+					.forEach(document -> executor.submit(() ->
+							generateFromTemplate(template, document)
+									.forEach(siteFileSystem::writeTemplatedFile)));
+			case RootQuery<DOCUMENT> rootQuery -> executor.submit(() ->
+					generateFromTemplate(template, store.query(rootQuery))
+							.forEach(siteFileSystem::writeTemplatedFile));
+		}
 	}
 
 	private <DOCUMENT extends Record & Document> Stream<TemplatedFile> generateFromTemplate(Template<DOCUMENT> template, DOCUMENT document) {
