@@ -10,10 +10,8 @@ public class StreamUtils {
 	public static <IN, OUT> Gatherer<IN, ?, OUT> only(Class<? extends OUT>... types) {
 		return Gatherer.of((_, element, downstream) -> {
 			for (var type : types)
-				if (type.isInstance(element)) {
-					downstream.push(type.cast(element));
-					break;
-				}
+				if (type.isInstance(element))
+					return downstream.push(type.cast(element));
 			return !downstream.isRejecting();
 		});
 	}

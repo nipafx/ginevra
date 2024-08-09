@@ -55,7 +55,10 @@ class LiveTemplating {
 	}
 
 	void updateToNewClassLoader(NodeOutline outline) {
-		updateToNewClassLoaderWithChangedTemplates(outline, List.of());
+		outline
+				.nodes(GenerateTemplateNode.class)
+				// replace the cache for that node with a fresh one (~> content will have to be rendered again)
+				.forEach(node -> cache.put(node.id(), TemplateCache.createFor(node.template(), store, renderer)));
 	}
 
 	public void updateToNewClassLoaderWithChangedTemplates(NodeOutline outline, List<Class<? extends Template<?>>> changedTemplates) {
